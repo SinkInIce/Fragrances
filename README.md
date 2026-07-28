@@ -100,7 +100,11 @@ notes, and a **photo**. Each card shows cost per ml, how many completed tests it
 
 Each bottle can also record **how full it is now** — tap a preset (Full, ¾, half, ¼,
 nearly out, empty) or drag the slider for an exact figure like 63%. **Clear** unsets it.
-A rough eyeball is enough. It drives how much is still on your shelf, what that is worth,
+A rough eyeball is enough.
+
+Once a bottle is catalogued you do not need the edit sheet to change its level: **open the
+bottle and there is a slider right on the card.** Handy straight after decanting — pour
+some off, drag it down, done. It saves when you let go. It drives how much is still on your shelf, what that is worth,
 and a **Running low** list of anything at a quarter or less.
 
 At the top you get **collection stats**: bottles owned, total spent, total ml, average

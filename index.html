@@ -215,12 +215,16 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
 .sync-note strong{ color:var(--ink); font-weight:700; }
 .fill-slide{ display:flex; align-items:center; gap:13px; margin-top:11px; }
-.fill-slide input[type=range]{ flex:1; -webkit-appearance:none; appearance:none; height:5px; border-radius:3px;
-  background:var(--paper-deep); outline:none; }
-.fill-slide input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+.fill-slide input[type=range], .card-fill input[type=range]{ flex:1; -webkit-appearance:none; appearance:none; height:5px;
+  border-radius:3px; background:var(--paper-deep); outline:none; }
+.fill-slide input[type=range]::-webkit-slider-thumb, .card-fill input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
   background:var(--accent-deep); border:3px solid #fff; box-shadow:0 1px 4px rgba(43,36,29,.3); cursor:pointer; }
-.fill-slide input[type=range]::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:var(--accent-deep);
-  border:3px solid #fff; cursor:pointer; }
+.fill-slide input[type=range]::-moz-range-thumb, .card-fill input[type=range]::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%; background:var(--accent-deep); border:3px solid #fff; cursor:pointer; }
+.card-fill{ display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:13px; border-bottom:1px solid var(--line); }
+.card-fill-label{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; white-space:nowrap; }
+.card-fill .fill-readout{ min-width:66px; font-size:15px; }
 .fill-readout{ min-width:74px; text-align:right; font-family:'Libre Caslon Text',serif; font-style:italic;
   font-size:17px; color:var(--accent-deep); }
 .prefill-hint.warn{ background:rgba(140,74,72,.1); border-color:rgba(140,74,72,.35); }
@@ -1366,6 +1370,11 @@ function cardBottle(b){
   let inner='';
   if(open){
     inner+='<div class="bottle-detail">';
+    if(!readOnly) inner+='<div class="card-fill">'+
+      '<div class="card-fill-label">How full</div>'+
+      '<input type="range" class="card-fill-range" data-bottle="'+b.id+'" min="0" max="100" step="1" value="'+(b.fill===''?100:esc(b.fill))+'">'+
+      '<div class="fill-readout" data-fillout="'+b.id+'">'+(b.fill===''?'Not set':esc(fillLabel(b.fill)))+'</div>'+
+    '</div>';
     if(mine.length){
       inner+='<div class="bottle-tests-label">'+mine.length+' test'+(mine.length>1?'s':'')+' on this bottle</div>';
       mine.forEach(function(t){
@@ -1839,9 +1848,22 @@ function bind(){
     });
   });
 
+  document.querySelectorAll('.card-fill-range').forEach(function(r){
+    r.addEventListener('click',function(e){ e.stopPropagation(); });
+    r.addEventListener('input',function(e){
+      e.stopPropagation();
+      var b=tests.filter(function(x){ return x.id===r.dataset.bottle; })[0]; if(!b) return;
+      b.fill=String(r.value);
+      var out=document.querySelector('[data-fillout="'+b.id+'"]');
+      if(out) out.textContent=fillLabel(b.fill);
+    });
+    /* Commit on release — saving mid-drag would re-render out from under the thumb. */
+    r.addEventListener('change',function(e){ e.stopPropagation(); save(); render(); toast('Level updated'); });
+  });
+
   document.querySelectorAll('.bottle-card').forEach(function(c){
     c.addEventListener('click',function(e){
-      if(e.target.closest('[data-act]')) return;
+      if(e.target.closest('[data-act]')||e.target.closest('.card-fill')) return;
       var opening = openBottleId!==c.dataset.bottle;
       openBottleId = opening ? c.dataset.bottle : null;
       render();
