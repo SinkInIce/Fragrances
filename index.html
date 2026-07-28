@@ -215,16 +215,24 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
 .sync-note strong{ color:var(--ink); font-weight:700; }
 .fill-slide{ display:flex; align-items:center; gap:13px; margin-top:11px; }
-.fill-slide input[type=range], .card-fill input[type=range]{ flex:1; -webkit-appearance:none; appearance:none; height:5px;
-  border-radius:3px; background:var(--paper-deep); outline:none; }
+.fill-slide input[type=range], .card-fill input[type=range]{ flex:1; -webkit-appearance:none; appearance:none; height:10px;
+  border-radius:5px; background:var(--paper-deep); outline:none; touch-action:none; padding:0; margin:0; }
 .fill-slide input[type=range]::-webkit-slider-thumb, .card-fill input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
-  background:var(--accent-deep); border:3px solid #fff; box-shadow:0 1px 4px rgba(43,36,29,.3); cursor:pointer; }
+  -webkit-appearance:none; width:32px; height:32px; border-radius:50%;
+  background:var(--accent-deep); border:3px solid #fff; box-shadow:0 1px 5px rgba(43,36,29,.35); cursor:pointer; }
 .fill-slide input[type=range]::-moz-range-thumb, .card-fill input[type=range]::-moz-range-thumb{
   width:22px; height:22px; border-radius:50%; background:var(--accent-deep); border:3px solid #fff; cursor:pointer; }
-.card-fill{ display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:13px; border-bottom:1px solid var(--line); }
-.card-fill-label{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; white-space:nowrap; }
-.card-fill .fill-readout{ min-width:66px; font-size:15px; }
+.card-fill{ margin-bottom:14px; padding-bottom:13px; border-bottom:1px solid var(--line); }
+.card-fill-top{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:9px; }
+.card-fill-row{ display:flex; align-items:center; gap:12px; }
+.card-fill-label{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; }
+.card-fill .fill-readout{ min-width:0; text-align:right; font-size:15px; }
+/* Stepping beats dragging on a phone, especially going back down. */
+.fill-step{ flex:0 0 auto; width:46px; height:46px; border-radius:8px; border:1.5px solid var(--line);
+  background:#fff; color:var(--ink); font-size:20px; font-weight:700; line-height:1; cursor:pointer; }
+.fill-step:active{ background:var(--paper-deep); }
+.fill-slide{ flex-wrap:wrap; }
+.fill-slide .fill-readout{ flex:1 1 100%; text-align:right; }
 .col-foot{ display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:16px; }
 .col-filters{ margin-bottom:14px; }
 .bulk-row{ display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
@@ -749,7 +757,9 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <div class="chip sm" data-val="0">Empty</div>
     </div>
     <div class="fill-slide">
+      <button type="button" class="fill-step" id="bFillMinus" aria-label="Less">&minus;</button>
       <input type="range" id="bFillRange" min="0" max="100" step="1" value="100">
+      <button type="button" class="fill-step" id="bFillPlus" aria-label="More">+</button>
       <div class="fill-readout" id="bFillOut">Not set</div>
     </div>
     <div class="helper">Tap a preset or drag for an exact figure. It drives what is left on your shelf and what it is worth. <button class="btn-text" id="bFillClear">Clear</button></div></div>
@@ -1352,6 +1362,19 @@ function viewCollection(){
 /* A bottle's tests: explicitly linked ones, plus any unlinked test whose
    naming matches — so tests logged before the collection existed attach
    themselves without the user having to link anything by hand. */
+/* A blotter run is a baseline: the fragrance with no skin chemistry in the
+   way. The interesting number is the gap between paper and skin. */
+function avgHours(list){
+  var w=list.filter(function(t){ return longHrs[t.longevity]; });
+  return w.length?w.reduce(function(a,t){ return a+longHrs[t.longevity]; },0)/w.length:0;
+}
+function paperVsSkin(list){
+  var done=list.filter(function(t){ return t.completed; });
+  var p=avgHours(done.filter(isBlotter)), sk=avgHours(done.filter(function(t){ return !isBlotter(t); }));
+  if(!p||!sk) return null;
+  return { paper:p, skin:sk, drop:Math.round((1-sk/p)*100) };
+}
+
 function bottleTests(b){
   return testRecords().filter(function(t){
     if(t.notebook!==b.notebook) return false;
@@ -1446,9 +1469,13 @@ function cardBottle(b){
   if(open){
     inner+='<div class="bottle-detail">';
     if(!readOnly) inner+='<div class="card-fill">'+
-      '<div class="card-fill-label">How full</div>'+
-      '<input type="range" class="card-fill-range" data-bottle="'+b.id+'" min="0" max="100" step="1" value="'+(b.fill===''?100:esc(b.fill))+'">'+
-      '<div class="fill-readout" data-fillout="'+b.id+'">'+(b.fill===''?'Not set':esc(fillLabel(b.fill)))+'</div>'+
+      '<div class="card-fill-top"><span class="card-fill-label">How full</span>'+
+        '<span class="fill-readout" data-fillout="'+b.id+'">'+(b.fill===''?'Not set':esc(fillLabel(b.fill)))+'</span></div>'+
+      '<div class="card-fill-row">'+
+        '<button class="fill-step" data-fillstep="-5" data-bottle="'+b.id+'" aria-label="Less">&minus;</button>'+
+        '<input type="range" class="card-fill-range" data-bottle="'+b.id+'" min="0" max="100" step="1" value="'+(b.fill===''?100:esc(b.fill))+'">'+
+        '<button class="fill-step" data-fillstep="5" data-bottle="'+b.id+'" aria-label="More">+</button>'+
+      '</div>'+
     '</div>';
     if(mine.length){
       inner+='<div class="bottle-tests-label">'+mine.length+' test'+(mine.length>1?'s':'')+' on this bottle</div>';
@@ -1465,6 +1492,15 @@ function cardBottle(b){
     } else {
       inner+='<div class="bottle-tests-label">No tests on this bottle yet.</div>';
     }
+    var pvs=paperVsSkin(mine);
+    if(pvs) inner+='<div class="bottle-tests-label">Paper vs skin</div>'+
+      '<div class="rank-row"><div class="rn">Blotter baseline<small>no skin chemistry</small></div>'+
+        '<div class="rv">'+pvs.paper.toFixed(1)+'h</div></div>'+
+      '<div class="rank-row"><div class="rn">On your skin<small>'+
+        (pvs.drop>0?'your skin takes about '+pvs.drop+'% off':
+         pvs.drop<0?'lasts '+Math.abs(pvs.drop)+'% longer on you':'about the same')+
+        '</small></div><div class="rv">'+pvs.skin.toFixed(1)+'h</div></div>';
+
     /* Same juice, different batch: only worth showing once there are two to compare. */
     var byBatch={};
     mine.filter(function(t){ return t.completed&&t.batch; }).forEach(function(t){
@@ -1725,8 +1761,14 @@ function viewInsights(){
     '<div class="stat-box"><div class="n">'+avgScore+'</div><div class="l">Avg score /10</div></div>'+
     '<div class="stat-box"><div class="n sm">'+avgCpl+'</div><div class="l">Avg cost / ml</div></div></div>'+
     '<div class="result-count" style="margin-top:2px">'+top+' rated S or A tier</div>'+
-    (onPaper.length?'<div class="result-count"><b>'+onPaper.length+'</b> blotter test'+(onPaper.length>1?'s':'')+
-      ' kept out of the performance averages'+(avgPaperL?' — they average '+avgPaperL+'h on paper':'')+'</div>':'');
+    (onPaper.length?'<div class="result-count"><b>'+onPaper.length+'</b> blotter baseline'+(onPaper.length>1?'s':'')+
+      ' held separately'+(avgPaperL?' — averaging '+avgPaperL+'h on paper, with no skin chemistry':'')+'</div>':'');
+  const gap=paperVsSkin(s);
+  if(gap) h+='<div class="section-label">What your skin does to a fragrance</div><div class="card">'+
+    '<div class="rank-row"><div class="rn">On a blotter<small>the baseline</small></div><div class="rv">'+gap.paper.toFixed(1)+'h</div></div>'+
+    '<div class="rank-row"><div class="rn">On your skin<small>'+
+      (gap.drop>0?'about '+gap.drop+'% shorter':gap.drop<0?'about '+Math.abs(gap.drop)+'% longer':'no real difference')+
+      '</small></div><div class="rv">'+gap.skin.toFixed(1)+'h</div></div></div>';
 
   const longest=withL.slice().sort((a,b)=>longHrs[b.longevity]-longHrs[a.longevity]).slice(0,5);
   if(longest.length) h+='<div class="section-label">Longest lasting · on skin</div><div class="card">'+
@@ -1946,6 +1988,16 @@ function bind(){
       else if(a==='copycmp') copyCmp();
       else if(a==='clearfilters'){ filters={}; visibleCount=PAGE; render(); }
       else if(a==='more'){ visibleCount+=PAGE; render(); }
+    });
+  });
+
+  document.querySelectorAll('.fill-step[data-bottle]').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var b=tests.filter(function(x){ return x.id===btn.dataset.bottle; })[0]; if(!b) return;
+      var cur=b.fill===''?100:parseInt(b.fill,10);
+      b.fill=String(Math.max(0,Math.min(100,cur+parseInt(btn.dataset.fillstep,10))));
+      save(); render();
     });
   });
 
@@ -2303,6 +2355,13 @@ document.getElementById('bFillRange').addEventListener('input',function(){
   bottleFill=String(this.value); syncFillUI();
 });
 document.getElementById('bFillClear').addEventListener('click',function(){ bottleFill=''; syncFillUI(); });
+function stepSheetFill(by){
+  var cur=bottleFill===''?100:parseInt(bottleFill,10);
+  bottleFill=String(Math.max(0,Math.min(100,cur+by)));
+  syncFillUI();
+}
+document.getElementById('bFillMinus').addEventListener('click',function(){ stepSheetFill(-5); });
+document.getElementById('bFillPlus').addEventListener('click',function(){ stepSheetFill(5); });
 document.getElementById('bHouse').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
 document.getElementById('bName').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
 document.getElementById('bottlePrefillBtn').addEventListener('click',applyBottlePrefill);
@@ -2589,7 +2648,7 @@ function testToReview(t){
   if(t.weather) cond.push(t.weather.toLowerCase()+' weather');
   if(t.humidity) cond.push(t.humidity.toLowerCase()+' humidity');
   if(cond.length) L.push('','Tested with '+cond.join(', ')+'.');
-  if(isBlotter(t)) L.push('Note: tested on a blotter, not on skin — performance on skin will differ.');
+  if(isBlotter(t)) L.push('Tested on a blotter as a baseline — this is the fragrance itself, with no skin chemistry. Expect skin to differ.');
 
   var cps=(t.checkpoints||[]).slice().sort(function(a,b){ return a.minutes-b.minutes; });
   if(cps.length){

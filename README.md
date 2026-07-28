@@ -113,7 +113,8 @@ nearly out, empty) or drag the slider for an exact figure like 63%. **Clear** un
 A rough eyeball is enough.
 
 Once a bottle is catalogued you do not need the edit sheet to change its level: **open the
-bottle and there is a slider right on the card.** Handy straight after decanting — pour
+bottle and there is a slider with − and + buttons right on the card.** The buttons step 5%
+at a time, which beats dragging on a phone — especially going back down. Handy straight after decanting — pour
 some off, drag it down, done. It saves when you let go. It drives how much is still on your shelf, what that is worth,
 and a **Running low** list of anything at a quarter or less.
 
@@ -153,16 +154,20 @@ enough to save on every keystroke.
 **Every bottle in your collection is public** — there is no per-bottle toggle, by your
 choice. That is different from tests, which stay private until you share each one.
 
-## Blotter versus skin
+## Blotter as a baseline
 
-Paper holds scent far longer than skin and projects differently, so mixing the two would
-inflate every performance figure — and those are the numbers you quote in a review.
+A blotter run is a **control** — the fragrance on its own, with no skin chemistry in the
+way. The useful number is the gap between that and how it behaves on you.
 
-A test counts as a blotter test when it has a blotter spot and no skin spot. Those are
-**kept out of the average longevity and the Longest lasting ranking**, which are labelled
-*on skin*. Insights says how many were held out and what they averaged on paper, the card
-carries a `Blotter` badge, and the review export adds a line noting performance on skin
-will differ.
+A test counts as a blotter test when it has a blotter spot and no skin spot. It stays out
+of the skin averages, which are labelled *on skin*, so paper cannot inflate the figures
+you quote. But it is not discarded:
+
+- A bottle with both kinds of test grows a **Paper vs skin** panel — baseline hours, skin
+  hours, and how much your skin takes off.
+- Insights carries the same comparison across the whole log, under **What your skin does
+  to a fragrance**.
+- The review export frames it as a baseline rather than a performance claim.
 
 ## Comparing batches
 
