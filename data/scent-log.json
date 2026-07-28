@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:16:46.194Z",
+  "updatedAt": "2026-07-28T23:16:58.090Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1022,8 +1022,8 @@
       "covered": false,
       "id": "t1785273512486tivkqi",
       "name": "Egoiste",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T23:15:48.556Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-28T23:16:55.436Z"
     },
     {
       "notebook": "stevnscents",
