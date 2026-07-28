@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T22:53:53.803Z",
+  "updatedAt": "2026-07-28T22:55:27.083Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -110,6 +110,14 @@
           "note": "More of the vanilla comes out and the pomegranate turns into a sweeter version",
           "projection": "Arm's length",
           "loggedAt": "2026-07-28T19:31:39.858Z"
+        },
+        {
+          "key": "skin",
+          "label": "Skin Scent",
+          "minutes": 238,
+          "note": "I am barely smelling it on the strip at this point, you primarily get that birch and woodyness that was in the dry down except for it is a bit less",
+          "projection": "Skin scent",
+          "loggedAt": "2026-07-28T22:55:24.251Z"
         }
       ],
       "compliments": [],
@@ -151,7 +159,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:57:17.388Z",
       "completed": false,
-      "updatedAt": "2026-07-28T19:31:39.858Z"
+      "updatedAt": "2026-07-28T22:55:24.251Z"
     },
     {
       "notebook": "stevnscents",
