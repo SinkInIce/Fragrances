@@ -31,7 +31,7 @@ header{ padding:6px 4px 16px; }
 header .eyebrow{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; margin-bottom:6px; }
 header h1{ font-family:'Libre Caslon Text',serif; font-style:italic; font-weight:400; font-size:clamp(26px,7.5vw,32px); line-height:1.05; letter-spacing:-.01em; }
 header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1.5; max-width:44ch; }
-.tab-bar{ display:flex; gap:8px; margin:4px 4px 12px; }
+.tab-bar{ display:none; gap:8px; margin:4px 4px 12px; }   /* single notebook — nothing to switch between */
 .tab{ flex:1; text-align:center; padding:12px 8px; border-radius:6px; border:1.5px solid var(--line); font-size:12.5px; font-weight:800; color:var(--ink-soft); cursor:pointer; background:#fff; transition:.15s; }
 .tab.selected{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
 .view-bar{ display:flex; gap:4px; margin:0 4px 18px; background:rgba(43,36,29,.05); padding:4px; border-radius:7px; }
@@ -179,8 +179,10 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .calc-out{ font-size:12px; color:var(--accent-deep); font-weight:700; margin-top:-8px; margin-bottom:14px; }
 .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:11px 20px; border-radius:30px; font-size:12.5px; font-weight:600; opacity:0; pointer-events:none; transition:.3s; z-index:200; max-width:90vw; text-align:center; }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-.fab-wrap{ position:fixed; bottom:0; left:0; right:0; padding:16px; padding-bottom:calc(16px + env(safe-area-inset-bottom)); background:linear-gradient(180deg,transparent,var(--paper) 40%); z-index:40; }
-.fab-wrap .btn{ max-width:600px; margin:0 auto; }
+/* The wrapper spans the viewport for its fade, so it must not take clicks —
+   without this it swallows every tap in the bottom strip of the page. */
+.fab-wrap{ position:fixed; bottom:0; left:0; right:0; padding:16px; padding-bottom:calc(16px + env(safe-area-inset-bottom)); background:linear-gradient(180deg,transparent,var(--paper) 40%); z-index:40; pointer-events:none; }
+.fab-wrap .btn{ display:flex; width:100%; max-width:600px; margin:0 auto; pointer-events:auto; }
 .fab-wrap.hidden{ display:none; }
 .loading{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
 .data-bar{ margin:26px 0 96px; padding:14px 16px; border:1px solid var(--line); border-radius:6px; background:var(--card); }
@@ -241,6 +243,38 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 .prose-box .pb-lab{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:4px; }
 .pc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:11px; }
 @media (max-width:440px){ .pc-grid{ grid-template-columns:1fr; } }
+
+/* Desktop and iPad. The phone layout is the baseline; on a big screen a
+   bottom-anchored full-width sheet reads as a mistake, so sheets become
+   centred dialogs and the column gets a little more room. */
+@media (min-width:760px){
+  #app{ max-width:680px; padding:34px 24px 130px; }
+  header h1{ font-size:34px; }
+  header p{ font-size:13.5px; }
+  .overlay{ align-items:center; padding:28px 20px; }
+  .sheet{ max-width:600px; margin:0 auto; max-height:84vh; border-radius:12px;
+          padding:26px 26px 28px; animation:popin .2s ease; box-shadow:0 18px 50px rgba(43,36,29,.28); }
+  .sheet-handle{ display:none; }
+  .fab-wrap{ padding:18px 24px calc(18px + env(safe-area-inset-bottom)); }
+  .fab-wrap .btn{ max-width:680px; }
+  .btn{ font-size:14.5px; }
+  .card{ padding:19px; }
+  .hist-detail-actions{ gap:14px; }
+  .data-bar{ margin-bottom:40px; }
+}
+@keyframes popin{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+
+/* Pointer-precision screens don't need thumb-sized targets, but they do
+   benefit from an obvious hover state. */
+@media (hover:hover) and (pointer:fine){
+  .chip:hover{ border-color:var(--accent-deep); color:var(--ink); }
+  .chip.selected:hover{ color:var(--paper); }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-text:hover, .btn-danger-text:hover{ opacity:.72; }
+  .hist-card:hover{ border-color:rgba(43,36,29,.26); }
+  .vtab:hover{ color:var(--ink); }
+  .note-item:hover{ border-color:var(--accent-deep); }
+}
 .pc-box{ font-size:12.5px; line-height:1.5; padding:10px 12px; border-radius:4px; }
 .pc-box.pro{ background:rgba(111,125,94,.12); }
 .pc-box.con{ background:rgba(140,74,72,.1); }
@@ -263,9 +297,10 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
     <p>Log the spray, the dry down, and the skin scent as they happen — then turn it into a review.</p>
   </header>
 
+  <!-- Fallowmark is retired from the UI for now. The notebook field stays in the
+       data model, so records keep their tag and the tab can come back unchanged. -->
   <div class="tab-bar" id="tabBar">
     <div class="tab" data-tab="stevnscents">StevnScents</div>
-    <div class="tab" data-tab="fallowmark">Fallowmark</div>
   </div>
 
   <div class="view-bar" id="viewBar">
@@ -294,7 +329,7 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 </div>
 
 <div class="fab-wrap" id="fabWrap">
-  <button class="btn btn-primary" id="newTestBtn">+ New test — <span id="fabNotebookLabel">StevnScents</span></button>
+  <button class="btn btn-primary" id="newTestBtn">+ New test<span id="fabNotebookLabel" hidden></span></button>
 </div>
 
 <div class="overlay" id="newTestOverlay"><div class="sheet">
@@ -612,8 +647,8 @@ const tierOrder={S:0,A:1,B:2,C:3,D:4,F:5};
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2300); }
 function uid(){ return 't'+Date.now()+Math.random().toString(36).slice(2,8); }
 function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
-function fmtEl(ms){ const m=Math.floor(ms/60000), h=Math.floor(m/60), r=m%60; return h===0?r+'m':h+'h '+r+'m'; }
-function fmtDate(iso){ return new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); }
+function fmtEl(ms){ if(!isFinite(ms)||ms<0) return '—'; const m=Math.floor(ms/60000), h=Math.floor(m/60), r=m%60; return h===0?r+'m':h+'h '+r+'m'; }
+function fmtDate(iso){ const d=new Date(iso); if(isNaN(d.getTime())) return '—'; return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); }
 function norm(t){
   return Object.assign({ notebook:'stevnscents', house:'', flanker:'', inspired:'', concentration:'', sprays:'', spots:[],
     weather:'', humidity:'', price:'', size:'', batch:'', context:'', checkpoints:[], compliments:[],
@@ -1367,7 +1402,7 @@ document.getElementById('newTestBtn').addEventListener('click',function(){
   document.getElementById('cplOut').textContent='';
   document.getElementById('moreFieldsNew').classList.remove('show');
   document.getElementById('moreToggleNew').textContent='+ More detail (weather, price, batch)';
-  document.getElementById('newTestSub').textContent='Starts the clock the moment you save \u2014 logging to '+nbLabel(activeTab)+'.';
+  document.getElementById('newTestSub').textContent='Starts the clock the moment you save.';
   show('newTestOverlay'); setTimeout(function(){ document.getElementById('fHouse').focus(); },150);
 });
 

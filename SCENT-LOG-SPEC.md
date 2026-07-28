@@ -32,6 +32,8 @@ Two independent **notebooks** partition all data:
 
 Notebooks share the same schema and UI but never mix records. Switching notebooks re-themes the entire interface via a `body` class.
 
+> **Current state:** only StevnScents is active. The Fallowmark tab is hidden (`.tab-bar { display:none }`) and the notebook switcher is not shown, since there is nothing to switch between. The `notebook` field, the Fallowmark accent tokens and all filtering logic are untouched — restoring the tab is a markup and one-line CSS change, and any existing Fallowmark records are hidden rather than deleted.
+
 ---
 
 ## 3. Data model
