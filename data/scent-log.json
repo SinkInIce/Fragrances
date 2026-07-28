@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T20:25:18.616Z",
+  "updatedAt": "2026-07-28T20:25:57.015Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -200,12 +200,12 @@
       "added": "2026-07-28T19:06:15.230Z",
       "bottleNotes": "Bought off Fragrancenet.com",
       "bottleId": "",
-      "fill": "",
+      "fill": "100",
       "covered": false,
       "id": "t1785265575230ppgjv6",
       "name": "Gas",
       "type": "Dupe",
-      "updatedAt": "2026-07-28T19:23:33.147Z"
+      "updatedAt": "2026-07-28T20:25:54.220Z"
     },
     {
       "notebook": "stevnscents",
