@@ -98,7 +98,8 @@ Add a bottle with **+ Add a bottle**: brand, name, type, concentration, price, s
 notes, and a **photo**. Each card shows cost per ml, how many completed tests it has (or
 `Untested`), and its average score.
 
-Each bottle can also record **how full it is now** — Full, ¾, half, ¼, nearly out, empty.
+Each bottle can also record **how full it is now** — tap a preset (Full, ¾, half, ¼,
+nearly out, empty) or drag the slider for an exact figure like 63%. **Clear** unsets it.
 A rough eyeball is enough. It drives how much is still on your shelf, what that is worth,
 and a **Running low** list of anything at a quarter or less.
 
@@ -112,6 +113,9 @@ blanks.
 you have already tested (or already own), a prompt appears offering to reuse the details
 — type, concentration, inspired-by, price, size. It only fills blanks, so nothing you
 have typed gets overwritten.
+
+If you start adding a bottle you **already own**, a warning appears with **Open that one**
+so you edit the original instead of creating a second entry.
 
 **Tap a bottle to open it** and you get its full test history, plus four actions:
 
@@ -134,6 +138,13 @@ enough to save on every keystroke.
 
 **Every bottle in your collection is public** — there is no per-bottle toggle, by your
 choice. That is different from tests, which stay private until you share each one.
+
+## Tracking what you have posted
+
+A finished test has **Mark as covered** — use it once you have made the video. Covered
+tests get a badge, and **Insights** carries a **Still to cover** list: everything tested,
+with a verdict formed, that you have not posted about yet. That is your content backlog,
+built from your own data rather than a separate list you have to maintain.
 
 ## Exporting for a review
 

@@ -214,6 +214,17 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .sync-line.warn{ color:var(--wine); }
 .sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
 .sync-note strong{ color:var(--ink); font-weight:700; }
+.fill-slide{ display:flex; align-items:center; gap:13px; margin-top:11px; }
+.fill-slide input[type=range]{ flex:1; -webkit-appearance:none; appearance:none; height:5px; border-radius:3px;
+  background:var(--paper-deep); outline:none; }
+.fill-slide input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+  background:var(--accent-deep); border:3px solid #fff; box-shadow:0 1px 4px rgba(43,36,29,.3); cursor:pointer; }
+.fill-slide input[type=range]::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:var(--accent-deep);
+  border:3px solid #fff; cursor:pointer; }
+.fill-readout{ min-width:74px; text-align:right; font-family:'Libre Caslon Text',serif; font-style:italic;
+  font-size:17px; color:var(--accent-deep); }
+.prefill-hint.warn{ background:rgba(140,74,72,.1); border-color:rgba(140,74,72,.35); }
+.prefill-hint.warn button{ border-color:var(--wine); color:var(--wine); }
 .prefill-hint[hidden]{ display:none; }   /* an author display rule beats the hidden attribute */
 .prefill-hint{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
   background:var(--accent-soft); border:1px solid rgba(184,130,60,.3); border-radius:6px;
@@ -222,6 +233,7 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
   border-radius:5px; background:#fff; color:var(--accent-deep); font-weight:700; text-decoration:none;
   white-space:nowrap; }
 .badge.shared{ background:var(--accent-soft); color:var(--accent-deep); }
+.badge.covered{ background:rgba(93,107,75,.16); color:#4a5a3c; }
 .btn-sm{ padding:9px 14px; font-size:12.5px; }
 .bottle-card{ padding:14px; }
 .bottle-row{ display:flex; gap:14px; align-items:flex-start; }
@@ -714,7 +726,11 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <div class="chip sm" data-val="10">Nearly out</div>
       <div class="chip sm" data-val="0">Empty</div>
     </div>
-    <div class="helper">A rough eyeball is fine — it drives what is left on your shelf and what it is worth.</div></div>
+    <div class="fill-slide">
+      <input type="range" id="bFillRange" min="0" max="100" step="1" value="100">
+      <div class="fill-readout" id="bFillOut">Not set</div>
+    </div>
+    <div class="helper">Tap a preset or drag for an exact figure. It drives what is left on your shelf and what it is worth. <button class="btn-text" id="bFillClear">Clear</button></div></div>
   <div class="two-col">
     <div class="field"><label>Price paid</label><input type="number" id="bPrice" placeholder="35" inputmode="decimal"></div>
     <div class="field"><label>Bottle size (ml)</label><input type="number" id="bSize" placeholder="100" inputmode="numeric"></div>
@@ -801,7 +817,7 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'', fill:'' }, t);
+    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'', fill:'', covered:false }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -1269,6 +1285,7 @@ function bottleTests(b){
    bottles that actually carry a price, and say so, rather than quietly
    averaging over blanks. */
 const FILL_LABEL={'100':'Full','75':'\u00be full','50':'Half full','25':'\u00bc left','10':'Nearly out','0':'Empty'};
+function fillLabel(v){ return (v===''||v==null)?'':(FILL_LABEL[v]||v+'% left'); }
 function fillPct(b){ return b.fill===''||b.fill==null?null:parseFloat(b.fill); }
 function mlLeft(b){
   const p=fillPct(b), sz=parseFloat(b.size);
@@ -1316,7 +1333,7 @@ function collectionStats(list){
     if(low.length) h+='<div class="section-label">Running low</div><div class="card">'+
       low.map(b=>'<div class="rank-row"><div class="rn">'+esc(fullName(b))+
         '<small>'+(b.house?esc(b.house):'')+(mlLeft(b)?' · about '+Math.round(mlLeft(b))+'ml left':'')+'</small></div>'+
-        '<div class="rv">'+esc(FILL_LABEL[b.fill]||b.fill+'%')+'</div></div>').join('')+'</div>';
+        '<div class="rv">'+esc(fillLabel(b.fill))+'</div></div>').join('')+'</div>';
   }
 
   const tc={}; list.forEach(b=>{ if(b.type) tc[b.type]=(tc[b.type]||0)+1; });
@@ -1388,7 +1405,7 @@ function cardBottle(b){
           (cpl(b)?'<div class="badge">'+cpl(b)+'</div>':'')+
           (done.length?'<div class="badge">'+done.length+' test'+(done.length>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
           (avg?'<div class="badge longevity">avg '+avg.toFixed(1)+'/10</div>':'')+
-          (b.fill!==''?'<div class="badge'+(fillPct(b)<=25?' projection':'')+'">'+esc(FILL_LABEL[b.fill]||b.fill+'%')+'</div>':'')+
+          (b.fill!==''?'<div class="badge'+(fillPct(b)<=25?' projection':'')+'">'+esc(fillLabel(b.fill))+'</div>':'')+
         '</div>'+
       '</div>'+
       '<div class="chevron">&rsaquo;</div>'+
@@ -1559,6 +1576,7 @@ function cardHist(t){
         ((t.seasons||[]).length?'<div class="badge">'+esc(t.seasons.join(', '))+'</div>':'')+
         ((t.compliments||[]).length?'<div class="badge">'+t.compliments.length+' compliment'+(t.compliments.length>1?'s':'')+'</div>':'')+
         ((t.shared&&!readOnly)?'<div class="badge shared">Public</div>':'')+
+        ((t.covered&&!readOnly)?'<div class="badge covered">Covered</div>':'')+
       '</div></div>'+
       '<div style="text-align:right">'+
         (t.rating?'<div class="score"><span class="sv">'+esc(t.rating)+'</span><span class="sm">/10</span></div>':'')+
@@ -1578,6 +1596,7 @@ function cardHist(t){
         '<button class="btn-text" data-act="end" data-test="'+t.id+'">Edit ratings</button>'+
         '<button class="btn-text" data-act="retest" data-test="'+t.id+'">Test again</button>'+
         '<button class="btn-text" data-act="share" data-test="'+t.id+'">'+(t.shared?'Remove from public page':'Add to public page')+'</button>'+
+        '<button class="btn-text" data-act="covered" data-test="'+t.id+'">'+(t.covered?'Not covered yet':'Mark as covered')+'</button>'+
         '<button class="btn-danger-text" data-act="del" data-test="'+t.id+'">Delete</button>'+
       '</div>')+'</div></div></div>';
 }
@@ -1603,6 +1622,14 @@ function viewInsights(){
   const longest=withL.slice().sort((a,b)=>longHrs[b.longevity]-longHrs[a.longevity]).slice(0,5);
   if(longest.length) h+='<div class="section-label">Longest lasting</div><div class="card">'+
     longest.map(t=>'<div class="rank-row"><div class="rn">'+esc(fullName(t))+'<small>'+(t.house?esc(t.house)+' \u00b7 ':'')+esc(t.type)+'</small></div><div class="rv">'+esc(t.longevity)+'</div></div>').join('')+'</div>';
+
+  /* The content backlog: tested, verdict formed, nothing posted about it yet. */
+  const uncovered=s.filter(t=>!t.covered).sort((a,b)=>new Date(b.startTime)-new Date(a.startTime));
+  if(uncovered.length) h+='<div class="section-label">Still to cover · '+uncovered.length+'</div><div class="card">'+
+    uncovered.slice(0,8).map(t=>'<div class="rank-row"><div class="rn">'+esc(fullName(t))+
+      '<small>'+(t.house?esc(t.house)+' · ':'')+fmtDate(t.startTime)+'</small></div>'+
+      '<div class="rv">'+(t.rating?esc(t.rating)+'/10':(t.tier?'Tier '+esc(t.tier):'—'))+'</div></div>').join('')+
+    (uncovered.length>8?'<div class="result-count" style="margin-top:10px">and '+(uncovered.length-8)+' more</div>':'')+'</div>';
 
   const brandCount={}; s.forEach(t=>{ const b=t.house||'(no brand)'; brandCount[b]=(brandCount[b]||0)+1; });
   const brands=Object.keys(brandCount).map(k=>[k,brandCount[k]]).sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -1789,6 +1816,10 @@ function bind(){
       else if(a==='review') copyReview(id);
       else if(a==='exportcol') exportCollection();
       else if(a==='retest') retest(id);
+      else if(a==='covered'){
+        const ct=tests.filter(function(x){ return x.id===id; })[0];
+        if(ct){ ct.covered=!ct.covered; save(); render(); toast(ct.covered?'Marked as covered':'Back on the to-cover list'); }
+      }
       else if(a==='share'){
         const st=tests.filter(function(x){ return x.id===id; })[0];
         if(st){ st.shared=!st.shared; save(); render(); toast(st.shared?'Added to your public page':'Removed from your public page'); }
@@ -1946,15 +1977,26 @@ function findPrior(house,name,excludeId){
 function refreshBottlePrefill(){
   var el=document.getElementById('bottlePrefill');
   var prior=findPrior(document.getElementById('bHouse').value,document.getElementById('bName').value,bottleId);
-  if(!prior){ el.hidden=true; el.dataset.from=''; return; }
+  if(!prior){ el.hidden=true; el.dataset.from=''; el.classList.remove('warn'); return; }
   el.hidden=false; el.dataset.from=prior.id;
-  document.getElementById('bottlePrefillText').textContent=
-    isBottle(prior)?'Already in your collection — reuse its details?':'You have tested this before — reuse those details?';
+  var dupe=isBottle(prior);
+  el.classList.toggle('warn',dupe);
+  el.dataset.dupe=dupe?'1':'';
+  document.getElementById('bottlePrefillText').textContent=dupe
+    ? 'You already own this one.'
+    : 'You have tested this before — reuse those details?';
+  document.getElementById('bottlePrefillBtn').textContent=dupe?'Open that one':'Fill in the rest';
 }
 function applyBottlePrefill(){
   var el=document.getElementById('bottlePrefill');
   var prior=tests.filter(function(x){ return x.id===el.dataset.from; })[0];
   if(!prior) return;
+  if(el.dataset.dupe){                    /* it is the same bottle — go edit that one */
+    hide('bottleOverlay');
+    activeSection='collection'; openBottleId=prior.id; render();
+    openBottle(prior.id);
+    return;
+  }
   var filled=[];
   function put(id,val,label){
     var f=document.getElementById(id);
@@ -1972,6 +2014,15 @@ function applyBottlePrefill(){
   toast(filled.length?'Filled in '+filled.join(', '):'Nothing left to fill');
 }
 
+let bottleFill='';
+function syncFillUI(){
+  var r=document.getElementById('bFillRange'), out=document.getElementById('bFillOut');
+  if(bottleFill===''){ out.textContent='Not set'; setSingle('bFill',''); r.value=100; return; }
+  r.value=bottleFill;
+  out.textContent=fillLabel(bottleFill);
+  setSingle('bFill',bottleFill);          /* highlights only when it matches a preset */
+}
+
 function openBottle(id){
   var b=id?tests.filter(function(x){ return x.id===id; })[0]:null;
   bottleId=b?id:null; bottlePhoto=b?b.photo:'';
@@ -1982,7 +2033,7 @@ function openBottle(id){
   document.getElementById('bInspired').value=b?b.inspired:'';
   setSingle('bType',b?b.type:'Dupe');
   setSingle('bConc',b?b.concentration:'');
-  setSingle('bFill',b?b.fill:'');
+  bottleFill=b?(b.fill||''):''; syncFillUI();
   document.getElementById('bPrice').value=b?b.price:'';
   document.getElementById('bSize').value=b?b.size:'';
   document.getElementById('bNotes').value=b?b.bottleNotes:'';
@@ -2057,6 +2108,14 @@ document.getElementById('bottlePhotoInput').addEventListener('change',async func
     toast('Photo added — '+Math.round(blob.size/1024)+'KB');
   }catch(err){ toast(err.message||'Could not use that image'); }
 });
+document.getElementById('bFill').addEventListener('click',function(e){
+  if(!e.target.closest('.chip')) return;
+  bottleFill=getSingle('bFill'); syncFillUI();
+});
+document.getElementById('bFillRange').addEventListener('input',function(){
+  bottleFill=String(this.value); syncFillUI();
+});
+document.getElementById('bFillClear').addEventListener('click',function(){ bottleFill=''; syncFillUI(); });
 document.getElementById('bHouse').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
 document.getElementById('bName').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
 document.getElementById('bottlePrefillBtn').addEventListener('click',applyBottlePrefill);
@@ -2069,7 +2128,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
   var data={ kind:'bottle', notebook:activeTab, house:house, name:name,
     flanker:document.getElementById('bFlanker').value.trim(),
     inspired:document.getElementById('bInspired').value.trim(),
-    type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'), fill:getSingle('bFill'),
+    type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'), fill:bottleFill,
     price:document.getElementById('bPrice').value.trim(),
     size:document.getElementById('bSize').value.trim(),
     bottleNotes:document.getElementById('bNotes').value.trim(),
@@ -2414,7 +2473,7 @@ function exportCollection(){
     var scores=done.map(function(t){ return parseInt(t.rating); }).filter(function(n){ return n>0; });
     var bits=[];
     if(cpl(b)) bits.push(cpl(b));
-    if(b.fill!=='') bits.push((FILL_LABEL[b.fill]||b.fill+'%')+(mlLeft(b)?' (~'+Math.round(mlLeft(b))+'ml)':''));
+    if(b.fill!=='') bits.push(fillLabel(b.fill)+(mlLeft(b)?' (~'+Math.round(mlLeft(b))+'ml)':''));
     bits.push(done.length?done.length+' test'+(done.length>1?'s':''):'untested');
     if(scores.length) bits.push('avg '+(scores.reduce(function(a,n){ return a+n; },0)/scores.length).toFixed(1)+'/10');
     L.push('  '+bits.join(' · '));
