@@ -135,7 +135,8 @@ by finishing a test, so a fragrance stays unlisted until the day its video goes 
 keep working normally — and `…/?edit=1` always forces the editor if you land on the
 public view on a new device.
 
-The page updates a minute or two after you sync, once Pages redeploys.
+The page reads your log straight from the `data` branch, so it reflects a sync within
+moments — it does not wait for a site rebuild.
 
 ### What is actually public
 
