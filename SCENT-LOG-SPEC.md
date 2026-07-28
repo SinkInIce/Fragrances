@@ -46,7 +46,7 @@ Single key, personal scope:
 await window.storage.set('scent-log-tests', JSON.stringify({
   tests: Test[],
   activeTab: 'stevnscents' | 'fallowmark',
-  activeView: 'tests' | 'insights' | 'compare' | 'guide',
+  activeView: 'tests' | 'collection' | 'insights' | 'compare' | 'guide',
   sortBy: SortKey
 }), false);
 ```
@@ -60,6 +60,15 @@ interface Test {
   // Identity
   id: string;                    // 't' + timestamp + random
   notebook: 'stevnscents' | 'fallowmark';
+  kind: 'test' | 'bottle';       // 'bottle' = a Collection entry, not a wearing.
+                                 // Bottles share this shape but use only the identity,
+                                 // reference and economics fields. Every test-based view
+                                 // filters them out via isBottle().
+
+  // Collection-only
+  photo: string;                 // filename in data/photos/, blob held in IndexedDB
+  bottleNotes: string;           // free text about this specific bottle
+  added: string;                 // ISO, when it entered the collection
 
   // Naming — brand is REQUIRED, name is REQUIRED, flanker optional
   house: string;                 // brand, e.g. "Lattafa"
@@ -167,7 +176,7 @@ Two levels, both persisted:
 
 ```
 [ StevnScents | Fallowmark ]        ← notebook tabs (data partition + theme)
-[ Tests | Insights | Compare | Guide ]  ← view tabs
+[ Tests | Collection | Insights | Compare | Guide ]  ← view tabs
 ```
 
 ### 4.2 View: Tests
@@ -199,7 +208,23 @@ The primary working view.
 - Pagination at 30 records with "Show more"
 - "Copy all tests" export
 
-### 4.3 View: Insights
+### 4.3 View: Collection
+
+A catalogue of bottles owned, independent of whether they have been tested. A test can
+exist for something never owned (tried in a shop), and a bottle can be owned for months
+before its first wearing — so these are separate records, not two states of one thing.
+
+- One card per bottle: photo thumbnail, name with flanker, brand, type, concentration, size
+- Badges for cost/ml and either a completed-test count or `Untested`
+- Free-text search across brand, name, flanker, type, concentration and notes; appears past four bottles
+- Actions: **Edit** | **Test this** | **Remove**
+- **Test this** starts a wear test with identity and reference fields carried over, then switches to the Tests view
+- Sorted by brand then name
+
+Every bottle is public on the collection page — unlike tests, there is no per-item share
+toggle, by explicit choice.
+
+### 4.4 View: Insights
 
 Aggregate analysis over completed tests in the active notebook.
 
@@ -211,11 +236,11 @@ Aggregate analysis over completed tests in the active notebook.
 - **Collection leans** — scent family distribution bar chart
 - **Video ideas from your data** — rule-based generator producing concrete content prompts from the actual dataset (tier list when ≥3 S-tier exist, survivor format at ≥5 dupes, honest-callout when a poor performer exists, price-shock from the best value entry, compliment story from logged compliments, seasonal roundup at ≥3 in one season, side-by-side when ≥2 have stated inspirations)
 
-### 4.4 View: Compare
+### 4.5 View: Compare
 
 Two dropdowns select any two completed tests. Renders a side-by-side table across ~20 rows. Winning cell is highlighted per row where a comparison is objectively possible (longevity, cost/ml, tier, score, compliment count). Includes a copy-to-clipboard export.
 
-### 4.5 View: Guide
+### 4.6 View: Guide
 
 Twelve collapsible plain-language explainers, each ending with a quotable on-camera line:
 
@@ -351,8 +376,8 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
 
 1. **Full re-render on every interaction.** `render()` rebuilds all of `#content` and re-attaches listeners. Fine at 160 records with 30-per-page pagination; would need reworking at 1000+.
 2. **Search input focus restoration is manual.** Cursor position is saved and restored across the re-render — a workaround for the above.
-3. **No untested backlog.** The app only holds fragrances already tested. A ~160-bottle collection has no queue view showing what remains.
-4. **No photos.** Sandbox limitation.
+3. ~~**No untested backlog.**~~ Resolved. The Collection view catalogues owned bottles independently of whether they have been tested; each shows a completed-test count or `Untested`.
+4. ~~**No photos.**~~ Resolved once outside the sandbox. Bottle photos are downscaled to ~1200px JPEG on capture, held in IndexedDB, and synced as individual files under `data/photos/`. Records store only the filename, so the log JSON stays small enough to rewrite on every change.
 5. **No notification reminders** for the dry-down and skin-scent windows.
 6. ~~**No cross-device sync.**~~ Resolved. Optional GitHub-backed sync writes a shared
    JSON file to the repo via the Contents API, with a per-device token. Records carry
@@ -367,10 +392,10 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
 
 Ordered by value to the actual workflow:
 
-1. **Untested backlog / queue.** Add `status: 'queued' | 'active' | 'completed'`. A queue view lists owned-but-untested bottles; tapping one starts a test with identity fields pre-filled. Directly addresses the 160-bottle reality.
-2. **Photo capture per test.** Requires leaving the sandbox. Bottle shot + optional wear-context shot.
+1. ~~**Untested backlog / queue.**~~ Done, as the Collection view — see §4.3. Implemented as a `kind: 'bottle' | 'test'` discriminator on the shared record store rather than a status enum, since a bottle you own and a wearing of it are different things.
+2. ~~**Photo capture.**~~ Done for bottles in the Collection. A per-test wear-context shot is still open.
 3. **Check-in reminders.** Local notifications at ~45min and ~4h. Requires a real PWA or native shell.
-4. **Collection view separate from test history.** Currently one bottle tested three times appears as three records. A collection view would group by `house + name + flanker` and roll up results.
+4. ~~**Collection view separate from test history.**~~ Done. Bottles are first-class records; the card rolls up how many completed tests match on `house + name + flanker`.
 5. **Batch/reformulation comparison.** Same fragrance, different batches, side by side.
 6. **CSV / JSON export** in addition to clipboard text.
 7. **Fragrantica or similar lookup** to pre-fill note pyramids instead of manual entry.

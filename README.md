@@ -84,6 +84,23 @@ backup file.
 
 ---
 
+## Your collection
+
+The **Collection** tab is a catalogue of what you own, separate from wear tests — so you
+can test something in a shop without owning it, and own bottles you have not tested yet.
+
+Add a bottle with **+ Add to collection**: brand, name, type, concentration, price, size,
+notes, and a **photo**. Each card shows cost per ml and how many completed tests it has,
+or `Untested`. **Test this** starts a wear test with the details already filled in.
+
+**Photos** are downscaled to about 1200px on capture (a 3MB phone photo lands near
+200KB), stored on your device, and uploaded to the repo as separate image files under
+`data/photos/`. Your log file only ever stores the filename, which is what keeps it small
+enough to save on every keystroke.
+
+**Every bottle in your collection is public** — there is no per-bottle toggle, by your
+choice. That is different from tests, which stay private until you share each one.
+
 ## Your public page
 
 Followers get the same URL you use. With no token in their browser and no log of their
@@ -158,5 +175,6 @@ I'll set either up.
 | `sw.js` | Service worker — offline shell and font caching |
 | `icons/` | App icons (192, 512, and 180 for iOS) |
 | `data/scent-log.json` | Your synced log — created on first sync, and public |
+| `data/photos/` | Bottle photos, uploaded on sync — also public |
 | `SCENT-LOG-SPEC.md` | Design spec, data model and roadmap |
 | `.github/workflows/pages.yml` | Publishes the app to GitHub Pages |

@@ -199,6 +199,20 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
 .sync-note strong{ color:var(--ink); font-weight:700; }
 .badge.shared{ background:var(--accent-soft); color:var(--accent-deep); }
+.btn-sm{ padding:9px 14px; font-size:12.5px; }
+.bottle-card{ padding:14px; }
+.bottle-row{ display:flex; gap:14px; align-items:flex-start; }
+.bottle-thumb{ width:66px; height:66px; flex:0 0 66px; border-radius:5px; overflow:hidden; background:var(--paper-deep); display:flex; align-items:center; justify-content:center; }
+.bottle-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.bottle-thumb-empty{ color:var(--ink-soft); opacity:.45; font-size:20px; }
+.bottle-info{ flex:1; min-width:0; }
+.bottle-note{ font-size:12px; color:var(--ink-soft); line-height:1.5; margin-top:7px; }
+.bottle-actions{ display:flex; flex-wrap:wrap; gap:16px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line); }
+.photo-pick{ display:flex; gap:14px; align-items:center; }
+.photo-preview{ width:92px; height:92px; flex:0 0 92px; border-radius:6px; overflow:hidden; background:var(--paper-deep); display:flex; align-items:center; justify-content:center; }
+.photo-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
+.photo-pick-actions{ display:flex; flex-direction:column; gap:9px; align-items:flex-start; }
+@media (max-width:420px){ .vtab{ font-size:10.5px; padding:9px 2px; } }
 body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 .controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
 .sort-sel{ position:relative; }
@@ -306,6 +320,7 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 
   <div class="view-bar" id="viewBar">
     <div class="vtab" data-view="tests">Tests</div>
+    <div class="vtab" data-view="collection">Collection</div>
     <div class="vtab" data-view="insights">Insights</div>
     <div class="vtab" data-view="compare">Compare</div>
     <div class="vtab" data-view="guide">Guide</div>
@@ -330,7 +345,7 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 </div>
 
 <div class="fab-wrap" id="fabWrap">
-  <button class="btn btn-primary" id="newTestBtn">+ New test<span id="fabNotebookLabel" hidden></span></button>
+  <button class="btn btn-primary" id="newTestBtn"><span id="fabLabel">+ New test</span><span id="fabNotebookLabel" hidden></span></button>
 </div>
 
 <div class="overlay" id="newTestOverlay"><div class="sheet">
@@ -600,6 +615,55 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <button class="btn btn-ghost btn-stack" id="confirmNoBtn">Keep it</button>
 </div></div>
 
+<div class="overlay" id="bottleOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2 id="bottleTitle">Add to collection</h2>
+  <div class="sheet-sub">What you own. Start a wear test from any bottle later.</div>
+
+  <div class="field"><label>Photo <span class="opt">optional</span></label>
+    <div class="photo-pick">
+      <div class="photo-preview" id="bottlePhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
+      <div class="photo-pick-actions">
+        <button class="btn btn-ghost btn-sm" id="bottlePhotoBtn">Take or choose photo</button>
+        <button class="btn-danger-text" id="bottlePhotoClear">Remove photo</button>
+      </div>
+    </div>
+    <input type="file" id="bottlePhotoInput" accept="image/*" hidden>
+  </div>
+
+  <div class="field"><label>Brand / house</label>
+    <input type="text" id="bHouse" placeholder="e.g. Lattafa" autocomplete="off" list="brandList"></div>
+  <div class="field"><label>Fragrance name</label>
+    <input type="text" id="bName" placeholder="e.g. Khamrah" autocomplete="off"></div>
+  <div class="field"><label>Flanker <span class="opt">optional</span></label>
+    <input type="text" id="bFlanker" placeholder="e.g. Qahwa, Elixir, Intense" autocomplete="off"></div>
+  <div class="field"><label>Type</label>
+    <div class="rating-row" id="bType">
+      <div class="chip" data-val="Dupe">Dupe / Clone</div>
+      <div class="chip" data-val="Designer">Designer</div>
+      <div class="chip" data-val="Niche">Niche</div>
+      <div class="chip" data-val="Indie">Indie</div>
+    </div></div>
+  <div class="field"><label>Concentration</label>
+    <div class="rating-row" id="bConc">
+      <div class="chip sm" data-val="EDC">EDC</div>
+      <div class="chip sm" data-val="EDT">EDT</div>
+      <div class="chip sm" data-val="EDP">EDP</div>
+      <div class="chip sm" data-val="Extrait">Extrait</div>
+      <div class="chip sm" data-val="Parfum">Parfum</div>
+      <div class="chip sm" data-val="Oil / Attar">Oil</div>
+    </div></div>
+  <div class="two-col">
+    <div class="field"><label>Price paid</label><input type="number" id="bPrice" placeholder="35" inputmode="decimal"></div>
+    <div class="field"><label>Bottle size (ml)</label><input type="number" id="bSize" placeholder="100" inputmode="numeric"></div>
+  </div>
+  <div class="calc-out" id="bCplOut"></div>
+  <div class="field"><label>Notes <span class="opt">optional</span></label>
+    <textarea id="bNotes" placeholder="e.g. bought at the mall, batch smells stronger than the first bottle"></textarea></div>
+
+  <button class="btn btn-primary" id="saveBottleBtn">Save to collection</button>
+</div></div>
+
 <div class="overlay" id="syncOverlay"><div class="sheet">
   <div class="sheet-handle"></div>
   <h2>Sync across devices</h2>
@@ -631,7 +695,7 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 const KEY='scent-log-tests';
 let tests=[], activeTab='stevnscents', activeView='tests';
 let noteCtx=null, endId=null, openHistId=null, tick=null, searchQ='', cmpA='', cmpB='';
-let sortBy='recent', filters={}, filterOpen=false, visibleCount=30;
+let sortBy='recent', filters={}, filterOpen=false, visibleCount=30, colQ='';
 const urlParams=new URLSearchParams(location.search);
 let readOnly=false;   /* public visitor mode — no editing, no saving, no sync */
 const PAGE=30;
@@ -672,7 +736,8 @@ function norm(t){
     longevity:'', projection:'', sillage:'', families:[], seasons:[], occasions:[], complimentFactor:'',
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
-    gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false }, t);
+    gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
+    kind:'test', photo:'', added:'', bottleNotes:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -708,6 +773,84 @@ const store=(function(){
 const storeLabel={ artifact:'Saved in this artifact', local:'Saved on this device', memory:'Held in memory only' };
 let saveState='idle', lastSaved=null;
 
+/* ---- Photos ----------------------------------------------------------
+   A phone photo is megabytes; the whole log gets about 5MB of
+   localStorage. So images live in IndexedDB and sync as separate files
+   in the repo, leaving the log JSON small enough to write on every
+   change. Records store only the filename. */
+const PHOTO_DB='scent-log-photos', PHOTO_STORE='photos';
+let photoDBPromise=null;
+function photoDB(){
+  if(photoDBPromise) return photoDBPromise;
+  photoDBPromise=new Promise(function(res,rej){
+    if(!window.indexedDB){ rej(new Error('no indexeddb')); return; }
+    const r=indexedDB.open(PHOTO_DB,1);
+    r.onupgradeneeded=function(){ if(!r.result.objectStoreNames.contains(PHOTO_STORE)) r.result.createObjectStore(PHOTO_STORE); };
+    r.onsuccess=function(){ res(r.result); };
+    r.onerror=function(){ rej(r.error); };
+  });
+  return photoDBPromise;
+}
+async function photoPut(id,blob){
+  const db=await photoDB();
+  return new Promise(function(res,rej){
+    const tx=db.transaction(PHOTO_STORE,'readwrite');
+    tx.objectStore(PHOTO_STORE).put(blob,id);
+    tx.oncomplete=function(){ res(true); };
+    tx.onerror=function(){ rej(tx.error); };
+  });
+}
+async function photoGet(id){
+  try{
+    const db=await photoDB();
+    return await new Promise(function(res,rej){
+      const tx=db.transaction(PHOTO_STORE,'readonly');
+      const q=tx.objectStore(PHOTO_STORE).get(id);
+      q.onsuccess=function(){ res(q.result||null); };
+      q.onerror=function(){ rej(q.error); };
+    });
+  }catch(e){ return null; }
+}
+/* Downscale on capture — a raw phone photo is ~3MB, this lands near 200KB. */
+function compressImage(file,maxPx,quality){
+  return new Promise(function(res,rej){
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=function(){
+      URL.revokeObjectURL(url);
+      let w=img.naturalWidth, h=img.naturalHeight;
+      const scale=Math.min(1,(maxPx||1200)/Math.max(w,h));
+      w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      cv.toBlob(function(b){ b?res(b):rej(new Error('Could not read that image')); },'image/jpeg',quality||0.78);
+    };
+    img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error('Could not read that image')); };
+    img.src=url;
+  });
+}
+const photoURLCache={};
+function photoRemoteURL(id){
+  if(sync.owner&&sync.repo)
+    return 'https://raw.githubusercontent.com/'+sync.owner+'/'+sync.repo+'/'+(sync.branch||'main')+'/data/photos/'+id;
+  return 'data/photos/'+id;
+}
+async function photoSrc(id){
+  if(!id) return '';
+  if(photoURLCache[id]) return photoURLCache[id];
+  const b=await photoGet(id);
+  if(b){ photoURLCache[id]=URL.createObjectURL(b); return photoURLCache[id]; }
+  return photoRemoteURL(id);      /* taken on another device — use the published copy */
+}
+/* render() builds strings, so images are filled in afterwards. */
+function hydratePhotos(){
+  document.querySelectorAll('img[data-photo]').forEach(function(im){
+    const id=im.getAttribute('data-photo');
+    if(!id||im.dataset.done) return;
+    im.dataset.done='1';
+    photoSrc(id).then(function(src){ if(src) im.src=src; });
+  });
+}
+
 async function load(){
   let raw=null;
   try{ raw=await store.get(KEY); }catch(e){ raw=null; }
@@ -741,7 +884,10 @@ async function tryPublic(force){
     const res=await fetch('data/scent-log.json?_='+Date.now(),{cache:'no-store'});
     if(!res.ok) return false;
     const doc=await res.json();
-    const list=(doc&&Array.isArray(doc.tests))?doc.tests.map(norm).filter(function(t){ return t.shared&&t.completed; }):[];
+    /* Bottles are all public by design; tests only when explicitly shared. */
+    const list=(doc&&Array.isArray(doc.tests))?doc.tests.map(norm).filter(function(t){
+      return t.kind==='bottle' ? true : (t.shared&&t.completed);
+    }):[];
     if(!list.length&&!force) return false;
     tests=list; readOnly=true;
     const p=document.querySelector('header p');
@@ -831,6 +977,10 @@ async function loadSyncConfig(){
     const raw=await store.get(SYNC_KEY);
     if(raw) sync=Object.assign(sync,JSON.parse(raw));
   }catch(e){}
+  try{
+    const up=await store.get(PHOTOS_UP_KEY);
+    if(up) uploadedPhotos=JSON.parse(up)||{};
+  }catch(e){}
   syncState=syncConfigured()?'idle':'off';
 }
 async function saveSyncConfig(){ try{ await store.set(SYNC_KEY,JSON.stringify(sync)); }catch(e){} }
@@ -855,6 +1005,42 @@ async function ghRead(){
   try{ doc=JSON.parse(b64dec(j.content)); }catch(e){ doc=null; }
   return {doc:doc,sha:j.sha||null};
 }
+/* Photos go up as individual files so the log JSON stays small. Tracked
+   locally so an already-uploaded photo is not re-sent on every sync. */
+const PHOTOS_UP_KEY='scent-log-photos-uploaded';
+let uploadedPhotos={};
+function blobToBase64(blob){
+  return new Promise(function(res,rej){
+    const fr=new FileReader();
+    fr.onload=function(){ const s=String(fr.result); res(s.slice(s.indexOf(',')+1)); };
+    fr.onerror=function(){ rej(fr.error); };
+    fr.readAsDataURL(blob);
+  });
+}
+async function ghPutPhoto(id,b64){
+  const url='https://api.github.com/repos/'+encodeURIComponent(sync.owner)+'/'+encodeURIComponent(sync.repo)
+    +'/contents/data/photos/'+encodeURIComponent(id);
+  const res=await fetch(url,{ method:'PUT', headers:Object.assign({'Content-Type':'application/json'},ghHeaders()),
+    body:JSON.stringify({ message:'Scent Log photo', content:b64, branch:sync.branch||'main' }) });
+  if(res.ok) return true;
+  if(res.status===422||res.status===409) return true;   /* already there */
+  return false;
+}
+async function syncPhotos(){
+  const wanted=tests.filter(function(t){ return t.kind==='bottle'&&t.photo; }).map(function(t){ return t.photo; });
+  let changed=false;
+  for(let i=0;i<wanted.length;i++){
+    const id=wanted[i];
+    if(uploadedPhotos[id]) continue;
+    const blob=await photoGet(id);
+    if(!blob) continue;                                  /* taken on another device */
+    try{
+      if(await ghPutPhoto(id,await blobToBase64(blob))){ uploadedPhotos[id]=1; changed=true; }
+    }catch(e){ /* leave it for the next sync */ }
+  }
+  if(changed){ try{ await store.set(PHOTOS_UP_KEY,JSON.stringify(uploadedPhotos)); }catch(e){} }
+}
+
 async function ghWrite(doc,sha){
   const body={ message:'Scent Log sync', content:b64enc(JSON.stringify(doc,null,2)), branch:sync.branch||'main' };
   if(sha) body.sha=sha;
@@ -879,6 +1065,7 @@ async function syncNow(manual){
       if(ok) settled=true;
     }
     if(!settled) throw new Error('Another device was writing — try again in a moment');
+    await syncPhotos();
     seedSnapshot();
     await persist();
     syncState='idle'; syncMsg=''; lastSync=new Date();
@@ -927,18 +1114,73 @@ function renderDataBar(){
   }
 }
 function theme(){ document.body.className='nb-'+activeTab+(readOnly?' public-mode':''); document.getElementById('fabNotebookLabel').textContent=nbLabel(activeTab); }
-function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!t.completed&&t.notebook===activeTab)) render(); },60000); }
+function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!isBottle(t)&&!t.completed&&t.notebook===activeTab)) render(); },60000); }
 
 function render(){
   document.querySelectorAll('#tabBar .tab').forEach(t=>t.classList.toggle('selected',t.dataset.tab===activeTab));
   document.querySelectorAll('#viewBar .vtab').forEach(t=>t.classList.toggle('selected',t.dataset.view===activeView));
-  document.getElementById('fabWrap').classList.toggle('hidden', activeView!=='tests');
+  document.getElementById('fabWrap').classList.toggle('hidden', activeView!=='tests'&&activeView!=='collection');
+  const fl=document.getElementById('fabLabel');
+  if(fl) fl.textContent=activeView==='collection'?'+ Add to collection':'+ New test';
   const c=document.getElementById('content');
   if(activeView==='tests') c.innerHTML=viewTests();
+  else if(activeView==='collection') c.innerHTML=viewCollection();
   else if(activeView==='insights') c.innerHTML=viewInsights();
   else if(activeView==='compare') c.innerHTML=viewCompare();
   else c.innerHTML=viewGuide();
   bind();
+  hydratePhotos();
+}
+
+/* Bottles you own and wear tests share one store; kind keeps them apart. */
+function isBottle(t){ return t.kind==='bottle'; }
+function testRecords(){ return tests.filter(function(t){ return !isBottle(t); }); }
+
+function viewCollection(){
+  let list=tests.filter(t=>isBottle(t)&&t.notebook===activeTab);
+  if(colQ){ const q=colQ.toLowerCase();
+    list=list.filter(t=>[t.house,t.name,t.flanker,t.type,t.concentration,t.bottleNotes,t.inspired,(t.families||[]).join(' ')].join(' ').toLowerCase().indexOf(q)>-1);
+  }
+  list=list.sort((a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name));
+  const all=tests.filter(t=>isBottle(t)&&t.notebook===activeTab).length;
+
+  let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+(all?' · '+all:'')+'</div>';
+  if(all>4) h+='<div class="search-wrap"><input type="text" id="colSearch" placeholder="Search your collection..." value="'+esc(colQ)+'"></div>';
+  if(!all){
+    h+='<div class="empty-state"><div class="icon">&#9672;</div><p>'+
+      (readOnly?'Nothing in the collection yet.':'Nothing catalogued yet. Add the bottles you own — you can start a test from any of them later.')+'</p></div>';
+    return h;
+  }
+  if(!list.length) return h+'<div class="empty-state"><p>Nothing matches that search.</p></div>';
+  if(colQ&&list.length!==all) h+='<div class="result-count">Showing <b>'+list.length+'</b> of '+all+'</div>';
+  list.forEach(b=>h+=cardBottle(b));
+  return h;
+}
+
+function cardBottle(b){
+  const testCount=testRecords().filter(t=>t.completed&&t.house===b.house&&t.name===b.name&&t.flanker===b.flanker).length;
+  const meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(' · ');
+  return '<div class="card bottle-card" data-bottle="'+b.id+'">'+
+    '<div class="bottle-row">'+
+      '<div class="bottle-thumb">'+
+        (b.photo?'<img data-photo="'+esc(b.photo)+'" alt="" loading="lazy">':'<span class="bottle-thumb-empty">&#9672;</span>')+
+      '</div>'+
+      '<div class="bottle-info">'+
+        '<div class="hist-name">'+esc(b.name)+(b.flanker?' <span class="flanker-name">'+esc(b.flanker)+'</span>':'')+'</div>'+
+        '<div class="hist-meta">'+(b.house?esc(b.house):'')+(meta?' · '+esc(meta):'')+'</div>'+
+        '<div class="hist-badges">'+
+          (cpl(b)?'<div class="badge">'+cpl(b)+'</div>':'')+
+          (testCount?'<div class="badge">'+testCount+' test'+(testCount>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
+        '</div>'+
+        (b.bottleNotes?'<div class="bottle-note">'+esc(b.bottleNotes)+'</div>':'')+
+      '</div>'+
+    '</div>'+
+    (readOnly?'':'<div class="bottle-actions">'+
+      '<button class="btn-text" data-act="bottleedit" data-bottle="'+b.id+'">Edit</button>'+
+      '<button class="btn-text" data-act="bottletest" data-bottle="'+b.id+'">Test this</button>'+
+      '<button class="btn-danger-text" data-act="bottledel" data-bottle="'+b.id+'">Remove</button>'+
+    '</div>')+
+  '</div>';
 }
 
 function activeFilterCount(){ let n=0; for(const k in filters){ if((filters[k]||[]).length) n+=filters[k].length; } return n; }
@@ -974,7 +1216,7 @@ function sortList(arr){
 }
 
 function viewTests(){
-  const scoped=tests.filter(t=>t.notebook===activeTab&&(!readOnly||(t.shared&&t.completed)));
+  const scoped=tests.filter(t=>!isBottle(t)&&t.notebook===activeTab&&(!readOnly||(t.shared&&t.completed)));
   const act=readOnly?[]:scoped.filter(t=>!t.completed).sort((a,b)=>new Date(b.startTime)-new Date(a.startTime));
   const allDone=scoped.filter(t=>t.completed);
   if(readOnly&&!allDone.length) return '<div class="empty-state"><div class="icon">&#9672;</div><p>Nothing published here yet — check back soon.</p></div>';
@@ -1125,7 +1367,7 @@ function cardHist(t){
 }
 
 function viewInsights(){
-  const s=tests.filter(t=>t.notebook===activeTab&&t.completed);
+  const s=tests.filter(t=>!isBottle(t)&&t.notebook===activeTab&&t.completed);
   if(s.length<1) return '<div class="empty-state"><div class="icon">&#9719;</div><p>Finish a few tests and this fills up with patterns across your collection — plus video ideas pulled from your own data.</p></div>';
   const withL=s.filter(t=>longHrs[t.longevity]);
   const avgL=withL.length?(withL.reduce((a,t)=>a+longHrs[t.longevity],0)/withL.length).toFixed(1):'-';
@@ -1185,7 +1427,7 @@ function viewInsights(){
 }
 
 function viewCompare(){
-  const s=tests.filter(t=>t.notebook===activeTab&&t.completed);
+  const s=tests.filter(t=>!isBottle(t)&&t.notebook===activeTab&&t.completed);
   if(s.length<2) return '<div class="empty-state"><div class="icon">&#8646;</div><p>Finish two tests and you can put them head to head here \u2014 the fastest way to build a dupe-vs-original video.</p></div>';
   const opt=sel=>'<option value="">Choose...</option>'+s.map(t=>'<option value="'+t.id+'"'+(sel===t.id?' selected':'')+'>'+esc(fullTitle(t))+'</option>').join('');
   let h='<div class="cmp-selects"><select id="cmpA">'+opt(cmpA)+'</select><select id="cmpB">'+opt(cmpB)+'</select></div>';
@@ -1317,6 +1559,9 @@ function bind(){
         const st=tests.filter(function(x){ return x.id===id; })[0];
         if(st){ st.shared=!st.shared; save(); render(); toast(st.shared?'Added to your public page':'Removed from your public page'); }
       }
+      else if(a==='bottleedit') openBottle(el.dataset.bottle);
+      else if(a==='bottletest') testFromBottle(el.dataset.bottle);
+      else if(a==='bottledel') askDelete(el.dataset.bottle);
       else if(a==='exportall') exportAll();
       else if(a==='copycmp') copyCmp();
       else if(a==='clearfilters'){ filters={}; visibleCount=PAGE; render(); }
@@ -1334,6 +1579,10 @@ function bind(){
   document.querySelectorAll('.acc').forEach(function(a){
     a.querySelector('.acc-head').addEventListener('click',function(){ a.classList.toggle('open'); });
   });
+
+  var cs=document.getElementById('colSearch');
+  if(cs) cs.addEventListener('input',function(e){ colQ=e.target.value; var p=e.target.selectionStart; render();
+    var n=document.getElementById('colSearch'); if(n){ n.focus(); n.setSelectionRange(p,p); } });
 
   var ss=document.getElementById('sortSel');
   if(ss) ss.addEventListener('change',function(e){ sortBy=e.target.value; visibleCount=PAGE; save(); render(); });
@@ -1362,7 +1611,7 @@ var pendingDelete=null;
 function askDelete(id){
   var t=tests.filter(function(x){return x.id===id;})[0]; if(!t) return;
   pendingDelete=id;
-  document.getElementById('confirmTitle').textContent = t.completed ? 'Delete this test?' : 'Discard this test?';
+  document.getElementById('confirmTitle').textContent = isBottle(t) ? 'Remove from your collection?' : (t.completed ? 'Delete this test?' : 'Discard this test?');
   document.getElementById('confirmSub').textContent = fullTitle(t) + " \u2014 this can't be undone.";
   show('confirmOverlay');
 }
@@ -1410,7 +1659,86 @@ function updCpl(){ var p=parseFloat(document.getElementById('fPrice').value), s=
 document.getElementById('fPrice').addEventListener('input',updCpl);
 document.getElementById('fSize').addEventListener('input',updCpl);
 
+/* ---- Collection ------------------------------------------------------ */
+let bottleId=null, bottlePhoto='';
+function fillBrandList(){
+  var seen={}; tests.forEach(function(t){ if(t.house) seen[t.house]=1; });
+  document.getElementById('brandList').innerHTML=Object.keys(seen).sort().map(function(b){ return '<option value="'+esc(b)+'">'; }).join('');
+}
+function renderBottlePhoto(){
+  var el=document.getElementById('bottlePhotoPreview');
+  if(!bottlePhoto){ el.innerHTML='<span class="bottle-thumb-empty">&#9672;</span>'; return; }
+  el.innerHTML='<img alt="">';
+  photoSrc(bottlePhoto).then(function(src){ var im=el.querySelector('img'); if(im&&src) im.src=src; });
+}
+function updBottleCpl(){
+  var p=parseFloat(document.getElementById('bPrice').value), s=parseFloat(document.getElementById('bSize').value);
+  document.getElementById('bCplOut').textContent=(p&&s)?'$'+(p/s).toFixed(2)+' per ml':'';
+}
+function openBottle(id){
+  var b=id?tests.filter(function(x){ return x.id===id; })[0]:null;
+  bottleId=b?id:null; bottlePhoto=b?b.photo:'';
+  document.getElementById('bottleTitle').textContent=b?'Edit bottle':'Add to collection';
+  document.getElementById('bHouse').value=b?b.house:'';
+  document.getElementById('bName').value=b?b.name:'';
+  document.getElementById('bFlanker').value=b?b.flanker:'';
+  setSingle('bType',b?b.type:'Dupe');
+  setSingle('bConc',b?b.concentration:'');
+  document.getElementById('bPrice').value=b?b.price:'';
+  document.getElementById('bSize').value=b?b.size:'';
+  document.getElementById('bNotes').value=b?b.bottleNotes:'';
+  document.getElementById('saveBottleBtn').textContent=b?'Save changes':'Save to collection';
+  fillBrandList(); updBottleCpl(); renderBottlePhoto();
+  show('bottleOverlay');
+}
+/* Start a wear test from a bottle you own, carrying the identity across. */
+function testFromBottle(id){
+  var b=tests.filter(function(x){ return x.id===id; })[0]; if(!b) return;
+  var t=norm({ id:uid(), kind:'test', notebook:b.notebook, house:b.house, name:b.name, flanker:b.flanker,
+    type:b.type, concentration:b.concentration, inspired:b.inspired, price:b.price, size:b.size,
+    perfumer:b.perfumer, year:b.year, batch:b.batch, sprays:'3',
+    startTime:new Date().toISOString(), completed:false });
+  tests.push(t);
+  activeView='tests'; visibleCount=PAGE;
+  save(); render(); toast('Test started from '+fullName(b));
+}
+document.getElementById('bottlePhotoBtn').addEventListener('click',function(){ document.getElementById('bottlePhotoInput').click(); });
+document.getElementById('bottlePhotoClear').addEventListener('click',function(){ bottlePhoto=''; renderBottlePhoto(); });
+document.getElementById('bottlePhotoInput').addEventListener('change',async function(e){
+  var f=e.target.files&&e.target.files[0]; e.target.value='';
+  if(!f) return;
+  try{
+    var blob=await compressImage(f,1200,0.78);
+    var pid='p_'+Date.now()+Math.random().toString(36).slice(2,7)+'.jpg';
+    await photoPut(pid,blob);
+    bottlePhoto=pid; renderBottlePhoto();
+    toast('Photo added — '+Math.round(blob.size/1024)+'KB');
+  }catch(err){ toast(err.message||'Could not use that image'); }
+});
+document.getElementById('bPrice').addEventListener('input',updBottleCpl);
+document.getElementById('bSize').addEventListener('input',updBottleCpl);
+document.getElementById('saveBottleBtn').addEventListener('click',function(){
+  var house=document.getElementById('bHouse').value.trim(), name=document.getElementById('bName').value.trim();
+  if(!house){ toast('Add the brand first'); document.getElementById('bHouse').focus(); return; }
+  if(!name){ toast('Add a fragrance name'); document.getElementById('bName').focus(); return; }
+  var data={ kind:'bottle', notebook:activeTab, house:house, name:name,
+    flanker:document.getElementById('bFlanker').value.trim(),
+    type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'),
+    price:document.getElementById('bPrice').value.trim(),
+    size:document.getElementById('bSize').value.trim(),
+    bottleNotes:document.getElementById('bNotes').value.trim(),
+    photo:bottlePhoto };
+  if(bottleId){
+    var b=tests.filter(function(x){ return x.id===bottleId; })[0];
+    if(b) Object.assign(b,data);
+  } else {
+    tests.push(norm(Object.assign({ id:uid(), added:new Date().toISOString() },data)));
+  }
+  bottleId=null; save(); hide('bottleOverlay'); render(); toast('Saved to your collection');
+});
+
 document.getElementById('newTestBtn').addEventListener('click',function(){
+  if(activeView==='collection'){ openBottle(null); return; }
   ['fName','fHouse','fFlanker','fInspired','fPrice','fSize','fBatch','fYear','fPerfumer','fContext'].forEach(function(i){ document.getElementById(i).value=''; });
   var seen={}; tests.forEach(function(t){ if(t.house) seen[t.house]=1; });
   document.getElementById('brandList').innerHTML=Object.keys(seen).sort().map(function(b){ return '<option value="'+esc(b)+'">'; }).join('');
@@ -1635,7 +1963,7 @@ function testToText(t){
 function clip(txt,msg){ if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast(msg); }).catch(function(){ toast('Copy failed'); }); } else toast('Copy not supported here'); }
 function copyOne(id){ var t=tests.filter(function(x){return x.id===id;})[0]; if(t) clip(testToText(t),'Copied \u2014 paste into your script'); }
 function exportAll(){
-  var s=tests.filter(function(t){return t.notebook===activeTab&&t.completed;}).sort(function(a,b){return new Date(a.startTime)-new Date(b.startTime);});
+  var s=tests.filter(function(t){return !isBottle(t)&&t.notebook===activeTab&&t.completed;}).sort(function(a,b){return new Date(a.startTime)-new Date(b.startTime);});
   if(!s.length){ toast('Nothing to export yet'); return; }
   clip(nbLabel(activeTab)+' \u2014 Scent Log\n\n'+s.map(testToText).join('\n---\n\n'), s.length+' tests copied');
 }
