@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:22:17.206Z",
+  "updatedAt": "2026-07-28T23:22:28.393Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1035,7 +1035,7 @@
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "60",
+      "price": "85",
       "size": "50",
       "batch": "2M02",
       "context": "",
@@ -1077,7 +1077,7 @@
       "id": "t1785273512486mk6dno",
       "name": "Fahrenheit",
       "type": "Designer",
-      "updatedAt": "2026-07-28T23:19:49.865Z"
+      "updatedAt": "2026-07-28T23:22:25.723Z"
     },
     {
       "notebook": "stevnscents",
