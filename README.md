@@ -98,6 +98,17 @@ Add a bottle with **+ Add a bottle**: brand, name, type, concentration, price, s
 notes, and a **photo**. Each card shows cost per ml, how many completed tests it has (or
 `Untested`), and its average score.
 
+At the top you get **collection stats**: bottles owned, total spent, total ml, average
+cost per ml, tested vs untested, a breakdown by type, your biggest brands, spend by
+brand, and your cheapest and priciest bottles per ml. Money stats count only bottles that
+actually have a price and tell you how many that was, rather than quietly averaging over
+blanks.
+
+**You should not have to type the same fragrance twice.** When you start adding a bottle
+you have already tested (or already own), a prompt appears offering to reuse the details
+— type, concentration, inspired-by, price, size. It only fills blanks, so nothing you
+have typed gets overwritten.
+
 **Tap a bottle to open it** and you get its full test history, plus four actions:
 
 | Action | What it does |

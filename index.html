@@ -214,6 +214,13 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .sync-line.warn{ color:var(--wine); }
 .sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
 .sync-note strong{ color:var(--ink); font-weight:700; }
+.prefill-hint[hidden]{ display:none; }   /* an author display rule beats the hidden attribute */
+.prefill-hint{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  background:var(--accent-soft); border:1px solid rgba(184,130,60,.3); border-radius:6px;
+  padding:11px 13px; margin:-4px 0 16px; font-size:12px; color:var(--ink); line-height:1.45; }
+.prefill-hint button{ min-height:38px; padding:8px 12px; border:1.5px solid var(--accent-deep);
+  border-radius:5px; background:#fff; color:var(--accent-deep); font-weight:700; text-decoration:none;
+  white-space:nowrap; }
 .badge.shared{ background:var(--accent-soft); color:var(--accent-deep); }
 .btn-sm{ padding:9px 14px; font-size:12.5px; }
 .bottle-card{ padding:14px; }
@@ -675,6 +682,10 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
     <input type="text" id="bName" placeholder="e.g. Khamrah" autocomplete="off"></div>
   <div class="field"><label>Flanker <span class="opt">optional</span></label>
     <input type="text" id="bFlanker" placeholder="e.g. Qahwa, Elixir, Intense" autocomplete="off"></div>
+  <div class="prefill-hint" id="bottlePrefill" hidden>
+    <span id="bottlePrefillText">You have logged this before.</span>
+    <button class="btn-text" id="bottlePrefillBtn">Fill in the rest</button>
+  </div>
   <div class="field"><label>Type</label>
     <div class="rating-row" id="bType">
       <div class="chip" data-val="Dupe">Dupe / Clone</div>
@@ -1213,15 +1224,19 @@ function viewCollection(){
   list=list.sort((a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name));
   const all=tests.filter(t=>isBottle(t)&&t.notebook===activeTab).length;
 
+  /* The stats panel carries the counts; only repeat them in the header when
+     it is not showing (searching, or too few bottles to be worth charting). */
+  const showStats=!colQ&&all>=2;
   const untested=tests.filter(t=>isBottle(t)&&t.notebook===activeTab&&!bottleTests(t).some(x=>x.completed)).length;
-  let h='<div class="section-label">'+(readOnly?'The collection':'Bottles owned')+(all?' · '+all:'')+
-    (!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
+  let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+
+    (!showStats&&all?' · '+all:'')+(!showStats&&!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
   if(all>4) h+='<div class="search-wrap"><input type="text" id="colSearch" placeholder="Search your collection..." value="'+esc(colQ)+'"></div>';
   if(!all){
     h+='<div class="empty-state"><div class="icon">&#9672;</div><p>'+
       (readOnly?'Nothing in the collection yet.':'Nothing catalogued yet. Add the bottles you own — you can start a test from any of them later.')+'</p></div>';
     return h;
   }
+  if(showStats) h+=collectionStats(tests.filter(t=>isBottle(t)&&t.notebook===activeTab));
   if(!list.length) return h+'<div class="empty-state"><p>Nothing matches that search.</p></div>';
   if(colQ&&list.length!==all) h+='<div class="result-count">Showing <b>'+list.length+'</b> of '+all+'</div>';
   list.forEach(b=>h+=cardBottle(b));
@@ -1238,6 +1253,58 @@ function bottleTests(b){
     if(t.bottleId) return t.bottleId===b.id;
     return t.house===b.house&&t.name===b.name&&t.flanker===b.flanker;
   }).sort(function(x,y){ return new Date(y.startTime)-new Date(x.startTime); });
+}
+
+/* What the collection is worth and what is in it. Money stats only count
+   bottles that actually carry a price, and say so, rather than quietly
+   averaging over blanks. */
+function collectionStats(list){
+  if(list.length<2) return '';
+  const priced=list.filter(b=>parseFloat(b.price)>0);
+  const sized=list.filter(b=>parseFloat(b.size)>0);
+  const both=list.filter(b=>parseFloat(b.price)>0&&parseFloat(b.size)>0);
+  const spent=priced.reduce((a,b)=>a+parseFloat(b.price),0);
+  const ml=sized.reduce((a,b)=>a+parseFloat(b.size),0);
+  const avgCpl=both.length?both.reduce((a,b)=>a+cplNum(b),0)/both.length:0;
+  const tested=list.filter(b=>bottleTests(b).some(t=>t.completed)).length;
+  const money=n=>'$'+Math.round(n).toLocaleString();
+
+  let h='<div class="stat-grid">'+
+    '<div class="stat-box"><div class="n">'+list.length+'</div><div class="l">Bottles owned</div></div>'+
+    '<div class="stat-box"><div class="n'+(spent>=10000?' sm':'')+'">'+(priced.length?money(spent):'—')+'</div>'+
+      '<div class="l">Spent'+(priced.length&&priced.length<list.length?' · '+priced.length+' priced':'')+'</div></div>'+
+    '<div class="stat-box"><div class="n'+(ml>=10000?' sm':'')+'">'+(ml?Math.round(ml).toLocaleString():'—')+'</div><div class="l">Total ml</div></div>'+
+    '<div class="stat-box"><div class="n sm">'+(avgCpl?'$'+avgCpl.toFixed(2):'—')+'</div><div class="l">Avg cost / ml</div></div>'+
+  '</div>'+
+  '<div class="result-count" style="margin-top:2px"><b>'+tested+'</b> tested · <b>'+(list.length-tested)+'</b> still untested</div>';
+
+  const tc={}; list.forEach(b=>{ if(b.type) tc[b.type]=(tc[b.type]||0)+1; });
+  const types=Object.keys(tc).map(k=>[k,tc[k]]).sort((a,b)=>b[1]-a[1]);
+  if(types.length>1) h+='<div class="result-count">'+types.map(t=>'<b>'+t[1]+'</b> '+esc(t[0].toLowerCase())).join(' · ')+'</div>';
+
+  const bc={}; list.forEach(b=>{ const k=b.house||'(no brand)'; bc[k]=(bc[k]||0)+1; });
+  const brands=Object.keys(bc).map(k=>[k,bc[k]]).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if(brands.length>1&&brands[0][1]>1){ const mx=brands[0][1];
+    h+='<div class="section-label">Most of your shelf</div><div class="card">'+
+      brands.map(b=>'<div class="bar-row"><div class="bn">'+esc(b[0])+'</div><div class="bar-track">'+
+        '<div class="bar-fill" style="width:'+(b[1]/mx*100)+'%"></div></div><div class="bv">'+b[1]+'</div></div>').join('')+
+    '</div>';
+  }
+
+  const spendBy={}; priced.forEach(b=>{ const k=b.house||'(no brand)'; spendBy[k]=(spendBy[k]||0)+parseFloat(b.price); });
+  const topSpend=Object.keys(spendBy).map(k=>[k,spendBy[k]]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(topSpend.length>1) h+='<div class="section-label">Spent by brand</div><div class="card">'+
+    topSpend.map(x=>'<div class="rank-row"><div class="rn">'+esc(x[0])+'</div><div class="rv">'+money(x[1])+'</div></div>').join('')+'</div>';
+
+  if(both.length>1){
+    const byCpl=both.slice().sort((a,b)=>cplNum(a)-cplNum(b));
+    const rows=[[byCpl[0],'Cheapest per ml'],[byCpl[byCpl.length-1],'Priciest per ml']];
+    h+='<div class="section-label">Cost spread</div><div class="card">'+
+      rows.map(r=>'<div class="rank-row"><div class="rn">'+esc(fullName(r[0]))+
+        '<small>'+esc(r[1])+(r[0].house?' · '+esc(r[0].house):'')+'</small></div>'+
+        '<div class="rv">'+cpl(r[0])+'</div></div>').join('')+'</div>';
+  }
+  return h;
 }
 
 function cardBottle(b){
@@ -1804,6 +1871,48 @@ function updBottleCpl(){
   var p=parseFloat(document.getElementById('bPrice').value), s=parseFloat(document.getElementById('bSize').value);
   document.getElementById('bCplOut').textContent=(p&&s)?'$'+(p/s).toFixed(2)+' per ml':'';
 }
+/* Cataloguing 160 bottles by hand is the real cost here. Anything already
+   logged — a past test, another bottle — can supply the reference fields
+   again, so the same details are only ever typed once. */
+function findPrior(house,name,excludeId){
+  var h=(house||'').trim().toLowerCase(), n=(name||'').trim().toLowerCase();
+  if(!h||!n) return null;
+  var hits=tests.filter(function(t){
+    return t.id!==excludeId && (t.house||'').trim().toLowerCase()===h && (t.name||'').trim().toLowerCase()===n
+      && (t.concentration||t.inspired||t.price||t.perfumer||t.year||(t.topNotes||''));
+  });
+  hits.sort(function(a,b){ return String(stampOf(b)).localeCompare(String(stampOf(a))); });
+  return hits[0]||null;
+}
+function refreshBottlePrefill(){
+  var el=document.getElementById('bottlePrefill');
+  var prior=findPrior(document.getElementById('bHouse').value,document.getElementById('bName').value,bottleId);
+  if(!prior){ el.hidden=true; el.dataset.from=''; return; }
+  el.hidden=false; el.dataset.from=prior.id;
+  document.getElementById('bottlePrefillText').textContent=
+    isBottle(prior)?'Already in your collection — reuse its details?':'You have tested this before — reuse those details?';
+}
+function applyBottlePrefill(){
+  var el=document.getElementById('bottlePrefill');
+  var prior=tests.filter(function(x){ return x.id===el.dataset.from; })[0];
+  if(!prior) return;
+  var filled=[];
+  function put(id,val,label){
+    var f=document.getElementById(id);
+    if(val&&!f.value){ f.value=val; filled.push(label); }
+  }
+  put('bFlanker',prior.flanker,'flanker');
+  put('bInspired',prior.inspired,'inspired by');
+  put('bPrice',prior.price,'price');
+  put('bSize',prior.size,'size');
+  if(prior.type&&!getSingle('bType')){ setSingle('bType',prior.type); filled.push('type'); }
+  if(prior.concentration&&!getSingle('bConc')){ setSingle('bConc',prior.concentration); filled.push('concentration'); }
+  if(prior.type&&getSingle('bType')==='Dupe'&&prior.type!=='Dupe'){ setSingle('bType',prior.type); filled.push('type'); }
+  updBottleCpl();
+  el.hidden=true;
+  toast(filled.length?'Filled in '+filled.join(', '):'Nothing left to fill');
+}
+
 function openBottle(id){
   var b=id?tests.filter(function(x){ return x.id===id; })[0]:null;
   bottleId=b?id:null; bottlePhoto=b?b.photo:'';
@@ -1819,6 +1928,8 @@ function openBottle(id){
   document.getElementById('bNotes').value=b?b.bottleNotes:'';
   document.getElementById('saveBottleBtn').textContent=b?'Save changes':'Save to collection';
   fillBrandList(); updBottleCpl(); renderBottlePhoto();
+  document.getElementById('bottlePrefill').hidden=true;
+  if(!b) refreshBottlePrefill();          /* only offer it while adding something new */
   show('bottleOverlay');
 }
 /* Start a wear test from a bottle you own, carrying the identity across. */
@@ -1886,6 +1997,9 @@ document.getElementById('bottlePhotoInput').addEventListener('change',async func
     toast('Photo added — '+Math.round(blob.size/1024)+'KB');
   }catch(err){ toast(err.message||'Could not use that image'); }
 });
+document.getElementById('bHouse').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
+document.getElementById('bName').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
+document.getElementById('bottlePrefillBtn').addEventListener('click',applyBottlePrefill);
 document.getElementById('bPrice').addEventListener('input',updBottleCpl);
 document.getElementById('bSize').addEventListener('input',updBottleCpl);
 document.getElementById('saveBottleBtn').addEventListener('click',function(){
