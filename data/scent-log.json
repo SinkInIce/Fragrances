@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T17:17:39.821Z",
+  "updatedAt": "2026-07-28T17:17:45.617Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -60,6 +60,7 @@
       "photo": "",
       "added": "",
       "bottleNotes": "",
+      "bottleId": "",
       "id": "t1785255848903vtc30l",
       "name": "High Roller",
       "type": "Dupe",
