@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:16:58.090Z",
+  "updatedAt": "2026-07-28T23:17:44.458Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -274,14 +274,14 @@
       "house": "Creed",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
+      "price": "375",
       "size": "75",
-      "batch": "",
+      "batch": "75008",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -321,7 +321,7 @@
       "id": "t1785273512486vzq9nl",
       "name": "Aventus Absolu",
       "type": "Niche",
-      "updatedAt": "2026-07-28T23:16:43.376Z"
+      "updatedAt": "2026-07-28T23:17:41.638Z"
     },
     {
       "notebook": "stevnscents",
