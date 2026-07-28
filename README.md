@@ -98,6 +98,10 @@ Add a bottle with **+ Add a bottle**: brand, name, type, concentration, price, s
 notes, and a **photo**. Each card shows cost per ml, how many completed tests it has (or
 `Untested`), and its average score.
 
+Each bottle can also record **how full it is now** — Full, ¾, half, ¼, nearly out, empty.
+A rough eyeball is enough. It drives how much is still on your shelf, what that is worth,
+and a **Running low** list of anything at a quarter or less.
+
 At the top you get **collection stats**: bottles owned, total spent, total ml, average
 cost per ml, tested vs untested, a breakdown by type, your biggest brands, spend by
 brand, and your cheapest and priciest bottles per ml. Money stats count only bottles that

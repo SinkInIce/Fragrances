@@ -705,6 +705,16 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <div class="chip sm" data-val="Parfum">Parfum</div>
       <div class="chip sm" data-val="Oil / Attar">Oil</div>
     </div></div>
+  <div class="field"><label>How full is it now <span class="opt">optional</span></label>
+    <div class="rating-row" id="bFill">
+      <div class="chip sm" data-val="100">Full</div>
+      <div class="chip sm" data-val="75">&frac34;</div>
+      <div class="chip sm" data-val="50">Half</div>
+      <div class="chip sm" data-val="25">&frac14;</div>
+      <div class="chip sm" data-val="10">Nearly out</div>
+      <div class="chip sm" data-val="0">Empty</div>
+    </div>
+    <div class="helper">A rough eyeball is fine — it drives what is left on your shelf and what it is worth.</div></div>
   <div class="two-col">
     <div class="field"><label>Price paid</label><input type="number" id="bPrice" placeholder="35" inputmode="decimal"></div>
     <div class="field"><label>Bottle size (ml)</label><input type="number" id="bSize" placeholder="100" inputmode="numeric"></div>
@@ -791,7 +801,7 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'' }, t);
+    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'', fill:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -1258,6 +1268,17 @@ function bottleTests(b){
 /* What the collection is worth and what is in it. Money stats only count
    bottles that actually carry a price, and say so, rather than quietly
    averaging over blanks. */
+const FILL_LABEL={'100':'Full','75':'\u00be full','50':'Half full','25':'\u00bc left','10':'Nearly out','0':'Empty'};
+function fillPct(b){ return b.fill===''||b.fill==null?null:parseFloat(b.fill); }
+function mlLeft(b){
+  const p=fillPct(b), sz=parseFloat(b.size);
+  return (p===null||!sz)?null:sz*p/100;
+}
+function valueLeft(b){
+  const ml=mlLeft(b), c=cplNum(b);
+  return (ml===null||!isFinite(c))?null:ml*c;
+}
+
 function collectionStats(list){
   if(!list.length) return '';
   const priced=list.filter(b=>parseFloat(b.price)>0);
@@ -1279,6 +1300,24 @@ function collectionStats(list){
     '<div class="stat-box"><div class="n sm">'+(avgCpl?'$'+avgCpl.toFixed(2):'—')+'</div><div class="l">Avg cost / ml</div></div>'+
   '</div>'+
   '<div class="result-count" style="margin-top:2px"><b>'+tested+'</b> tested · <b>'+(list.length-tested)+'</b> still untested</div>';
+
+  const withFill=list.filter(b=>mlLeft(b)!==null);
+  if(withFill.length){
+    const leftMl=withFill.reduce((a,b)=>a+mlLeft(b),0);
+    const valued=withFill.filter(b=>valueLeft(b)!==null);
+    const leftVal=valued.reduce((a,b)=>a+valueLeft(b),0);
+    h+='<div class="stat-grid" style="margin-top:11px">'+
+      '<div class="stat-box"><div class="n'+(leftMl>=10000?' sm':'')+'">'+Math.round(leftMl).toLocaleString()+'</div>'+
+        '<div class="l">ml still in bottles'+(withFill.length<list.length?' · '+withFill.length+' tracked':'')+'</div></div>'+
+      '<div class="stat-box"><div class="n'+(leftVal>=1000?' sm':'')+'">'+(valued.length?money(leftVal):'—')+'</div>'+
+        '<div class="l">Value left on the shelf</div></div>'+
+    '</div>';
+    const low=withFill.filter(b=>fillPct(b)<=25).sort((a,b)=>fillPct(a)-fillPct(b));
+    if(low.length) h+='<div class="section-label">Running low</div><div class="card">'+
+      low.map(b=>'<div class="rank-row"><div class="rn">'+esc(fullName(b))+
+        '<small>'+(b.house?esc(b.house):'')+(mlLeft(b)?' · about '+Math.round(mlLeft(b))+'ml left':'')+'</small></div>'+
+        '<div class="rv">'+esc(FILL_LABEL[b.fill]||b.fill+'%')+'</div></div>').join('')+'</div>';
+  }
 
   const tc={}; list.forEach(b=>{ if(b.type) tc[b.type]=(tc[b.type]||0)+1; });
   const types=Object.keys(tc).map(k=>[k,tc[k]]).sort((a,b)=>b[1]-a[1]);
@@ -1357,6 +1396,7 @@ function cardBottle(b){
           (cpl(b)?'<div class="badge">'+cpl(b)+'</div>':'')+
           (done.length?'<div class="badge">'+done.length+' test'+(done.length>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
           (avg?'<div class="badge longevity">avg '+avg.toFixed(1)+'/10</div>':'')+
+          (b.fill!==''?'<div class="badge'+(fillPct(b)<=25?' projection':'')+'">'+esc(FILL_LABEL[b.fill]||b.fill+'%')+'</div>':'')+
         '</div>'+
       '</div>'+
       '<div class="chevron">&rsaquo;</div>'+
@@ -1852,7 +1892,7 @@ function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .
    they render and highlight nothing. bType/bConc were missed when the
    collection sheet was added, so every bottle saved as the default Dupe. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
- 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc'].forEach(chipSingle);
+ 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill'].forEach(chipSingle);
 ['fSpots','eFam','eSeason','eOcc'].forEach(chipMulti);
 
 document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
@@ -1950,6 +1990,7 @@ function openBottle(id){
   document.getElementById('bInspired').value=b?b.inspired:'';
   setSingle('bType',b?b.type:'Dupe');
   setSingle('bConc',b?b.concentration:'');
+  setSingle('bFill',b?b.fill:'');
   document.getElementById('bPrice').value=b?b.price:'';
   document.getElementById('bSize').value=b?b.size:'';
   document.getElementById('bNotes').value=b?b.bottleNotes:'';
@@ -2036,7 +2077,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
   var data={ kind:'bottle', notebook:activeTab, house:house, name:name,
     flanker:document.getElementById('bFlanker').value.trim(),
     inspired:document.getElementById('bInspired').value.trim(),
-    type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'),
+    type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'), fill:getSingle('bFill'),
     price:document.getElementById('bPrice').value.trim(),
     size:document.getElementById('bSize').value.trim(),
     bottleNotes:document.getElementById('bNotes').value.trim(),
@@ -2381,6 +2422,7 @@ function exportCollection(){
     var scores=done.map(function(t){ return parseInt(t.rating); }).filter(function(n){ return n>0; });
     var bits=[];
     if(cpl(b)) bits.push(cpl(b));
+    if(b.fill!=='') bits.push((FILL_LABEL[b.fill]||b.fill+'%')+(mlLeft(b)?' (~'+Math.round(mlLeft(b))+'ml)':''));
     bits.push(done.length?done.length+' test'+(done.length>1?'s':''):'untested');
     if(scores.length) bits.push('avg '+(scores.reduce(function(a,n){ return a+n; },0)/scores.length).toFixed(1)+'/10');
     L.push('  '+bits.join(' · '));
