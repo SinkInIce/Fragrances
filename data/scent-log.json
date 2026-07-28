@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T21:39:37.984Z",
+  "updatedAt": "2026-07-28T21:40:12.074Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -371,7 +371,7 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "Parfums De Marley",
+      "house": "Parfums De Marly",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -421,7 +421,7 @@
       "id": "t1785273512486r06mr6",
       "name": "Percival",
       "type": "Niche",
-      "updatedAt": "2026-07-28T21:38:38.949Z"
+      "updatedAt": "2026-07-28T21:40:09.265Z"
     },
     {
       "notebook": "stevnscents",
