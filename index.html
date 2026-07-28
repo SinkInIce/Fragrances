@@ -1226,7 +1226,7 @@ function viewCollection(){
 
   /* The stats panel carries the counts; only repeat them in the header when
      it is not showing (searching, or too few bottles to be worth charting). */
-  const showStats=!colQ&&all>=2;
+  const showStats=!colQ&&all>=1;
   const untested=tests.filter(t=>isBottle(t)&&t.notebook===activeTab&&!bottleTests(t).some(x=>x.completed)).length;
   let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+
     (!showStats&&all?' · '+all:'')+(!showStats&&!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
@@ -1259,7 +1259,7 @@ function bottleTests(b){
    bottles that actually carry a price, and say so, rather than quietly
    averaging over blanks. */
 function collectionStats(list){
-  if(list.length<2) return '';
+  if(!list.length) return '';
   const priced=list.filter(b=>parseFloat(b.price)>0);
   const sized=list.filter(b=>parseFloat(b.size)>0);
   const both=list.filter(b=>parseFloat(b.price)>0&&parseFloat(b.size)>0);
@@ -1267,12 +1267,14 @@ function collectionStats(list){
   const ml=sized.reduce((a,b)=>a+parseFloat(b.size),0);
   const avgCpl=both.length?both.reduce((a,b)=>a+cplNum(b),0)/both.length:0;
   const tested=list.filter(b=>bottleTests(b).some(t=>t.completed)).length;
-  const money=n=>'$'+Math.round(n).toLocaleString();
+  const money=n=>n>=10000
+    ? '$'+Math.round(n).toLocaleString()
+    : '$'+(Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
 
   let h='<div class="stat-grid">'+
     '<div class="stat-box"><div class="n">'+list.length+'</div><div class="l">Bottles owned</div></div>'+
-    '<div class="stat-box"><div class="n'+(spent>=10000?' sm':'')+'">'+(priced.length?money(spent):'—')+'</div>'+
-      '<div class="l">Spent'+(priced.length&&priced.length<list.length?' · '+priced.length+' priced':'')+'</div></div>'+
+    '<div class="stat-box"><div class="n'+(spent>=1000?' sm':'')+'">'+(priced.length?money(spent):'—')+'</div>'+
+      '<div class="l">Total spent'+(priced.length&&priced.length<list.length?' · '+priced.length+' priced':'')+'</div></div>'+
     '<div class="stat-box"><div class="n'+(ml>=10000?' sm':'')+'">'+(ml?Math.round(ml).toLocaleString():'—')+'</div><div class="l">Total ml</div></div>'+
     '<div class="stat-box"><div class="n sm">'+(avgCpl?'$'+avgCpl.toFixed(2):'—')+'</div><div class="l">Avg cost / ml</div></div>'+
   '</div>'+
