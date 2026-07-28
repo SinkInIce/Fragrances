@@ -17,10 +17,9 @@ Full design and data-model documentation: [`SCENT-LOG-SPEC.md`](SCENT-LOG-SPEC.m
 Required because GitHub Pages does not serve private repos on the free plan.
 
 > **Know what this means.** The app code, the spec, and your synced log file all become
-> readable by anyone. Your wear tests are unpublished video material — ratings and
-> verdicts will be visible before you post. Nobody can *edit* anything without being
-> added as a collaborator, but they can read it. If that stops being acceptable, see
-> *Making it private again* at the bottom.
+> readable by anyone. Nobody can *edit* anything without being added as a collaborator,
+> but they can read it. See **What is actually public** below — it matters more than it
+> sounds.
 
 ### 2. Turn on Pages
 
@@ -85,6 +84,41 @@ backup file.
 
 ---
 
+## Your public page
+
+Followers get the same URL you use. With no token in their browser and no log of their
+own, the app shows a **read-only collection page** instead of the editor: your shared
+tests, the Insights charts, and the Guide. No new-test button, no edit or delete, no
+storage panel.
+
+**Sharing is opt-in per test.** Open a finished test and tap **Add to public page**. It
+gets a `Public` badge, and only then does it appear for visitors. Nothing is published
+by finishing a test, so a fragrance stays unlisted until the day its video goes live.
+
+**Copy public link** in the app copies the follower URL (`…/?public=1`). Your own devices
+keep working normally — and `…/?edit=1` always forces the editor if you land on the
+public view on a new device.
+
+The page updates a minute or two after you sync, once Pages redeploys.
+
+### What is actually public
+
+This is the part worth reading twice.
+
+| | Who can see it |
+|---|---|
+| Tests you tapped **Add to public page** | Anyone — that is the point |
+| Tests you did **not** share | **Also readable**, in the raw file |
+| Your access token | Nobody — it never leaves your device |
+
+Sync writes your **entire** log to `data/scent-log.json` in this public repo. The Share
+toggle decides what the *page renders*; it does not decide what the *file contains*.
+Anyone who opens that file on github.com sees every test, including unreleased verdicts.
+
+If you want unshared tests genuinely hidden, the fix is to split them: keep the full log
+syncing to a **private** repo and publish only the shared subset to this public one. Say
+the word and I'll wire it up — it is about an hour of work and one extra repo.
+
 ## Where your data lives
 
 It saves **automatically on every change** — there is no save button. The footer shows
@@ -123,6 +157,6 @@ I'll set either up.
 | `manifest.webmanifest` | Name, colours and icons for Home Screen install |
 | `sw.js` | Service worker — offline shell and font caching |
 | `icons/` | App icons (192, 512, and 180 for iOS) |
-| `data/scent-log.json` | Your synced log — created on first sync |
+| `data/scent-log.json` | Your synced log — created on first sync, and public |
 | `SCENT-LOG-SPEC.md` | Design spec, data model and roadmap |
 | `.github/workflows/pages.yml` | Publishes the app to GitHub Pages |

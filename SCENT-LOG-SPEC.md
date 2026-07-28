@@ -115,6 +115,9 @@ interface Test {
   age: 'Young'|'Any age'|'Mature';
   complimentFactor: 'None'|'Low'|'Medium'|'High'|'Magnet';
 
+  // Publishing
+  shared: boolean;               // opt-in: show this test on the public collection page
+
   // Verdict
   rating: string;                // '1'–'10'
   tier: 'S'|'A'|'B'|'C'|'D'|'F';

@@ -195,6 +195,8 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .sync-line.warn{ color:var(--wine); }
 .sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
 .sync-note strong{ color:var(--ink); font-weight:700; }
+.badge.shared{ background:var(--accent-soft); color:var(--accent-deep); }
+body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 .controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
 .sort-sel{ position:relative; }
 .sort-sel select{ width:100%; -webkit-appearance:none; appearance:none; background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 30px 11px 12px; font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer; }
@@ -279,7 +281,9 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
     <div class="data-label">Your data</div>
     <div class="data-status" id="dataStatus">Checking storage…</div>
     <div class="sync-line" id="syncStatus"></div>
+    <div class="sync-line" id="publicStatus"></div>
     <div class="data-actions">
+      <button class="btn-text" id="publicLinkBtn">Copy public link</button>
       <button class="btn-text" id="backupBtn">Back up to file</button>
       <button class="btn-text" id="restoreBtn">Restore from file</button>
       <button class="btn-text" id="syncNowBtn" style="display:none">Sync now</button>
@@ -562,7 +566,9 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
     The token stays on this device. It is never committed and never included in a backup file.<br><br>
     Make a <strong>fine-grained personal access token</strong> on GitHub, limited to this one repository, with
     <strong>Contents: read and write</strong>. Enter it once on each device you use.<br><br>
-    <strong>This repo is public</strong> — anything synced to it can be read by anyone.
+    <strong>This repo is public.</strong> Sync writes your whole log to it — including tests
+    that are not on your public page. The Share toggle controls what the page <em>shows</em>,
+    not what the file contains, so treat anything you sync here as readable by anyone.
   </div>
   <button class="btn btn-primary" id="syncSaveBtn">Save and sync now</button>
   <div style="text-align:center;margin-top:12px"><button class="btn-text" id="syncOffBtn">Turn sync off on this device</button></div>
@@ -574,6 +580,8 @@ const KEY='scent-log-tests';
 let tests=[], activeTab='stevnscents', activeView='tests';
 let noteCtx=null, endId=null, openHistId=null, tick=null, searchQ='', cmpA='', cmpB='';
 let sortBy='recent', filters={}, filterOpen=false, visibleCount=30;
+const urlParams=new URLSearchParams(location.search);
+let readOnly=false;   /* public visitor mode — no editing, no saving, no sync */
 const PAGE=30;
 
 const phases=[
@@ -612,7 +620,7 @@ function norm(t){
     longevity:'', projection:'', sillage:'', families:[], seasons:[], occasions:[], complimentFactor:'',
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
-    gender:'', age:'', rating:'', value:'', pros:'', cons:'' }, t);
+    gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -668,8 +676,27 @@ async function load(){
   }
   seedSnapshot();
   await loadSyncConfig();
+  /* A follower arrives with no token and no local log — show the public
+     collection instead of an empty editor. ?edit=1 always forces the app. */
+  if(!urlParams.has('edit') && (urlParams.has('public') || (!syncConfigured() && !tests.length))){
+    await tryPublic(urlParams.has('public'));
+  }
   theme(); render(); renderDataBar(); startTick();
-  if(syncConfigured()) syncNow(false);
+  if(!readOnly && syncConfigured()) syncNow(false);
+}
+async function tryPublic(force){
+  try{
+    const res=await fetch('data/scent-log.json?_='+Date.now(),{cache:'no-store'});
+    if(!res.ok) return false;
+    const doc=await res.json();
+    const list=(doc&&Array.isArray(doc.tests))?doc.tests.map(norm).filter(function(t){ return t.shared&&t.completed; }):[];
+    if(!list.length&&!force) return false;
+    tests=list; readOnly=true;
+    const p=document.querySelector('header p');
+    if(p) p.innerHTML='A public collection log — what got tested, and how it wore.'+
+      ' <a href="?edit=1" style="color:var(--accent-deep);font-weight:600">Open the editor</a>';
+    return true;
+  }catch(e){ return false; }
 }
 /* Writes the current log to this device. save() adds change tracking and
    queues a sync on top; syncNow() calls persist() directly to avoid a loop. */
@@ -685,7 +712,7 @@ async function persist(){
   }
   renderDataBar();
 }
-async function save(){ stampChanges(); await persist(); scheduleSync(); }
+async function save(){ if(readOnly) return; stampChanges(); await persist(); scheduleSync(); }
 
 /* ---- Change tracking -------------------------------------------------
    Every mutation funnels through save(), but none of them say what
@@ -837,8 +864,17 @@ function renderDataBar(){
   sy.textContent=t; sy.className=cls;
   const now=document.getElementById('syncNowBtn');
   if(now) now.style.display=syncConfigured()?'':'none';
+
+  const pub=document.getElementById('publicStatus');
+  if(pub){
+    const n=tests.filter(function(x){ return x.shared&&x.completed; }).length;
+    pub.textContent=n
+      ? n+' test'+(n>1?'s':'')+' on your public page.'+(syncConfigured()?'':' Turn on sync to publish them.')
+      : 'Public page is empty — open a finished test and tap “Add to public page”.';
+    pub.className='sync-line'+(n&&syncConfigured()?' on':'');
+  }
 }
-function theme(){ document.body.className='nb-'+activeTab; document.getElementById('fabNotebookLabel').textContent=nbLabel(activeTab); }
+function theme(){ document.body.className='nb-'+activeTab+(readOnly?' public-mode':''); document.getElementById('fabNotebookLabel').textContent=nbLabel(activeTab); }
 function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!t.completed&&t.notebook===activeTab)) render(); },60000); }
 
 function render(){
@@ -886,9 +922,10 @@ function sortList(arr){
 }
 
 function viewTests(){
-  const scoped=tests.filter(t=>t.notebook===activeTab);
-  const act=scoped.filter(t=>!t.completed).sort((a,b)=>new Date(b.startTime)-new Date(a.startTime));
+  const scoped=tests.filter(t=>t.notebook===activeTab&&(!readOnly||(t.shared&&t.completed)));
+  const act=readOnly?[]:scoped.filter(t=>!t.completed).sort((a,b)=>new Date(b.startTime)-new Date(a.startTime));
   const allDone=scoped.filter(t=>t.completed);
+  if(readOnly&&!allDone.length) return '<div class="empty-state"><div class="icon">&#9672;</div><p>Nothing published here yet — check back soon.</p></div>';
   let done=allDone;
   if(searchQ){ const q=searchQ.toLowerCase();
     done=done.filter(t=>[t.name,t.flanker,t.house,t.inspired,t.verdict,t.topNotes,t.heartNotes,t.baseNotes,t.similar,t.perfumer,t.pros,t.cons,t.seasonNotes,(t.families||[]).join(' '),(t.checkpoints||[]).map(c=>c.note).join(' ')].join(' ').toLowerCase().indexOf(q)>-1);
@@ -917,7 +954,7 @@ function viewTests(){
     const slice=done.slice(0,visibleCount);
     slice.forEach(t=>h+=cardHist(t));
     if(done.length>visibleCount) h+='<div class="showmore"><button class="btn btn-ghost" data-act="more">Show '+Math.min(PAGE,done.length-visibleCount)+' more</button></div>';
-    h+='<div style="text-align:center;margin-top:16px"><button class="btn-text" data-act="exportall">Copy all '+nbLabel(activeTab)+' tests</button></div>';
+    if(!readOnly) h+='<div style="text-align:center;margin-top:16px"><button class="btn-text" data-act="exportall">Copy all '+nbLabel(activeTab)+' tests</button></div>';
   }
   return h;
 }
@@ -1012,6 +1049,7 @@ function cardHist(t){
         (t.dayNight?'<div class="badge">'+esc(t.dayNight)+'</div>':'')+
         ((t.seasons||[]).length?'<div class="badge">'+esc(t.seasons.join(', '))+'</div>':'')+
         ((t.compliments||[]).length?'<div class="badge">'+t.compliments.length+' compliment'+(t.compliments.length>1?'s':'')+'</div>':'')+
+        ((t.shared&&!readOnly)?'<div class="badge shared">Public</div>':'')+
       '</div></div>'+
       '<div style="text-align:right">'+
         (t.rating?'<div class="score"><span class="sv">'+esc(t.rating)+'</span><span class="sm">/10</span></div>':'')+
@@ -1025,12 +1063,13 @@ function cardHist(t){
       (dg?'<div class="detail-grid">'+dg+'</div>':'')+
       (dg2?'<div class="detail-grid">'+dg2+'</div>':'')+
       notesBlock(t)+
-      '<div class="hist-detail-actions">'+
+      (readOnly?'':'<div class="hist-detail-actions">'+
         '<button class="btn-text" data-act="copy" data-test="'+t.id+'">Copy for script</button>'+
         '<button class="btn-text" data-act="end" data-test="'+t.id+'">Edit ratings</button>'+
         '<button class="btn-text" data-act="retest" data-test="'+t.id+'">Test again</button>'+
+        '<button class="btn-text" data-act="share" data-test="'+t.id+'">'+(t.shared?'Remove from public page':'Add to public page')+'</button>'+
         '<button class="btn-danger-text" data-act="del" data-test="'+t.id+'">Delete</button>'+
-      '</div></div></div></div>';
+      '</div>')+'</div></div></div>';
 }
 
 function viewInsights(){
@@ -1222,6 +1261,10 @@ function bind(){
       else if(a==='del') askDelete(id);
       else if(a==='copy') copyOne(id);
       else if(a==='retest') retest(id);
+      else if(a==='share'){
+        const st=tests.filter(function(x){ return x.id===id; })[0];
+        if(st){ st.shared=!st.shared; save(); render(); toast(st.shared?'Added to your public page':'Removed from your public page'); }
+      }
       else if(a==='exportall') exportAll();
       else if(a==='copycmp') copyCmp();
       else if(a==='clearfilters'){ filters={}; visibleCount=PAGE; render(); }
@@ -1540,6 +1583,9 @@ document.getElementById('restoreInput').addEventListener('change',function(e){
   e.target.value='';
 });
 
+document.getElementById('publicLinkBtn').addEventListener('click',function(){
+  clip(location.origin+location.pathname+'?public=1','Public link copied');
+});
 document.getElementById('syncNowBtn').addEventListener('click',function(){ syncNow(true); });
 document.getElementById('syncBtn').addEventListener('click',function(){
   document.getElementById('syOwner').value=sync.owner||'';

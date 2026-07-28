@@ -1,6 +1,6 @@
 /* Scent Log service worker — offline shell + font caching.
    Bump CACHE when shell files change so old copies are cleared. */
-const CACHE = 'scent-log-v1';
+const CACHE = 'scent-log-v2';
 const FONTS = 'scent-log-fonts-v1';
 const SHELL = [
   './',
@@ -53,6 +53,23 @@ async function navigateNetworkFirst(request) {
   }
 }
 
+/* The synced log is live data — never serve a stale copy while online.
+   Cached under a fixed key so the cache-buster query still matches offline. */
+const DATA_KEY = './data/scent-log.json';
+async function dataNetworkFirst(request) {
+  try {
+    const res = await fetch(request);
+    if (res.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(DATA_KEY, res.clone());
+    }
+    return res;
+  } catch (err) {
+    const hit = await caches.match(DATA_KEY);
+    return hit || Response.error();
+  }
+}
+
 async function assetCacheFirst(request) {
   const hit = await caches.match(request);
   if (hit) return hit;
@@ -78,6 +95,10 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     event.respondWith(navigateNetworkFirst(request));
+    return;
+  }
+  if (url.pathname.endsWith('/data/scent-log.json')) {
+    event.respondWith(dataNetworkFirst(request));
     return;
   }
   event.respondWith(assetCacheFirst(request));
