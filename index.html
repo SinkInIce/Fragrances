@@ -1846,8 +1846,11 @@ function getMulti(cid){ return Array.prototype.slice.call(document.querySelector
 function setSingle(cid,v){ document.querySelectorAll('#'+cid+' .chip').forEach(function(c){ c.classList.toggle('selected',c.dataset.val===v); }); }
 function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .chip').forEach(function(c){ c.classList.toggle('selected',a.indexOf(c.dataset.val)>-1); }); }
 
+/* Every .rating-row in the markup must appear here or its chips are dead —
+   they render and highlight nothing. bType/bConc were missed when the
+   collection sheet was added, so every bottle saved as the default Dupe. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
- 'eDayNight','eGender','eAge','eRating','eValue'].forEach(chipSingle);
+ 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc'].forEach(chipSingle);
 ['fSpots','eFam','eSeason','eOcc'].forEach(chipMulti);
 
 document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
