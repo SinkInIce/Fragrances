@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T19:23:28.155Z",
+  "updatedAt": "2026-07-28T19:23:35.851Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -182,8 +182,8 @@
       "bottleId": "",
       "id": "t1785265575230ppgjv6",
       "name": "Gas",
-      "type": "Indie",
-      "updatedAt": "2026-07-28T19:06:15.230Z"
+      "type": "Dupe",
+      "updatedAt": "2026-07-28T19:23:33.147Z"
     }
   ],
   "deleted": [
