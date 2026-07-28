@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:37:19.690Z",
+  "updatedAt": "2026-07-28T23:37:27.284Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -91,7 +91,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:56:42.538Z",
       "completed": true,
-      "updatedAt": "2026-07-28T23:37:12.073Z",
+      "updatedAt": "2026-07-28T23:37:24.628Z",
       "endTime": "2026-07-28T23:35:32.172Z"
     },
     {
