@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:15:51.441Z",
+  "updatedAt": "2026-07-28T23:16:46.194Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -280,7 +280,7 @@
       "weather": "",
       "humidity": "",
       "price": "",
-      "size": "",
+      "size": "75",
       "batch": "",
       "context": "",
       "checkpoints": [],
@@ -316,12 +316,12 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "80",
       "covered": false,
       "id": "t1785273512486vzq9nl",
       "name": "Aventus Absolu",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Niche",
+      "updatedAt": "2026-07-28T23:16:43.376Z"
     },
     {
       "notebook": "stevnscents",
