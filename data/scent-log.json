@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:23:18.849Z",
+  "updatedAt": "2026-07-28T23:25:33.795Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1244,16 +1244,16 @@
     {
       "notebook": "stevnscents",
       "house": "Dior",
-      "flanker": "",
+      "flanker": "EAU DE PARFUM",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "115",
+      "size": "60",
+      "batch": "75008",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -1288,12 +1288,12 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "65",
       "covered": false,
       "id": "t17852735124863ethl6",
       "name": "Sauvage",
       "type": "Designer",
-      "updatedAt": "2026-07-28T23:23:16.191Z"
+      "updatedAt": "2026-07-28T23:25:30.972Z"
     },
     {
       "notebook": "stevnscents",
