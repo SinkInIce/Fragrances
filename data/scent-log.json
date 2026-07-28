@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T16:56:15.060Z",
+  "updatedAt": "2026-07-28T17:24:04.458Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -27,6 +27,14 @@
           "note": "a bunch of sugary bubblegum thats super super sweet.",
           "projection": "Room-filling",
           "loggedAt": "2026-07-28T16:24:49.125Z"
+        },
+        {
+          "key": "custom_1785259232570",
+          "label": "After 30 minutes projection is less than arm length",
+          "minutes": 36,
+          "note": "More of a musky clean bubblegum scent",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-28T17:00:00.000Z"
         }
       ],
       "compliments": [],
@@ -60,12 +68,13 @@
       "photo": "",
       "added": "",
       "bottleNotes": "",
+      "bottleId": "",
       "id": "t1785255848903vtc30l",
       "name": "High Roller",
       "type": "Dupe",
       "startTime": "2026-07-28T16:24:08.903Z",
       "completed": false,
-      "updatedAt": "2026-07-28T16:24:49.125Z"
+      "updatedAt": "2026-07-28T17:21:17.523Z"
     }
   ],
   "deleted": [
