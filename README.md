@@ -94,7 +94,17 @@ The app has two sections, switched at the very top: **Wear log** and **My collec
 The collection is a catalogue of what you own, separate from wear tests — so you can test
 something in a shop without owning it, and own bottles you have not tested yet.
 
-Add a bottle with **+ Add a bottle**: brand, name, type, concentration, price, size,
+**Adding a lot at once:** *Add several at once* takes a pasted list, one per line.
+`Lattafa Khamrah`, `Armaf, Club de Nuit` and `Parfums de Marly - Layton` all work — a
+comma or dash splits brand from name, otherwise the first word is taken as the brand. It
+shows how every line reads before committing and skips anything already in your
+collection. Details can be filled in later.
+
+Past a couple of bottles you also get **sorting** (brand, name, cheapest or priciest per
+ml, most tested, emptiest first, recently added) and **filters** (untested, running low,
+by type). Unpriced bottles sort last rather than pretending to be the most expensive.
+
+Add a single bottle with **+ Add a bottle**: brand, name, type, concentration, price, size,
 notes, and a **photo**. Each card shows cost per ml, how many completed tests it has (or
 `Untested`), and its average score.
 
@@ -142,6 +152,23 @@ enough to save on every keystroke.
 
 **Every bottle in your collection is public** — there is no per-bottle toggle, by your
 choice. That is different from tests, which stay private until you share each one.
+
+## Blotter versus skin
+
+Paper holds scent far longer than skin and projects differently, so mixing the two would
+inflate every performance figure — and those are the numbers you quote in a review.
+
+A test counts as a blotter test when it has a blotter spot and no skin spot. Those are
+**kept out of the average longevity and the Longest lasting ranking**, which are labelled
+*on skin*. Insights says how many were held out and what they averaged on paper, the card
+carries a `Blotter` badge, and the review export adds a line noting performance on skin
+will differ.
+
+## Comparing batches
+
+Bottles record a **batch**. When a bottle has completed tests across more than one batch,
+its card grows a **By batch** breakdown — test count, average score and average longevity
+per batch — so a reformulation shows up as a number rather than a hunch.
 
 ## Tracking what you have posted
 

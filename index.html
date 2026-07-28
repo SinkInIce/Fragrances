@@ -225,6 +225,13 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .card-fill{ display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:13px; border-bottom:1px solid var(--line); }
 .card-fill-label{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; white-space:nowrap; }
 .card-fill .fill-readout{ min-width:66px; font-size:15px; }
+.col-foot{ display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:16px; }
+.col-filters{ margin-bottom:14px; }
+.bulk-row{ display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
+.bulk-row:last-child{ border-bottom:none; }
+.bulk-row .bh{ font-weight:700; }
+.bulk-row .bs{ font-size:11px; color:var(--ink-soft); }
+.bulk-row.dupe .bs{ color:var(--wine); }
 .fill-readout{ min-width:74px; text-align:right; font-family:'Libre Caslon Text',serif; font-style:italic;
   font-size:17px; color:var(--accent-deep); }
 .prefill-hint.warn{ background:rgba(140,74,72,.1); border-color:rgba(140,74,72,.35); }
@@ -669,6 +676,17 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <button class="btn btn-ghost btn-stack" id="confirmNoBtn">Keep it</button>
 </div></div>
 
+<div class="overlay" id="bulkOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Add several bottles</h2>
+  <div class="sheet-sub">One per line. Details can wait — get the names down first.</div>
+  <div class="field"><label>Paste or type your list</label>
+    <textarea id="bulkText" rows="8" placeholder="Lattafa Khamrah&#10;Armaf, Club de Nuit&#10;Parfums de Marly - Layton"></textarea>
+    <div class="helper">Use a comma or a dash to split brand from name. With neither, the first word is taken as the brand.</div></div>
+  <div id="bulkPreview"></div>
+  <button class="btn btn-primary" id="bulkAddBtn">Add them</button>
+</div></div>
+
 <div class="overlay" id="linkOverlay"><div class="sheet">
   <div class="sheet-handle"></div>
   <h2>Link a past test</h2>
@@ -740,6 +758,9 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
     <div class="field"><label>Bottle size (ml)</label><input type="number" id="bSize" placeholder="100" inputmode="numeric"></div>
   </div>
   <div class="calc-out" id="bCplOut"></div>
+  <div class="field"><label>Batch <span class="opt">optional</span></label>
+    <input type="text" id="bBatch" placeholder="e.g. 2024, lot 3F21" autocomplete="off">
+    <div class="helper">Reformulations are real. Recording it lets you compare batches of the same fragrance later.</div></div>
   <div class="field"><label>Notes <span class="opt">optional</span></label>
     <textarea id="bNotes" placeholder="e.g. bought at the mall, batch smells stronger than the first bottle"></textarea></div>
 
@@ -779,7 +800,7 @@ const KEY='scent-log-tests';
 let tests=[], activeTab='stevnscents', activeView='tests';
 let noteCtx=null, endId=null, openHistId=null, tick=null, searchQ='', cmpA='', cmpB='';
 let sortBy='recent', filters={}, filterOpen=false, visibleCount=30, colQ='';
-let activeSection='log', openBottleId=null;
+let activeSection='log', openBottleId=null, colSort='brand', colFilter='';
 const urlParams=new URLSearchParams(location.search);
 let readOnly=false;   /* public visitor mode — no editing, no saving, no sync */
 const PAGE=30;
@@ -1244,6 +1265,16 @@ function render(){
 
 /* Bottles you own and wear tests share one store; kind keeps them apart. */
 function isBottle(t){ return t.kind==='bottle'; }
+/* Paper holds scent far longer than skin does. Mixing the two would
+   inflate every performance average and any claim drawn from it. */
+const SKIN_SPOTS=['Neck','Wrists','Chest','Behind ears','Forearms','Hair'];
+function isBlotter(t){
+  var sp=t.spots||[];
+  if(!sp.length) return false;
+  var skin=sp.some(function(x){ return SKIN_SPOTS.indexOf(x)>-1; });
+  var paper=sp.some(function(x){ return x.indexOf('Blotter')===0; });
+  return paper&&!skin;
+}
 function testRecords(){ return tests.filter(function(t){ return !isBottle(t); }); }
 
 function viewCollection(){
@@ -1251,26 +1282,70 @@ function viewCollection(){
   if(colQ){ const q=colQ.toLowerCase();
     list=list.filter(t=>[t.house,t.name,t.flanker,t.type,t.concentration,t.bottleNotes,t.inspired,(t.families||[]).join(' ')].join(' ').toLowerCase().indexOf(q)>-1);
   }
-  list=list.sort((a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name));
+  if(colFilter==='untested') list=list.filter(t=>!bottleTests(t).some(x=>x.completed));
+  else if(colFilter==='low') list=list.filter(t=>fillPct(t)!==null&&fillPct(t)<=25);
+  else if(colFilter) list=list.filter(t=>t.type===colFilter);
+
+  const byName=(a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name);
+  list=list.slice().sort(function(a,b){
+    if(colSort==='name') return (a.name||'').localeCompare(b.name||'')||byName(a,b);
+    if(colSort==='cheap'||colSort==='dear'){
+      /* Unpriced has no cost per ml. Sorting it as Infinity would parade
+         every blank bottle as the most expensive thing you own. */
+      var ca=cplNum(a), cb=cplNum(b), ua=!isFinite(ca), ub=!isFinite(cb);
+      if(ua&&ub) return byName(a,b);
+      if(ua) return 1;
+      if(ub) return -1;
+      return (colSort==='cheap'?ca-cb:cb-ca)||byName(a,b);
+    }
+    if(colSort==='tested'){
+      var na=bottleTests(a).filter(x=>x.completed).length, nb=bottleTests(b).filter(x=>x.completed).length;
+      return (nb-na)||byName(a,b);
+    }
+    if(colSort==='empty'){
+      var fa=fillPct(a), fb=fillPct(b);
+      if(fa===null&&fb===null) return byName(a,b);
+      if(fa===null) return 1;              /* untracked sorts last, not as full */
+      if(fb===null) return -1;
+      return (fa-fb)||byName(a,b);
+    }
+    if(colSort==='added') return String(b.added||'').localeCompare(String(a.added||''))||byName(a,b);
+    return byName(a,b);
+  });
   const all=tests.filter(t=>isBottle(t)&&t.notebook===activeTab).length;
 
   /* The stats panel carries the counts; only repeat them in the header when
      it is not showing (searching, or too few bottles to be worth charting). */
-  const showStats=!colQ&&all>=1;
+  const showStats=!colQ&&!colFilter&&all>=1;
   const untested=tests.filter(t=>isBottle(t)&&t.notebook===activeTab&&!bottleTests(t).some(x=>x.completed)).length;
   let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+
     (!showStats&&all?' · '+all:'')+(!showStats&&!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
   if(all>4) h+='<div class="search-wrap"><input type="text" id="colSearch" placeholder="Search your collection..." value="'+esc(colQ)+'"></div>';
+  if(all>2&&!readOnly){
+    const sorts=[['brand','Brand A-Z'],['name','Name A-Z'],['cheap','Cheapest per ml'],['dear','Priciest per ml'],
+      ['tested','Most tested'],['empty','Emptiest first'],['added','Recently added']];
+    const filters=[['','All'],['untested','Untested'],['low','Running low'],
+      ['Dupe','Dupes'],['Designer','Designer'],['Niche','Niche'],['Indie','Indie']];
+    h+='<div class="controls"><div class="sort-sel"><select id="colSort">'+
+      sorts.map(o=>'<option value="'+o[0]+'"'+(colSort===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+
+      '</select></div></div>'+
+      '<div class="rating-row col-filters">'+
+      filters.map(f=>'<div class="chip sm'+(colFilter===f[0]?' selected':'')+'" data-colfilter="'+f[0]+'">'+f[1]+'</div>').join('')+
+      '</div>';
+  }
   if(!all){
     h+='<div class="empty-state"><div class="icon">&#9672;</div><p>'+
-      (readOnly?'Nothing in the collection yet.':'Nothing catalogued yet. Add the bottles you own — you can start a test from any of them later.')+'</p></div>';
+      (readOnly?'Nothing in the collection yet.':'Nothing catalogued yet. Add the bottles you own — you can start a test from any of them later.')+'</p>'+
+      (readOnly?'':'<div style="margin-top:14px"><button class="btn-text" data-act="bulkadd">Add several at once</button></div>')+'</div>';
     return h;
   }
   if(showStats) h+=collectionStats(tests.filter(t=>isBottle(t)&&t.notebook===activeTab));
-  if(!list.length) return h+'<div class="empty-state"><p>Nothing matches that search.</p></div>';
-  if(colQ&&list.length!==all) h+='<div class="result-count">Showing <b>'+list.length+'</b> of '+all+'</div>';
+  if(!list.length) return h+'<div class="empty-state"><p>'+(colFilter&&!colQ?'Nothing in your collection matches that filter.':'Nothing matches that search.')+'</p></div>';
+  if((colQ||colFilter)&&list.length!==all) h+='<div class="result-count">Showing <b>'+list.length+'</b> of '+all+'</div>';
   list.forEach(b=>h+=cardBottle(b));
-  if(!readOnly) h+='<div style="text-align:center;margin-top:16px"><button class="btn-text" data-act="exportcol">Copy my whole collection</button></div>';
+  if(!readOnly) h+='<div class="col-foot">'+
+    '<button class="btn-text" data-act="bulkadd">Add several at once</button>'+
+    '<button class="btn-text" data-act="exportcol">Copy my whole collection</button></div>';
   return h;
 }
 
@@ -1381,7 +1456,7 @@ function cardBottle(b){
         inner+='<div class="mini-test" data-act="gototest" data-test="'+t.id+'">'+
           '<div class="mini-test-main">'+
             '<div class="mini-test-date">'+(t.completed?fmtDate(t.startTime):'In progress')+'</div>'+
-            '<div class="mini-test-meta">'+[t.weather,t.sprays?t.sprays+' sprays':'',t.longevity].filter(Boolean).map(esc).join(' · ')+'</div>'+
+            '<div class="mini-test-meta">'+[t.batch?'batch '+t.batch:'',t.weather,t.sprays?t.sprays+' sprays':'',t.longevity].filter(Boolean).map(esc).join(' · ')+'</div>'+
           '</div>'+
           (t.rating?'<div class="mini-test-score">'+esc(t.rating)+'<span>/10</span></div>':'')+
           (t.tier?'<div class="tier-chip t-'+t.tier+'">'+t.tier+'</div>':'')+
@@ -1390,6 +1465,25 @@ function cardBottle(b){
     } else {
       inner+='<div class="bottle-tests-label">No tests on this bottle yet.</div>';
     }
+    /* Same juice, different batch: only worth showing once there are two to compare. */
+    var byBatch={};
+    mine.filter(function(t){ return t.completed&&t.batch; }).forEach(function(t){
+      (byBatch[t.batch]=byBatch[t.batch]||[]).push(t);
+    });
+    var batchKeys=Object.keys(byBatch);
+    if(batchKeys.length>1){
+      inner+='<div class="bottle-tests-label">By batch</div>';
+      batchKeys.sort().forEach(function(k){
+        var g=byBatch[k];
+        var sc=g.map(function(t){ return parseInt(t.rating); }).filter(function(n){ return n>0; });
+        var lo=g.filter(function(t){ return longHrs[t.longevity]; });
+        var bits=[g.length+' test'+(g.length>1?'s':'')];
+        if(sc.length) bits.push('avg '+(sc.reduce(function(a,n){ return a+n; },0)/sc.length).toFixed(1)+'/10');
+        if(lo.length) bits.push((lo.reduce(function(a,t){ return a+longHrs[t.longevity]; },0)/lo.length).toFixed(1)+'h');
+        inner+='<div class="rank-row"><div class="rn">Batch '+esc(k)+'<small>'+esc(bits.join(' · '))+'</small></div></div>';
+      });
+    }
+    if(b.batch) inner+='<div class="result-count" style="margin-bottom:10px">This bottle: batch '+esc(b.batch)+'</div>';
     if(b.bottleNotes) inner+='<div class="prose-box"><span class="pb-lab">Notes</span>'+esc(b.bottleNotes)+'</div>';
     if(!readOnly) inner+='<div class="bottle-actions">'+
       '<button class="btn-text" data-act="bottletest" data-bottle="'+b.id+'">Log a test</button>'+
@@ -1586,6 +1680,7 @@ function cardHist(t){
         ((t.compliments||[]).length?'<div class="badge">'+t.compliments.length+' compliment'+(t.compliments.length>1?'s':'')+'</div>':'')+
         ((t.shared&&!readOnly)?'<div class="badge shared">Public</div>':'')+
         ((t.covered&&!readOnly)?'<div class="badge covered">Covered</div>':'')+
+        (isBlotter(t)?'<div class="badge">Blotter</div>':'')+
       '</div></div>'+
       '<div style="text-align:right">'+
         (t.rating?'<div class="score"><span class="sv">'+esc(t.rating)+'</span><span class="sm">/10</span></div>':'')+
@@ -1613,8 +1708,11 @@ function cardHist(t){
 function viewInsights(){
   const s=tests.filter(t=>!isBottle(t)&&t.notebook===activeTab&&t.completed);
   if(s.length<1) return '<div class="empty-state"><div class="icon">&#9719;</div><p>Finish a few tests and this fills up with patterns across your collection — plus video ideas pulled from your own data.</p></div>';
-  const withL=s.filter(t=>longHrs[t.longevity]);
+  const onSkin=s.filter(t=>!isBlotter(t)), onPaper=s.filter(isBlotter);
+  const withL=onSkin.filter(t=>longHrs[t.longevity]);
   const avgL=withL.length?(withL.reduce((a,t)=>a+longHrs[t.longevity],0)/withL.length).toFixed(1):'-';
+  const paperL=onPaper.filter(t=>longHrs[t.longevity]);
+  const avgPaperL=paperL.length?(paperL.reduce((a,t)=>a+longHrs[t.longevity],0)/paperL.length).toFixed(1):'';
   const priced=s.filter(t=>parseFloat(t.price)&&parseFloat(t.size));
   const avgCpl=priced.length?'$'+(priced.reduce((a,t)=>a+parseFloat(t.price)/parseFloat(t.size),0)/priced.length).toFixed(2):'-';
   const top=s.filter(t=>t.tier==='S'||t.tier==='A').length;
@@ -1626,10 +1724,12 @@ function viewInsights(){
     '<div class="stat-box"><div class="n">'+avgL+(avgL!=='-'?'h':'')+'</div><div class="l">Avg longevity</div></div>'+
     '<div class="stat-box"><div class="n">'+avgScore+'</div><div class="l">Avg score /10</div></div>'+
     '<div class="stat-box"><div class="n sm">'+avgCpl+'</div><div class="l">Avg cost / ml</div></div></div>'+
-    '<div class="result-count" style="margin-top:2px">'+top+' rated S or A tier</div>';
+    '<div class="result-count" style="margin-top:2px">'+top+' rated S or A tier</div>'+
+    (onPaper.length?'<div class="result-count"><b>'+onPaper.length+'</b> blotter test'+(onPaper.length>1?'s':'')+
+      ' kept out of the performance averages'+(avgPaperL?' — they average '+avgPaperL+'h on paper':'')+'</div>':'');
 
   const longest=withL.slice().sort((a,b)=>longHrs[b.longevity]-longHrs[a.longevity]).slice(0,5);
-  if(longest.length) h+='<div class="section-label">Longest lasting</div><div class="card">'+
+  if(longest.length) h+='<div class="section-label">Longest lasting · on skin</div><div class="card">'+
     longest.map(t=>'<div class="rank-row"><div class="rn">'+esc(fullName(t))+'<small>'+(t.house?esc(t.house)+' \u00b7 ':'')+esc(t.type)+'</small></div><div class="rv">'+esc(t.longevity)+'</div></div>').join('')+'</div>';
 
   /* The content backlog: tested, verdict formed, nothing posted about it yet. */
@@ -1824,6 +1924,7 @@ function bind(){
       else if(a==='copy') copyOne(id);
       else if(a==='review') copyReview(id);
       else if(a==='exportcol') exportCollection();
+      else if(a==='bulkadd') openBulk();
       else if(a==='retest') retest(id);
       else if(a==='covered'){
         const ct=tests.filter(function(x){ return x.id===id; })[0];
@@ -1883,6 +1984,12 @@ function bind(){
 
   document.querySelectorAll('.acc').forEach(function(a){
     a.querySelector('.acc-head').addEventListener('click',function(){ a.classList.toggle('open'); });
+  });
+
+  var csort=document.getElementById('colSort');
+  if(csort) csort.addEventListener('change',function(e){ colSort=e.target.value; save(); render(); });
+  document.querySelectorAll('[data-colfilter]').forEach(function(c){
+    c.addEventListener('click',function(){ colFilter=c.dataset.colfilter; openBottleId=null; render(); });
   });
 
   var cs=document.getElementById('colSearch');
@@ -2027,6 +2134,7 @@ function applyBottlePrefill(){
   put('bFlanker',prior.flanker,'flanker');
   put('bInspired',prior.inspired,'inspired by');
   put('bPrice',prior.price,'price');
+  put('bBatch',prior.batch,'batch');
   put('bSize',prior.size,'size');
   if(prior.type&&!getSingle('bType')){ setSingle('bType',prior.type); filled.push('type'); }
   if(prior.concentration&&!getSingle('bConc')){ setSingle('bConc',prior.concentration); filled.push('concentration'); }
@@ -2058,6 +2166,7 @@ function openBottle(id){
   bottleFill=b?(b.fill||''):''; syncFillUI();
   document.getElementById('bPrice').value=b?b.price:'';
   document.getElementById('bSize').value=b?b.size:'';
+  document.getElementById('bBatch').value=b?b.batch:'';
   document.getElementById('bNotes').value=b?b.bottleNotes:'';
   document.getElementById('saveBottleBtn').textContent=b?'Save changes':'Save to collection';
   fillBrandList(); updBottleCpl(); renderBottlePhoto();
@@ -2113,6 +2222,62 @@ function linkTest(bottleId,testId){
 }
 /* The link list is injected after bind() has run, so it needs its own
    delegated handler rather than the per-render [data-act] wiring. */
+/* Cataloguing 160 bottles one sheet at a time is the real cost. Parse a
+   pasted list instead: an explicit comma or dash wins, otherwise assume
+   the first word is the brand. Show exactly how each line reads before
+   committing, so a bad guess is visible rather than silently stored. */
+function parseBulkLine(line){
+  var t=line.trim();
+  if(!t) return null;
+  var m=t.match(/^(.+?)\s*(?:,|\s[-\u2013\u2014]\s)\s*(.+)$/);
+  if(m) return { house:m[1].trim(), name:m[2].trim() };
+  var parts=t.split(/\s+/);
+  if(parts.length<2) return { house:'', name:t };
+  return { house:parts[0], name:parts.slice(1).join(' ') };
+}
+function bulkRows(){
+  return document.getElementById('bulkText').value.split('\n')
+    .map(parseBulkLine).filter(Boolean).map(function(r){
+      r.dupe=!!tests.filter(function(x){
+        return isBottle(x)&&x.notebook===activeTab &&
+          (x.house||'').toLowerCase()===r.house.toLowerCase() &&
+          (x.name||'').toLowerCase()===r.name.toLowerCase();
+      })[0];
+      return r;
+    });
+}
+function renderBulkPreview(){
+  var rows=bulkRows(), el=document.getElementById('bulkPreview');
+  if(!rows.length){ el.innerHTML=''; document.getElementById('bulkAddBtn').textContent='Add them'; return; }
+  var fresh=rows.filter(function(r){ return !r.dupe; }).length;
+  el.innerHTML='<div class="section-label">Reads as · '+rows.length+'</div><div class="card">'+
+    rows.slice(0,40).map(function(r){
+      return '<div class="bulk-row'+(r.dupe?' dupe':'')+'">'+
+        '<div><div class="bh">'+esc(r.name||'(no name)')+'</div>'+
+        '<div class="bs">'+(r.house?esc(r.house):'no brand')+(r.dupe?' · already in your collection':'')+'</div></div></div>';
+    }).join('')+
+    (rows.length>40?'<div class="result-count" style="margin-top:8px">and '+(rows.length-40)+' more</div>':'')+'</div>';
+  document.getElementById('bulkAddBtn').textContent=fresh?'Add '+fresh+' bottle'+(fresh>1?'s':''):'Nothing new to add';
+}
+function openBulk(){
+  document.getElementById('bulkText').value='';
+  renderBulkPreview();
+  show('bulkOverlay');
+  setTimeout(function(){ document.getElementById('bulkText').focus(); },150);
+}
+document.getElementById('bulkText').addEventListener('input',renderBulkPreview);
+document.getElementById('bulkAddBtn').addEventListener('click',function(){
+  var rows=bulkRows().filter(function(r){ return !r.dupe&&r.name; });
+  if(!rows.length){ toast('Nothing new in that list'); return; }
+  var now=new Date().toISOString();
+  rows.forEach(function(r){
+    tests.push(norm({ id:uid(), kind:'bottle', notebook:activeTab,
+      house:r.house, name:r.name, type:'Dupe', added:now }));
+  });
+  save(); hide('bulkOverlay'); render();
+  toast('Added '+rows.length+' bottle'+(rows.length>1?'s':''));
+});
+
 document.getElementById('linkList').addEventListener('click',function(e){
   var el=e.target.closest('[data-act="linkpick"]');
   if(el) linkTest(el.dataset.bottle,el.dataset.test);
@@ -2153,6 +2318,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
     type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'), fill:bottleFill,
     price:document.getElementById('bPrice').value.trim(),
     size:document.getElementById('bSize').value.trim(),
+    batch:document.getElementById('bBatch').value.trim(),
     bottleNotes:document.getElementById('bNotes').value.trim(),
     photo:bottlePhoto };
   if(bottleId){
@@ -2423,6 +2589,7 @@ function testToReview(t){
   if(t.weather) cond.push(t.weather.toLowerCase()+' weather');
   if(t.humidity) cond.push(t.humidity.toLowerCase()+' humidity');
   if(cond.length) L.push('','Tested with '+cond.join(', ')+'.');
+  if(isBlotter(t)) L.push('Note: tested on a blotter, not on skin — performance on skin will differ.');
 
   var cps=(t.checkpoints||[]).slice().sort(function(a,b){ return a.minutes-b.minutes; });
   if(cps.length){
@@ -2491,6 +2658,7 @@ function exportCollection(){
     var meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(', ');
     L.push(fullTitle(b)+(meta?' ('+meta+')':''));
     if(b.inspired) L.push('  Inspired by '+b.inspired);
+    if(b.batch) L.push('  Batch '+b.batch);
     var done=bottleTests(b).filter(function(t){ return t.completed; });
     var scores=done.map(function(t){ return parseInt(t.rating); }).filter(function(n){ return n>0; });
     var bits=[];
