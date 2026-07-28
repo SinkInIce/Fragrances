@@ -1337,14 +1337,6 @@ function collectionStats(list){
   if(topSpend.length>1) h+='<div class="section-label">Spent by brand</div><div class="card">'+
     topSpend.map(x=>'<div class="rank-row"><div class="rn">'+esc(x[0])+'</div><div class="rv">'+money(x[1])+'</div></div>').join('')+'</div>';
 
-  if(both.length>1){
-    const byCpl=both.slice().sort((a,b)=>cplNum(a)-cplNum(b));
-    const rows=[[byCpl[0],'Cheapest per ml'],[byCpl[byCpl.length-1],'Priciest per ml']];
-    h+='<div class="section-label">Cost spread</div><div class="card">'+
-      rows.map(r=>'<div class="rank-row"><div class="rn">'+esc(fullName(r[0]))+
-        '<small>'+esc(r[1])+(r[0].house?' · '+esc(r[0].house):'')+'</small></div>'+
-        '<div class="rv">'+cpl(r[0])+'</div></div>').join('')+'</div>';
-  }
   return h;
 }
 
