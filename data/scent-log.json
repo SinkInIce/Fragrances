@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T21:34:32.716Z",
+  "updatedAt": "2026-07-28T21:36:12.343Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1182,16 +1182,16 @@
     {
       "notebook": "stevnscents",
       "house": "Chanel",
-      "flanker": "",
+      "flanker": "EDT",
       "inspired": "",
       "concentration": "",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "115",
+      "size": "100",
+      "batch": "7003",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -1226,12 +1226,12 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "85",
       "covered": false,
       "id": "t1785273512486lq2s2a",
       "name": "Bleu De Chanel",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-28T21:36:09.521Z"
     },
     {
       "notebook": "stevnscents",
