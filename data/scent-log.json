@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T20:25:57.015Z",
+  "updatedAt": "2026-07-28T20:26:05.093Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -254,12 +254,12 @@
       "added": "2026-07-28T19:27:27.760Z",
       "bottleNotes": "Bought via fragrancenet.com",
       "bottleId": "",
-      "fill": "",
+      "fill": "100",
       "covered": false,
       "id": "t1785266847760zkl9yh",
       "name": "Only Ever",
       "type": "Dupe",
-      "updatedAt": "2026-07-28T19:28:08.112Z"
+      "updatedAt": "2026-07-28T20:26:02.396Z"
     }
   ],
   "deleted": [
