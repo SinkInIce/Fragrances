@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T20:25:15.465Z",
+  "updatedAt": "2026-07-28T20:25:18.616Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -70,6 +70,7 @@
       "bottleNotes": "",
       "bottleId": "",
       "fill": "",
+      "covered": false,
       "id": "t1785265002537m8oabv",
       "name": "Gas",
       "type": "Dupe",
@@ -144,6 +145,7 @@
       "bottleNotes": "",
       "bottleId": "",
       "fill": "",
+      "covered": false,
       "id": "t1785265037388uyxhb4",
       "name": "Only Ever",
       "type": "Dupe",
@@ -199,6 +201,7 @@
       "bottleNotes": "Bought off Fragrancenet.com",
       "bottleId": "",
       "fill": "",
+      "covered": false,
       "id": "t1785265575230ppgjv6",
       "name": "Gas",
       "type": "Dupe",
@@ -252,6 +255,7 @@
       "bottleNotes": "Bought via fragrancenet.com",
       "bottleId": "",
       "fill": "",
+      "covered": false,
       "id": "t1785266847760zkl9yh",
       "name": "Only Ever",
       "type": "Dupe",
