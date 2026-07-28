@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Scent Log — Testing Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root{
+  --paper:#ece2ce; --paper-deep:#ddd0b3; --ink:#2b241d; --ink-soft:#6b5f4f;
+  --accent:#b8823c; --accent-deep:#8f6529; --accent-soft:rgba(184,130,60,0.14);
+  --wine:#8c4a48; --line:rgba(43,36,29,0.14); --card:#f4ecdd;
+}
+body.nb-fallowmark{ --accent:#74886a; --accent-deep:#52603f; --accent-soft:rgba(116,136,106,0.16); }
+html,body{ background:var(--paper); color:var(--ink); font-family:'Manrope',sans-serif; min-height:100dvh; -webkit-font-smoothing:antialiased; }
+body{ background-image: radial-gradient(ellipse 600px 300px at 10% 0%, rgba(184,130,60,.07), transparent), radial-gradient(ellipse 500px 400px at 90% 100%, rgba(111,125,94,.05), transparent); }
+#app{ max-width:600px; margin:0 auto; padding:20px 16px 110px; }
+header{ padding:6px 4px 16px; }
+header .eyebrow{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; margin-bottom:6px; }
+header h1{ font-family:'Libre Caslon Text',serif; font-style:italic; font-weight:400; font-size:clamp(26px,7.5vw,32px); line-height:1.05; letter-spacing:-.01em; }
+header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1.5; max-width:44ch; }
+.tab-bar{ display:flex; gap:8px; margin:4px 4px 12px; }
+.tab{ flex:1; text-align:center; padding:12px 8px; border-radius:6px; border:1.5px solid var(--line); font-size:12.5px; font-weight:800; color:var(--ink-soft); cursor:pointer; background:#fff; transition:.15s; }
+.tab.selected{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.view-bar{ display:flex; gap:4px; margin:0 4px 18px; background:rgba(43,36,29,.05); padding:4px; border-radius:7px; }
+.vtab{ flex:1; text-align:center; padding:9px 4px; border-radius:5px; font-size:11.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+.vtab.selected{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(43,36,29,.1); }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; border-radius:3px; font-family:'Manrope',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:transform .15s; user-select:none; }
+.btn:active{ transform:scale(.97); }
+.btn-primary{ background:var(--ink); color:var(--paper); padding:15px 22px; width:100%; }
+.btn-ghost{ background:transparent; color:var(--ink); border:1.5px solid var(--line); padding:10px 16px; font-size:13px; }
+.btn-accent{ background:var(--accent); color:#fff; padding:12px 18px; }
+.btn-text{ background:none; color:var(--ink-soft); font-weight:600; font-size:12px; text-decoration:underline; text-underline-offset:3px; padding:6px; cursor:pointer; }
+.btn-danger-text{ background:none; color:var(--wine); font-weight:600; font-size:12px; padding:6px; cursor:pointer; }
+.card{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:17px; margin-bottom:13px; box-shadow:0 1px 2px rgba(43,36,29,.04); }
+.section-label{ font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; margin:26px 4px 11px; }
+.section-label:first-of-type{ margin-top:4px; }
+.search-wrap{ margin:0 0 14px; }
+.search-wrap input{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 13px; font-family:'Manrope',sans-serif; font-size:14px; color:var(--ink); }
+.search-wrap input:focus{ outline:none; border-color:var(--accent-deep); }
+.active-card{ border-color:var(--accent-deep); background:linear-gradient(135deg,var(--card) 0%,#f7efe0 100%); }
+.active-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.frag-name{ font-family:'Libre Caslon Text',serif; font-style:italic; font-size:19px; line-height:1.15; }
+.frag-house{ font-size:11px; color:var(--ink-soft); font-weight:600; margin-top:2px; }
+.inspired{ font-size:11px; color:var(--ink-soft); font-style:italic; margin-top:5px; line-height:1.4; }
+.meta-row{ display:flex; gap:5px; flex-wrap:wrap; margin-top:8px; }
+.mtag{ font-size:9px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:var(--accent-deep); background:var(--accent-soft); padding:3px 7px; border-radius:3px; }
+.mtag.neutral{ color:var(--ink-soft); background:rgba(43,36,29,.06); }
+.elapsed{ font-family:'Libre Caslon Text',serif; font-size:21px; color:var(--accent-deep); white-space:nowrap; text-align:right; }
+.elapsed .lbl{ display:block; font-family:'Manrope',sans-serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; margin-top:2px; }
+.decay-wrap{ margin:15px 0 11px; }
+.decay-bar{ position:relative; height:32px; border-radius:4px; background:rgba(43,36,29,.06); border:1px solid var(--line); }
+.decay-fill{ position:absolute; inset:0; border-radius:3px; background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 38%,rgba(184,130,60,.32) 74%,rgba(184,130,60,.06) 100%); }
+.decay-pin{ position:absolute; top:-6px; width:2px; height:44px; background:var(--ink); opacity:.55; }
+.decay-pin::after{ content:''; position:absolute; top:-3px; left:50%; transform:translateX(-50%); width:7px; height:7px; border-radius:50%; background:var(--ink); }
+.decay-scale{ display:flex; justify-content:space-between; font-size:9px; color:var(--ink-soft); margin-top:5px; font-weight:600; }
+.checkpoint-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:13px; }
+.cp-btn{ background:#fff; border:1.5px solid var(--line); border-radius:5px; padding:11px 5px; text-align:center; cursor:pointer; display:flex; flex-direction:column; gap:3px; align-items:center; }
+.cp-btn:active{ background:var(--paper-deep); }
+.cp-btn.logged{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.cp-btn-label{ font-size:11.5px; font-weight:700; line-height:1.15; }
+.cp-btn-time{ font-size:9.5px; opacity:.75; font-weight:600; }
+.cp-hint{ font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:7px; font-style:italic; line-height:1.45; }
+.inline-actions{ display:flex; gap:12px; justify-content:center; margin-top:8px; flex-wrap:wrap; }
+.notes-list{ margin-top:13px; display:flex; flex-direction:column; gap:9px; }
+.note-item{ display:grid; grid-template-columns:74px 1fr; gap:10px; font-size:12.5px; line-height:1.5; padding-bottom:9px; border-bottom:1px solid var(--line); cursor:pointer; }
+.note-item:last-child{ border-bottom:none; padding-bottom:0; }
+.note-time{ font-weight:700; color:var(--accent-deep); font-size:10.5px; padding-top:1px; line-height:1.35; }
+.note-time span{ display:block; font-weight:600; color:var(--ink-soft); font-size:9.5px; }
+.note-text{ color:var(--ink); }
+.note-text.empty{ color:var(--ink-soft); font-style:italic; }
+.note-proj{ display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--wine); background:rgba(140,74,72,.1); padding:2px 6px; border-radius:3px; margin-top:4px; }
+.comp-item{ background:rgba(184,130,60,.09); border-left:2px solid var(--accent); padding:8px 10px; border-radius:0 4px 4px 0; font-size:12.5px; line-height:1.45; margin-top:8px; }
+.comp-item .ct{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--accent-deep); display:block; margin-bottom:3px; }
+.active-actions{ display:flex; gap:8px; margin-top:15px; }
+.active-actions .btn{ flex:1; }
+.hist-card{ cursor:pointer; }
+.hist-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.hist-name{ font-family:'Libre Caslon Text',serif; font-style:italic; font-size:16.5px; }
+.hist-meta{ font-size:11px; color:var(--ink-soft); margin-top:3px; }
+.hist-badges{ display:flex; gap:5px; flex-wrap:wrap; margin-top:8px; }
+.badge{ font-size:10px; font-weight:700; padding:4px 9px; border-radius:20px; background:rgba(43,36,29,.06); color:var(--ink-soft); }
+.badge.longevity{ background:var(--accent-soft); color:var(--accent-deep); }
+.badge.projection{ background:rgba(140,74,72,.12); color:var(--wine); }
+.tier-chip{ font-family:'Libre Caslon Text',serif; font-size:19px; font-style:italic; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--ink); color:var(--paper); flex:none; }
+.tier-chip.t-S{ background:#8f6529; } .tier-chip.t-A{ background:#5d6b4b; }
+.tier-chip.t-B{ background:#4a5a68; } .tier-chip.t-C{ background:#6b5f4f; }
+.tier-chip.t-D{ background:#8c6a48; } .tier-chip.t-F{ background:#8c4a48; }
+.chevron{ color:var(--ink-soft); font-size:18px; transition:transform .2s; }
+.hist-card.open .chevron{ transform:rotate(90deg); }
+.hist-detail{ max-height:0; overflow:hidden; transition:max-height .35s ease; }
+.hist-card.open .hist-detail{ max-height:2400px; }
+.hist-detail-inner{ padding-top:14px; }
+.verdict-box{ font-size:13px; line-height:1.55; background:rgba(43,36,29,.04); padding:12px; border-radius:4px; margin-top:12px; }
+.detail-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-top:12px; }
+.dg-item{ font-size:11.5px; }
+.dg-item .k{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; display:block; margin-bottom:3px; }
+.dg-item .v{ color:var(--ink); line-height:1.4; }
+.hist-detail-actions{ display:flex; gap:12px; margin-top:15px; flex-wrap:wrap; }
+.empty-state{ text-align:center; padding:38px 20px; color:var(--ink-soft); }
+.empty-state .icon{ font-size:30px; margin-bottom:10px; opacity:.5; }
+.empty-state p{ font-size:13px; line-height:1.5; max-width:34ch; margin:0 auto; }
+.stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:11px; margin-bottom:8px; }
+.stat-box{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:15px; }
+.stat-box .n{ font-family:'Libre Caslon Text',serif; font-size:30px; line-height:1; color:var(--accent-deep); }
+.stat-box .n.sm{ font-size:19px; font-style:italic; }
+.stat-box .l{ font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; margin-top:7px; line-height:1.3; }
+.rank-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; }
+.rank-row:last-child{ border-bottom:none; }
+.rank-row .rn{ font-weight:600; }
+.rank-row .rn small{ display:block; font-size:10.5px; color:var(--ink-soft); font-weight:500; margin-top:2px; }
+.rank-row .rv{ font-size:11.5px; font-weight:700; color:var(--accent-deep); white-space:nowrap; }
+.idea{ background:var(--card); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:0 6px 6px 0; padding:13px 15px; margin-bottom:9px; }
+.idea .it{ font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--accent-deep); margin-bottom:5px; }
+.idea .ib{ font-size:13px; line-height:1.5; }
+.bar-row{ display:grid; grid-template-columns:76px 1fr 32px; gap:9px; align-items:center; font-size:11.5px; margin-bottom:7px; }
+.bar-track{ height:8px; background:rgba(43,36,29,.08); border-radius:4px; overflow:hidden; }
+.bar-fill{ height:100%; background:var(--accent); border-radius:4px; }
+.bar-row .bn{ font-weight:600; }
+.bar-row .bv{ text-align:right; font-weight:700; color:var(--ink-soft); }
+.acc{ background:var(--card); border:1px solid var(--line); border-radius:6px; margin-bottom:9px; overflow:hidden; }
+.acc-head{ padding:14px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; font-weight:700; font-size:13.5px; }
+.acc-head .ch{ color:var(--ink-soft); font-size:17px; transition:transform .2s; }
+.acc.open .acc-head .ch{ transform:rotate(90deg); }
+.acc-body{ max-height:0; overflow:hidden; transition:max-height .3s ease; }
+.acc.open .acc-body{ max-height:1600px; }
+.acc-body-inner{ padding:0 16px 16px; font-size:13px; line-height:1.6; color:var(--ink); }
+.acc-body-inner p{ margin-bottom:10px; }
+.acc-body-inner p:last-child{ margin-bottom:0; }
+.acc-body-inner strong{ color:var(--accent-deep); }
+.acc-body-inner .say{ background:rgba(43,36,29,.04); padding:10px 12px; border-radius:4px; font-style:italic; margin-top:4px; }
+.cmp-selects{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:16px; }
+.cmp-selects select{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 9px; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--ink); }
+.cmp-table{ background:var(--card); border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+.cmp-row{ display:grid; grid-template-columns:78px 1fr 1fr; border-bottom:1px solid var(--line); }
+.cmp-row:last-child{ border-bottom:none; }
+.cmp-row > div{ padding:11px 9px; font-size:12px; line-height:1.45; }
+.cmp-row .cl{ font-size:9px; letter-spacing:.11em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); background:rgba(43,36,29,.04); display:flex; align-items:center; }
+.cmp-row.head > div{ font-family:'Libre Caslon Text',serif; font-style:italic; font-size:14px; padding:13px 9px; }
+.cmp-row .win{ color:var(--accent-deep); font-weight:700; }
+.overlay{ position:fixed; inset:0; background:rgba(20,16,12,.5); z-index:90; display:none; align-items:flex-end; }
+.overlay.show{ display:flex; }
+.sheet{ background:var(--paper); width:100%; max-height:90vh; overflow-y:auto; border-radius:18px 18px 0 0; padding:22px 18px calc(24px + env(safe-area-inset-bottom)); animation:slideup .28s ease; }
+@keyframes slideup{ from{ transform:translateY(100%);} to{ transform:translateY(0);} }
+.sheet-handle{ width:36px; height:4px; background:var(--line); border-radius:2px; margin:0 auto 18px; }
+.sheet h2{ font-family:'Libre Caslon Text',serif; font-style:italic; font-size:22px; margin-bottom:4px; }
+.sheet .sheet-sub{ font-size:12px; color:var(--ink-soft); margin-bottom:20px; line-height:1.5; }
+.field{ margin-bottom:16px; }
+.field label{ display:block; font-size:10px; letter-spacing:.16em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); margin-bottom:7px; }
+.field label .opt{ text-transform:none; letter-spacing:0; font-weight:500; font-size:10.5px; opacity:.7; }
+.field input[type=text], .field input[type=number], .field textarea{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:5px; padding:12px 13px; font-family:'Manrope',sans-serif; font-size:15px; color:var(--ink); }
+.field textarea{ resize:vertical; min-height:68px; line-height:1.5; }
+.field input:focus, .field textarea:focus{ outline:none; border-color:var(--accent-deep); }
+.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.chip-row{ display:flex; gap:7px; flex-wrap:wrap; }
+.chip{ border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:8px 13px; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--ink-soft); }
+.chip.selected{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.chip.sm{ padding:7px 11px; font-size:11.5px; }
+.rating-row{ display:flex; gap:7px; }
+.rating-row .chip{ flex:1; text-align:center; padding:10px 4px; font-size:11.5px; }
+.tier-row{ display:flex; gap:6px; }
+.tier-row .chip{ flex:1; text-align:center; padding:11px 2px; font-family:'Libre Caslon Text',serif; font-style:italic; font-size:17px; }
+.more-toggle{ text-align:center; padding:11px; font-size:12px; font-weight:700; color:var(--accent-deep); cursor:pointer; border-top:1px solid var(--line); margin:4px 0 16px; }
+.more-fields{ display:none; }
+.more-fields.show{ display:block; }
+.helper{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; margin-top:-8px; margin-bottom:14px; font-style:italic; }
+.calc-out{ font-size:12px; color:var(--accent-deep); font-weight:700; margin-top:-8px; margin-bottom:14px; }
+.toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:11px 20px; border-radius:30px; font-size:12.5px; font-weight:600; opacity:0; pointer-events:none; transition:.3s; z-index:200; max-width:90vw; text-align:center; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.fab-wrap{ position:fixed; bottom:0; left:0; right:0; padding:16px; padding-bottom:calc(16px + env(safe-area-inset-bottom)); background:linear-gradient(180deg,transparent,var(--paper) 40%); z-index:40; }
+.fab-wrap .btn{ max-width:600px; margin:0 auto; }
+.fab-wrap.hidden{ display:none; }
+.loading{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
+.controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
+.sort-sel{ position:relative; }
+.sort-sel select{ width:100%; -webkit-appearance:none; appearance:none; background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 30px 11px 12px; font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer; }
+.sort-sel::after{ content:'\25BE'; position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--ink-soft); font-size:11px; }
+.filter-btn{ background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 15px; font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:7px; }
+.filter-btn.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.filter-btn .fcount{ background:var(--accent); color:#fff; border-radius:10px; padding:1px 7px; font-size:10.5px; }
+.filter-panel{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:15px; margin-bottom:13px; display:none; }
+.filter-panel.show{ display:block; }
+.fgroup{ margin-bottom:14px; }
+.fgroup:last-of-type{ margin-bottom:10px; }
+.fgroup > .fl{ font-size:9px; letter-spacing:.16em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); margin-bottom:7px; }
+.fchips{ display:flex; gap:6px; flex-wrap:wrap; }
+.fchip{ border:1.5px solid var(--line); background:#fff; border-radius:16px; padding:6px 11px; font-size:11.5px; font-weight:600; cursor:pointer; color:var(--ink-soft); }
+.fchip.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.fclear{ text-align:center; padding-top:10px; border-top:1px solid var(--line); }
+.result-count{ font-size:11px; color:var(--ink-soft); font-weight:600; margin:0 4px 11px; }
+.result-count b{ color:var(--accent-deep); }
+.showmore{ text-align:center; margin-top:6px; }
+.showmore .btn-ghost{ width:100%; }
+.flanker-name{ color:var(--ink-soft); font-style:normal; }
+.sec{ border:1px solid var(--line); border-radius:6px; margin-bottom:11px; background:rgba(255,255,255,.4); overflow:hidden; }
+.sec-head{ padding:13px 14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:800; color:var(--ink); }
+.sec-head .sc{ color:var(--ink-soft); font-size:16px; transition:transform .2s; }
+.sec.open .sec-head .sc{ transform:rotate(90deg); }
+.sec-head .sdone{ font-size:9px; letter-spacing:.08em; color:var(--accent-deep); background:var(--accent-soft); padding:2px 7px; border-radius:10px; margin-left:auto; margin-right:9px; text-transform:none; font-weight:700; }
+.sec-body{ display:none; padding:2px 14px 14px; }
+.sec.open .sec-body{ display:block; }
+.sec-body .field:last-child{ margin-bottom:4px; }
+.rate10{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+.rate10 .chip{ text-align:center; padding:10px 2px; font-family:'Libre Caslon Text',serif; font-style:italic; font-size:15px; }
+.pyr{ margin-top:12px; }
+.pyr-row{ display:grid; grid-template-columns:52px 1fr; gap:10px; align-items:start; margin-bottom:8px; }
+.pyr-row:last-child{ margin-bottom:0; }
+.pyr-lab{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); padding-top:5px; }
+.ntags{ display:flex; gap:5px; flex-wrap:wrap; }
+.ntag{ font-size:11px; font-weight:600; padding:3px 9px; border-radius:12px; background:#fff; border:1px solid var(--line); color:var(--ink); }
+.pyr-row.top .ntag{ border-color:rgba(184,130,60,.45); }
+.pyr-row.heart .ntag{ border-color:rgba(140,74,72,.35); }
+.pyr-row.base .ntag{ border-color:rgba(43,36,29,.28); }
+.prose-box{ font-size:12.5px; line-height:1.55; margin-top:11px; }
+.prose-box .pb-lab{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:4px; }
+.pc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:11px; }
+@media (max-width:440px){ .pc-grid{ grid-template-columns:1fr; } }
+.pc-box{ font-size:12.5px; line-height:1.5; padding:10px 12px; border-radius:4px; }
+.pc-box.pro{ background:rgba(111,125,94,.12); }
+.pc-box.con{ background:rgba(140,74,72,.1); }
+.pc-box .pb-lab{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px; }
+.pc-box.pro .pb-lab{ color:#4f5c40; }
+.pc-box.con .pb-lab{ color:var(--wine); }
+.score{ display:flex; align-items:baseline; gap:3px; font-family:'Libre Caslon Text',serif; }
+.score .sv{ font-size:26px; font-style:italic; color:var(--accent-deep); line-height:1; }
+.score .sm{ font-size:12px; color:var(--ink-soft); }
+.btn-danger{ background:var(--wine); color:#fff; padding:15px 22px; width:100%; }
+.btn-stack{ width:100%; margin-top:9px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="eyebrow">Scent Log</div>
+    <h1>Track the wear,<br>not just the bottle.</h1>
+    <p>Log the spray, the dry down, and the skin scent as they happen — then turn it into a review.</p>
+  </header>
+
+  <div class="tab-bar" id="tabBar">
+    <div class="tab" data-tab="stevnscents">StevnScents</div>
+    <div class="tab" data-tab="fallowmark">Fallowmark</div>
+  </div>
+
+  <div class="view-bar" id="viewBar">
+    <div class="vtab" data-view="tests">Tests</div>
+    <div class="vtab" data-view="insights">Insights</div>
+    <div class="vtab" data-view="compare">Compare</div>
+    <div class="vtab" data-view="guide">Guide</div>
+  </div>
+
+  <div id="content"><div class="loading">Loading your log…</div></div>
+</div>
+
+<div class="fab-wrap" id="fabWrap">
+  <button class="btn btn-primary" id="newTestBtn">+ New test — <span id="fabNotebookLabel">StevnScents</span></button>
+</div>
+
+<div class="overlay" id="newTestOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>New test</h2>
+  <div class="sheet-sub" id="newTestSub">Starts the clock the moment you save.</div>
+  <div class="field"><label>Brand / house</label>
+    <input type="text" id="fHouse" placeholder="e.g. Lattafa" autocomplete="off" list="brandList">
+    <datalist id="brandList"></datalist></div>
+  <div class="field"><label>Fragrance name</label>
+    <input type="text" id="fName" placeholder="e.g. Khamrah" autocomplete="off"></div>
+  <div class="field"><label>Flanker <span class="opt">optional</span></label>
+    <input type="text" id="fFlanker" placeholder="e.g. Qahwa, Elixir, Intense" autocomplete="off"></div>
+  <div class="helper">A flanker is a spin-off of an existing fragrance. Leave blank if this is the original.</div>
+  <div class="field"><label>Type</label>
+    <div class="chip-row" id="fType">
+      <div class="chip selected" data-val="Dupe">Dupe / Clone</div>
+      <div class="chip" data-val="Designer">Designer</div>
+      <div class="chip" data-val="Niche">Niche</div>
+      <div class="chip" data-val="Indie">Indie</div>
+    </div></div>
+  <div class="field"><label>Brand markets it as inspired by <span class="opt">optional</span></label>
+    <input type="text" id="fInspired" placeholder="e.g. Angels' Share by Kilian" autocomplete="off"></div>
+  <div class="helper">Keeps the claim on the brand, not on you — exactly how you frame it on camera.</div>
+  <div class="field"><label>Concentration</label>
+    <div class="chip-row" id="fConc">
+      <div class="chip sm" data-val="EDC">EDC</div>
+      <div class="chip sm" data-val="EDT">EDT</div>
+      <div class="chip sm selected" data-val="EDP">EDP</div>
+      <div class="chip sm" data-val="Extrait">Extrait</div>
+      <div class="chip sm" data-val="Parfum">Parfum</div>
+      <div class="chip sm" data-val="Oil / Attar">Oil / Attar</div>
+    </div></div>
+  <div class="field"><label>Sprays</label>
+    <div class="rating-row" id="fSprays">
+      <div class="chip" data-val="1">1</div><div class="chip" data-val="2">2</div>
+      <div class="chip selected" data-val="3">3</div><div class="chip" data-val="4">4</div>
+      <div class="chip" data-val="5">5</div><div class="chip" data-val="6+">6+</div>
+    </div></div>
+  <div class="field"><label>Applied to <span class="opt">tap all that apply</span></label>
+    <div class="chip-row" id="fSpots">
+      <div class="chip sm" data-val="Neck">Neck</div><div class="chip sm" data-val="Wrists">Wrists</div>
+      <div class="chip sm" data-val="Chest">Chest</div><div class="chip sm" data-val="Behind ears">Behind ears</div>
+      <div class="chip sm" data-val="Forearms">Forearms</div><div class="chip sm" data-val="Clothing">Clothing</div>
+      <div class="chip sm" data-val="Hair">Hair</div><div class="chip sm" data-val="Blotter">Blotter only</div>
+    </div></div>
+  <div class="more-toggle" id="moreToggleNew">+ More detail (weather, price, batch)</div>
+  <div class="more-fields" id="moreFieldsNew">
+    <div class="field"><label>Weather</label>
+      <div class="rating-row" id="fWeather">
+        <div class="chip" data-val="Hot">Hot</div><div class="chip" data-val="Warm">Warm</div>
+        <div class="chip" data-val="Mild">Mild</div><div class="chip" data-val="Cool">Cool</div>
+        <div class="chip" data-val="Cold">Cold</div>
+      </div></div>
+    <div class="field"><label>Humidity</label>
+      <div class="rating-row" id="fHumidity">
+        <div class="chip" data-val="Dry">Dry</div><div class="chip" data-val="Average">Average</div>
+        <div class="chip" data-val="Humid">Humid</div>
+      </div></div>
+    <div class="helper">Heat pushes a fragrance out harder and burns it off faster. Logging this is why your longevity numbers will beat everyone else's.</div>
+    <div class="two-col">
+      <div class="field"><label>Price paid</label><input type="number" id="fPrice" placeholder="35" inputmode="decimal"></div>
+      <div class="field"><label>Bottle size (ml)</label><input type="number" id="fSize" placeholder="100" inputmode="numeric"></div>
+    </div>
+    <div class="calc-out" id="cplOut"></div>
+    <div class="two-col">
+      <div class="field"><label>Batch <span class="opt">optional</span></label>
+        <input type="text" id="fBatch" placeholder="2025 batch" autocomplete="off"></div>
+      <div class="field"><label>Released <span class="opt">optional</span></label>
+        <input type="text" id="fYear" placeholder="2023" autocomplete="off"></div>
+    </div>
+    <div class="field"><label>Perfumer / nose <span class="opt">optional</span></label>
+      <input type="text" id="fPerfumer" placeholder="e.g. Quentin Bisch" autocomplete="off"></div>
+  </div>
+  <div class="field"><label>Context <span class="opt">optional</span></label>
+    <input type="text" id="fContext" placeholder="e.g. office day, running errands" autocomplete="off"></div>
+  <button class="btn btn-primary" id="saveNewTestBtn">Start test</button>
+</div></div>
+
+<div class="overlay" id="noteOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2 id="noteTitle">Initial Spray</h2>
+  <div class="sheet-sub" id="noteSub">What do you smell right now?</div>
+  <div class="field"><label>What you smell</label>
+    <textarea id="noteText" placeholder="e.g. sharp cardamom and smoke up front, softer than expected…"></textarea></div>
+  <div class="helper" id="noteHint"></div>
+  <div class="field"><label>Projection right now</label>
+    <div class="rating-row" id="noteProj">
+      <div class="chip" data-val="Skin scent">Skin</div>
+      <div class="chip" data-val="Arm's length">Arm's length</div>
+      <div class="chip" data-val="Room-filling">Room</div>
+    </div></div>
+  <button class="btn btn-primary" id="saveNoteBtn">Save check-in</button>
+</div></div>
+
+<div class="overlay" id="customOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Extra check-in</h2>
+  <div class="sheet-sub">Log a moment outside the three main phases.</div>
+  <div class="field"><label>Label</label>
+    <input type="text" id="customLabel" placeholder="e.g. Hour 8, after the gym" autocomplete="off"></div>
+  <button class="btn btn-primary" id="saveCustomBtn">Continue</button>
+</div></div>
+
+<div class="overlay" id="compOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Log a compliment</h2>
+  <div class="sheet-sub">Who said it and what they said. This is the raw material for your best-performing videos.</div>
+  <div class="field"><label>What happened</label>
+    <textarea id="compText" placeholder="e.g. Barista asked what I was wearing, said it smelled expensive"></textarea></div>
+  <button class="btn btn-primary" id="saveCompBtn">Save</button>
+</div></div>
+
+<div class="overlay" id="endOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2 id="endTitle">Wrap up the test</h2>
+  <div class="sheet-sub">Only Performance is required. Fill in as much of the rest as you want — it all shows up on the card and in the export.</div>
+
+  <div class="sec open" data-sec="perf"><div class="sec-head">Performance<span class="sc">&rsaquo;</span></div><div class="sec-body">
+    <div class="field"><label>Longevity — total wear time</label>
+      <div class="rating-row" id="eLong">
+        <div class="chip" data-val="Under 2h">&lt;2h</div><div class="chip" data-val="2–4 hours">2–4h</div>
+        <div class="chip" data-val="4–6 hours">4–6h</div><div class="chip" data-val="6–8 hours">6–8h</div>
+        <div class="chip" data-val="8–12 hours">8–12h</div><div class="chip" data-val="12+ hours">12h+</div>
+      </div></div>
+    <div class="field"><label>Peak projection</label>
+      <div class="rating-row" id="eProj">
+        <div class="chip" data-val="Skin scent">Skin</div><div class="chip" data-val="Arm's length">Arm's length</div>
+        <div class="chip" data-val="Room-filling">Room</div><div class="chip" data-val="Beast mode">Beast</div>
+      </div></div>
+    <div class="field"><label>Sillage — the trail you leave</label>
+      <div class="rating-row" id="eSill">
+        <div class="chip" data-val="None">None</div><div class="chip" data-val="Soft">Soft</div>
+        <div class="chip" data-val="Moderate">Moderate</div><div class="chip" data-val="Heavy">Heavy</div>
+      </div></div>
+  </div></div>
+
+  <div class="sec" data-sec="notes"><div class="sec-head">Notes &amp; accords<span class="sc">&rsaquo;</span></div><div class="sec-body">
+    <div class="field"><label>Top notes <span class="opt">separate with commas</span></label>
+      <input type="text" id="eTop" placeholder="bergamot, cardamom, nutmeg" autocomplete="off"></div>
+    <div class="field"><label>Heart notes</label>
+      <input type="text" id="eHeart" placeholder="cinnamon, praline, tuberose" autocomplete="off"></div>
+    <div class="field"><label>Base notes</label>
+      <input type="text" id="eBase" placeholder="vanilla, tonka, amber, benzoin" autocomplete="off"></div>
+    <div class="field"><label>Main accords <span class="opt">tap all that apply</span></label>
+      <div class="chip-row" id="eFam">
+        <div class="chip sm" data-val="Fresh">Fresh</div><div class="chip sm" data-val="Citrus">Citrus</div>
+        <div class="chip sm" data-val="Aquatic">Aquatic</div><div class="chip sm" data-val="Green">Green</div>
+        <div class="chip sm" data-val="Floral">Floral</div><div class="chip sm" data-val="Fruity">Fruity</div>
+        <div class="chip sm" data-val="Gourmand">Gourmand</div><div class="chip sm" data-val="Sweet">Sweet</div>
+        <div class="chip sm" data-val="Spicy">Spicy</div><div class="chip sm" data-val="Woody">Woody</div>
+        <div class="chip sm" data-val="Amber">Amber</div><div class="chip sm" data-val="Oud">Oud</div>
+        <div class="chip sm" data-val="Leather">Leather</div><div class="chip sm" data-val="Smoky">Smoky</div>
+        <div class="chip sm" data-val="Powdery">Powdery</div><div class="chip sm" data-val="Musky">Musky</div>
+        <div class="chip sm" data-val="Fougère">Fougère</div><div class="chip sm" data-val="Aromatic">Aromatic</div>
+      </div></div>
+    <div class="field"><label>Smells similar to <span class="opt">optional</span></label>
+      <input type="text" id="eSimilar" placeholder="e.g. sits between Khamrah and Angels' Share" autocomplete="off"></div>
+  </div></div>
+
+  <div class="sec" data-sec="when"><div class="sec-head">When to wear<span class="sc">&rsaquo;</span></div><div class="sec-body">
+    <div class="field"><label>Best season <span class="opt">tap all that apply</span></label>
+      <div class="chip-row" id="eSeason">
+        <div class="chip sm" data-val="Spring">Spring</div><div class="chip sm" data-val="Summer">Summer</div>
+        <div class="chip sm" data-val="Fall">Fall</div><div class="chip sm" data-val="Winter">Winter</div>
+        <div class="chip sm" data-val="Year-round">Year-round</div>
+      </div></div>
+    <div class="field"><label>Why that season <span class="opt">optional</span></label>
+      <textarea id="eSeasonNotes" placeholder="e.g. The cinnamon and tobacco bloom in cold air — in summer heat this would go cloying fast."></textarea></div>
+    <div class="field"><label>Day or night</label>
+      <div class="rating-row" id="eDayNight">
+        <div class="chip" data-val="Daytime">Daytime</div><div class="chip" data-val="Evening">Evening</div>
+        <div class="chip" data-val="Either">Either</div>
+      </div></div>
+    <div class="field"><label>Best occasion <span class="opt">tap all that apply</span></label>
+      <div class="chip-row" id="eOcc">
+        <div class="chip sm" data-val="Office">Office</div><div class="chip sm" data-val="Date night">Date night</div>
+        <div class="chip sm" data-val="Casual">Casual</div><div class="chip sm" data-val="Formal">Formal</div>
+        <div class="chip sm" data-val="Night out">Night out</div><div class="chip sm" data-val="Gym">Gym</div>
+        <div class="chip sm" data-val="Church">Church</div><div class="chip sm" data-val="Travel">Travel</div>
+        <div class="chip sm" data-val="Signature">Signature</div>
+      </div></div>
+    <div class="field"><label>Layers well with <span class="opt">optional</span></label>
+      <input type="text" id="eLayers" placeholder="e.g. plain vanilla body lotion, or a clean musk" autocomplete="off"></div>
+  </div></div>
+
+  <div class="sec" data-sec="who"><div class="sec-head">Who it's for<span class="sc">&rsaquo;</span></div><div class="sec-body">
+    <div class="field"><label>Gender lean</label>
+      <div class="chip-row" id="eGender">
+        <div class="chip sm" data-val="Masculine">Masculine</div>
+        <div class="chip sm" data-val="Leans masculine">Leans masc</div>
+        <div class="chip sm" data-val="Unisex">Unisex</div>
+        <div class="chip sm" data-val="Leans feminine">Leans fem</div>
+        <div class="chip sm" data-val="Feminine">Feminine</div>
+      </div></div>
+    <div class="field"><label>Age read</label>
+      <div class="rating-row" id="eAge">
+        <div class="chip" data-val="Young">Young</div><div class="chip" data-val="Any age">Any age</div>
+        <div class="chip" data-val="Mature">Mature</div>
+      </div></div>
+    <div class="field"><label>Compliment factor</label>
+      <div class="rating-row" id="eCompF">
+        <div class="chip" data-val="None">None</div><div class="chip" data-val="Low">Low</div>
+        <div class="chip" data-val="Medium">Medium</div><div class="chip" data-val="High">High</div>
+        <div class="chip" data-val="Magnet">Magnet</div>
+      </div></div>
+  </div></div>
+
+  <div class="sec" data-sec="verdict"><div class="sec-head">Verdict<span class="sc">&rsaquo;</span></div><div class="sec-body">
+    <div class="field"><label>Score out of 10</label>
+      <div class="rate10" id="eRating">
+        <div class="chip" data-val="1">1</div><div class="chip" data-val="2">2</div><div class="chip" data-val="3">3</div>
+        <div class="chip" data-val="4">4</div><div class="chip" data-val="5">5</div><div class="chip" data-val="6">6</div>
+        <div class="chip" data-val="7">7</div><div class="chip" data-val="8">8</div><div class="chip" data-val="9">9</div>
+        <div class="chip" data-val="10">10</div>
+      </div></div>
+    <div class="field"><label>Tier</label>
+      <div class="tier-row" id="eTier">
+        <div class="chip" data-val="S">S</div><div class="chip" data-val="A">A</div>
+        <div class="chip" data-val="B">B</div><div class="chip" data-val="C">C</div>
+        <div class="chip" data-val="D">D</div><div class="chip" data-val="F">F</div>
+      </div></div>
+    <div class="field"><label>Worth the money?</label>
+      <div class="rating-row" id="eValue">
+        <div class="chip" data-val="Steal">Steal</div><div class="chip" data-val="Fair">Fair</div>
+        <div class="chip" data-val="Overpriced">Overpriced</div>
+      </div></div>
+    <div class="field"><label>Would you buy it again?</label>
+      <div class="rating-row" id="eRebuy">
+        <div class="chip" data-val="Yes">Yes</div><div class="chip" data-val="Maybe">Maybe</div>
+        <div class="chip" data-val="No">No</div>
+      </div></div>
+    <div class="two-col">
+      <div class="field"><label>What works</label>
+        <textarea id="ePros" placeholder="e.g. opening is genuinely gorgeous"></textarea></div>
+      <div class="field"><label>What doesn't</label>
+        <textarea id="eCons" placeholder="e.g. dies to nothing by hour four"></textarea></div>
+    </div>
+    <div class="field"><label>Verdict — one line for the video</label>
+      <textarea id="eVerdict" placeholder="e.g. Best cold-weather dupe I've tested this month — projects hard for 3 hours, then hugs skin all day"></textarea></div>
+  </div></div>
+
+  <button class="btn btn-primary" id="saveEndBtn">Save</button>
+</div></div>
+
+<div class="overlay" id="confirmOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2 id="confirmTitle">Discard this test?</h2>
+  <div class="sheet-sub" id="confirmSub">This can't be undone.</div>
+  <button class="btn btn-danger" id="confirmYesBtn">Delete</button>
+  <button class="btn btn-ghost btn-stack" id="confirmNoBtn">Keep it</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<script>
+const KEY='scent-log-tests';
+let tests=[], activeTab='stevnscents', activeView='tests';
+let noteCtx=null, endId=null, openHistId=null, tick=null, searchQ='', cmpA='', cmpB='';
+let sortBy='recent', filters={}, filterOpen=false, visibleCount=30;
+const PAGE=30;
+
+const phases=[
+  {key:'spray', label:'Initial Spray', hint:'The first 30 seconds — alcohol blast, top notes, first impression.'},
+  {key:'drydown', label:'Dry Down', hint:'Usually 30-90 minutes in. The heart of the fragrance — what people actually smell on you.'},
+  {key:'skin', label:'Skin Scent', hint:'When it stops projecting and sits close. Base notes only. Often 4-8 hours in.'}
+];
+const sortOpts=[['recent','Recently tested'],['oldest','Oldest first'],['name','Name A-Z'],['brand','Brand A-Z'],
+  ['tier','Tier (best first)'],['longevity','Longevity (longest)'],['value','Best value ($/ml)'],['compliments','Most compliments'],['score','Score (high to low)']];
+const filterGroups=[
+  {key:'type', label:'Type', opts:['Dupe','Designer','Niche','Indie']},
+  {key:'tier', label:'Tier', opts:['S','A','B','C','D','F']},
+  {key:'brand', label:'Brand', dynamic:true},
+  {key:'families', label:'Scent family', multi:true, dynamic:true},
+  {key:'seasons', label:'Season', multi:true, opts:['Spring','Summer','Fall','Winter','Year-round']},
+  {key:'occasions', label:'Occasion', multi:true, opts:['Office','Date night','Casual','Formal','Night out','Gym','Church','Travel']},
+  {key:'longBand', label:'Longevity', opts:['Under 4h','4-8h','8h+']},
+  {key:'dayNight', label:'Day or night', opts:['Daytime','Evening','Either']},
+  {key:'gender', label:'Gender lean', opts:['Masculine','Leans masculine','Unisex','Leans feminine','Feminine']},
+  {key:'value', label:'Worth it', opts:['Steal','Fair','Overpriced']},
+  {key:'rebuy', label:'Buy again', opts:['Yes','Maybe','No']},
+  {key:'flankerOnly', label:'Flankers', opts:['Flankers only','Originals only']}
+];
+const nbLabel = nb => nb==='fallowmark' ? 'Fallowmark' : 'StevnScents';
+const longHrs = {'Under 2h':1,'2–4 hours':3,'4–6 hours':5,'6–8 hours':7,'8–12 hours':10,'12+ hours':13,'Gone under 4h':3,'4–8 hours':6};
+const tierOrder={S:0,A:1,B:2,C:3,D:4,F:5};
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2300); }
+function uid(){ return 't'+Date.now()+Math.random().toString(36).slice(2,8); }
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+function fmtEl(ms){ const m=Math.floor(ms/60000), h=Math.floor(m/60), r=m%60; return h===0?r+'m':h+'h '+r+'m'; }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); }
+function norm(t){
+  return Object.assign({ notebook:'stevnscents', house:'', flanker:'', inspired:'', concentration:'', sprays:'', spots:[],
+    weather:'', humidity:'', price:'', size:'', batch:'', context:'', checkpoints:[], compliments:[],
+    longevity:'', projection:'', sillage:'', families:[], seasons:[], occasions:[], complimentFactor:'',
+    tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
+    topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
+    gender:'', age:'', rating:'', value:'', pros:'', cons:'' }, t);
+}
+function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
+function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
+function fullName(t){ return t.name + (t.flanker ? ' ' + t.flanker : ''); }
+function fullTitle(t){ return (t.house ? t.house + ' ' : '') + fullName(t); }
+function longBand(t){ const h=longHrs[t.longevity]; if(!h) return ''; return h<4?'Under 4h':h<8?'4-8h':'8h+'; }
+
+async function load(){
+  try{
+    const r=await window.storage.get(KEY,false);
+    if(r){ const p=JSON.parse(r.value);
+      if(Array.isArray(p)){ tests=p.map(norm); }
+      else { tests=(p.tests||[]).map(norm); activeTab=p.activeTab||'stevnscents'; activeView=p.activeView||'tests'; sortBy=p.sortBy||'recent'; }
+    }
+  }catch(e){ tests=[]; }
+  theme(); render(); startTick();
+}
+async function save(){
+  try{ const r=await window.storage.set(KEY,JSON.stringify({tests,activeTab,activeView,sortBy}),false); if(!r) toast('Could not save — try again'); }
+  catch(e){ toast('Storage error — last change may not be saved'); }
+}
+function theme(){ document.body.className='nb-'+activeTab; document.getElementById('fabNotebookLabel').textContent=nbLabel(activeTab); }
+function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!t.completed&&t.notebook===activeTab)) render(); },60000); }
+
+function render(){
+  document.querySelectorAll('#tabBar .tab').forEach(t=>t.classList.toggle('selected',t.dataset.tab===activeTab));
+  document.querySelectorAll('#viewBar .vtab').forEach(t=>t.classList.toggle('selected',t.dataset.view===activeView));
+  document.getElementById('fabWrap').classList.toggle('hidden', activeView!=='tests');
+  const c=document.getElementById('content');
+  if(activeView==='tests') c.innerHTML=viewTests();
+  else if(activeView==='insights') c.innerHTML=viewInsights();
+  else if(activeView==='compare') c.innerHTML=viewCompare();
+  else c.innerHTML=viewGuide();
+  bind();
+}
+
+function activeFilterCount(){ let n=0; for(const k in filters){ if((filters[k]||[]).length) n+=filters[k].length; } return n; }
+
+function passesFilters(t){
+  for(const g of filterGroups){
+    const sel=filters[g.key]||[]; if(!sel.length) continue;
+    if(g.key==='brand'){ if(sel.indexOf(t.house||'(no brand)')<0) return false; }
+    else if(g.key==='longBand'){ if(sel.indexOf(longBand(t))<0) return false; }
+    else if(g.key==='flankerOnly'){
+      const isF=!!(t.flanker&&t.flanker.trim());
+      if(sel.indexOf('Flankers only')>-1 && !isF) return false;
+      if(sel.indexOf('Originals only')>-1 && isF) return false;
+    }
+    else if(g.multi){ const vals=t[g.key]||[]; if(!sel.some(v=>vals.indexOf(v)>-1)) return false; }
+    else { if(sel.indexOf(t[g.key])<0) return false; }
+  }
+  return true;
+}
+
+function sortList(arr){
+  const a=arr.slice();
+  if(sortBy==='recent') a.sort((x,y)=>new Date(y.startTime)-new Date(x.startTime));
+  else if(sortBy==='oldest') a.sort((x,y)=>new Date(x.startTime)-new Date(y.startTime));
+  else if(sortBy==='name') a.sort((x,y)=>fullName(x).localeCompare(fullName(y)));
+  else if(sortBy==='brand') a.sort((x,y)=>(x.house||'zzz').localeCompare(y.house||'zzz')||fullName(x).localeCompare(fullName(y)));
+  else if(sortBy==='tier') a.sort((x,y)=>(tierOrder[x.tier]==null?9:tierOrder[x.tier])-(tierOrder[y.tier]==null?9:tierOrder[y.tier]));
+  else if(sortBy==='longevity') a.sort((x,y)=>(longHrs[y.longevity]||0)-(longHrs[x.longevity]||0));
+  else if(sortBy==='value') a.sort((x,y)=>cplNum(x)-cplNum(y));
+  else if(sortBy==='compliments') a.sort((x,y)=>(y.compliments||[]).length-(x.compliments||[]).length);
+  else if(sortBy==='score') a.sort((x,y)=>(parseInt(y.rating)||0)-(parseInt(x.rating)||0));
+  return a;
+}
+
+function viewTests(){
+  const scoped=tests.filter(t=>t.notebook===activeTab);
+  const act=scoped.filter(t=>!t.completed).sort((a,b)=>new Date(b.startTime)-new Date(a.startTime));
+  const allDone=scoped.filter(t=>t.completed);
+  let done=allDone;
+  if(searchQ){ const q=searchQ.toLowerCase();
+    done=done.filter(t=>[t.name,t.flanker,t.house,t.inspired,t.verdict,t.topNotes,t.heartNotes,t.baseNotes,t.similar,t.perfumer,t.pros,t.cons,t.seasonNotes,(t.families||[]).join(' '),(t.checkpoints||[]).map(c=>c.note).join(' ')].join(' ').toLowerCase().indexOf(q)>-1);
+  }
+  done=done.filter(passesFilters);
+  done=sortList(done);
+
+  let h='';
+  if(act.length){ h+='<div class="section-label">In progress</div>'; act.forEach(t=>h+=cardActive(t)); }
+  h+='<div class="section-label">Past tests'+(allDone.length?' \u00b7 '+allDone.length:'')+'</div>';
+
+  if(allDone.length>2){
+    const fc=activeFilterCount();
+    h+='<div class="search-wrap"><input type="text" id="searchInput" placeholder="Search brand, name, notes..." value="'+esc(searchQ)+'"></div>';
+    h+='<div class="controls"><div class="sort-sel"><select id="sortSel">'+
+      sortOpts.map(o=>'<option value="'+o[0]+'"'+(sortBy===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+
+      '</select></div><button class="filter-btn'+(fc?' active':'')+'" id="filterBtn">Filters'+(fc?'<span class="fcount">'+fc+'</span>':'')+'</button></div>';
+    h+=filterPanel(allDone);
+    if(done.length!==allDone.length) h+='<div class="result-count">Showing <b>'+done.length+'</b> of '+allDone.length+'</div>';
+  }
+
+  if(!allDone.length&&!act.length) h+='<div class="empty-state"><div class="icon">&#9672;</div><p>No '+nbLabel(activeTab)+' tests yet. Start one below.</p></div>';
+  else if(!done.length&&allDone.length) h+='<div class="empty-state"><p>Nothing matches. Try clearing a filter.</p></div>';
+  else if(!allDone.length) h+='<div class="empty-state"><p>Finish your active test and it will land here.</p></div>';
+  else {
+    const slice=done.slice(0,visibleCount);
+    slice.forEach(t=>h+=cardHist(t));
+    if(done.length>visibleCount) h+='<div class="showmore"><button class="btn btn-ghost" data-act="more">Show '+Math.min(PAGE,done.length-visibleCount)+' more</button></div>';
+    h+='<div style="text-align:center;margin-top:16px"><button class="btn-text" data-act="exportall">Copy all '+nbLabel(activeTab)+' tests</button></div>';
+  }
+  return h;
+}
+
+function filterPanel(pool){
+  let h='<div class="filter-panel'+(filterOpen?' show':'')+'" id="filterPanel">';
+  filterGroups.forEach(g=>{
+    let opts=g.opts;
+    if(g.dynamic){
+      const set={};
+      pool.forEach(t=>{ if(g.key==='brand'){ const b=t.house||'(no brand)'; set[b]=1; } else (t[g.key]||[]).forEach(v=>set[v]=1); });
+      opts=Object.keys(set).sort();
+    }
+    if(!opts||!opts.length) return;
+    const sel=filters[g.key]||[];
+    h+='<div class="fgroup"><div class="fl">'+g.label+'</div><div class="fchips">'+
+      opts.map(o=>'<div class="fchip'+(sel.indexOf(o)>-1?' on':'')+'" data-fg="'+esc(g.key)+'" data-fv="'+esc(o)+'">'+esc(o)+'</div>').join('')+
+      '</div></div>';
+  });
+  h+='<div class="fclear"><button class="btn-text" data-act="clearfilters">Clear all filters</button></div></div>';
+  return h;
+}
+
+function cardActive(t){
+  const el=Date.now()-new Date(t.startTime).getTime();
+  const pins=(t.checkpoints||[]).map(cp=>'<div class="decay-pin" style="left:'+Math.min(100,(cp.minutes/720)*100)+'%"></div>').join('');
+  const btns=phases.map(p=>{ const e=(t.checkpoints||[]).find(c=>c.key===p.key);
+    return '<div class="cp-btn'+(e?' logged':'')+'" data-act="note" data-test="'+t.id+'" data-key="'+p.key+'" data-label="'+p.label+'"><div class="cp-btn-label">'+p.label+'</div>'+(e?'<div class="cp-btn-time">'+fmtEl(e.minutes*60000)+' in</div>':'')+'</div>'; }).join('');
+  const next=phases.filter(p=>!(t.checkpoints||[]).some(c=>c.key===p.key))[0];
+  const meta=[t.concentration,t.sprays?t.sprays+' sprays':'',(t.spots||[]).join(', '),t.weather,cpl(t)].filter(Boolean)
+    .map(m=>'<div class="mtag'+(m===t.concentration?'':' neutral')+'">'+esc(m)+'</div>').join('');
+  return '<div class="card active-card">'+
+    '<div class="active-top"><div><div class="frag-name">'+esc(t.name)+(t.flanker?' <span class="flanker-name">'+esc(t.flanker)+'</span>':'')+'</div>'+
+      (t.house?'<div class="frag-house">'+esc(t.house)+'</div>':'')+
+      (t.inspired?'<div class="inspired">Brand markets it as inspired by '+esc(t.inspired)+'</div>':'')+
+      '<div class="meta-row">'+meta+'</div></div>'+
+      '<div class="elapsed">'+fmtEl(el)+'<span class="lbl">elapsed</span></div></div>'+
+    '<div class="decay-wrap"><div class="decay-bar"><div class="decay-fill"></div>'+pins+'</div>'+
+      '<div class="decay-scale"><span>0h</span><span>6h</span><span>12h+</span></div></div>'+
+    '<div class="checkpoint-grid">'+btns+'</div>'+
+    (next?'<div class="cp-hint">Next up: '+next.label+' \u2014 '+next.hint+'</div>':'<div class="cp-hint">All three phases logged. Add extras any time.</div>')+
+    '<div class="inline-actions"><button class="btn-text" data-act="custom" data-test="'+t.id+'">+ Extra check-in</button>'+
+      '<button class="btn-text" data-act="comp" data-test="'+t.id+'">+ Log a compliment</button></div>'+
+    notesBlock(t)+
+    '<div class="active-actions"><button class="btn btn-ghost" data-act="del" data-test="'+t.id+'">Discard</button>'+
+      '<button class="btn btn-accent" data-act="end" data-test="'+t.id+'" style="flex:2">Finish test</button></div></div>';
+}
+
+function notesBlock(t){
+  const cps=(t.checkpoints||[]).slice().sort((a,b)=>a.minutes-b.minutes);
+  let h='<div class="notes-list">';
+  if(!cps.length) h+='<div class="note-item"><div></div><div class="note-text empty">No check-ins yet — tap a phase above.</div></div>';
+  else cps.forEach(cp=>{ h+='<div class="note-item" data-act="editnote" data-test="'+t.id+'" data-key="'+cp.key+'" data-label="'+esc(cp.label)+'">'+
+    '<div class="note-time">'+esc(cp.label)+'<span>'+fmtEl(cp.minutes*60000)+' in</span></div>'+
+    '<div><div class="note-text'+(cp.note?'':' empty')+'">'+(cp.note?esc(cp.note):'Logged, no note')+'</div>'+
+    (cp.projection?'<span class="note-proj">'+esc(cp.projection)+'</span>':'')+'</div></div>'; });
+  h+='</div>';
+  (t.compliments||[]).forEach(c=>{ h+='<div class="comp-item"><span class="ct">Compliment \u00b7 '+fmtEl(c.minutes*60000)+' in</span>'+esc(c.text)+'</div>'; });
+  return h;
+}
+
+function noteTags(str){
+  return String(str||'').split(',').map(s=>s.trim()).filter(Boolean)
+    .map(n=>'<span class="ntag">'+esc(n)+'</span>').join('');
+}
+function pyramid(t){
+  const rows=[['top','Top',t.topNotes],['heart','Heart',t.heartNotes],['base','Base',t.baseNotes]].filter(r=>r[2]);
+  if(!rows.length) return '';
+  return '<div class="pyr">'+rows.map(r=>'<div class="pyr-row '+r[0]+'"><div class="pyr-lab">'+r[1]+'</div><div class="ntags">'+noteTags(r[2])+'</div></div>').join('')+'</div>';
+}
+function cardHist(t){
+  const open=openHistId===t.id;
+  const dg=[['Concentration',t.concentration],['Sprays',t.sprays],['Applied to',(t.spots||[]).join(', ')],
+    ['Weather',[t.weather,t.humidity].filter(Boolean).join(' \u00b7 ')],['Sillage',t.sillage],
+    ['Family',(t.families||[]).join(', ')],['Season',(t.seasons||[]).join(', ')],['Occasion',(t.occasions||[]).join(', ')],
+    ['Compliments',t.complimentFactor],['Buy again',t.rebuy],['Cost',cpl(t)?cpl(t)+(t.price?' \u00b7 $'+t.price:''):''],['Batch',t.batch]]
+    .filter(x=>x[1]).map(x=>'<div class="dg-item"><span class="k">'+x[0]+'</span><span class="v">'+esc(x[1])+'</span></div>').join('');
+  const dg2=[['Gender lean',t.gender],['Age read',t.age],['Day/night',t.dayNight],['Worth it',t.value],
+    ['Perfumer',t.perfumer],['Released',t.year],['Layers with',t.layers],['Similar to',t.similar]]
+    .filter(x=>x[1]).map(x=>'<div class="dg-item"><span class="k">'+x[0]+'</span><span class="v">'+esc(x[1])+'</span></div>').join('');
+  const prose=(t.seasonNotes?'<div class="prose-box"><span class="pb-lab">Why that season</span>'+esc(t.seasonNotes)+'</div>':'')+
+    ((t.pros||t.cons)?'<div class="pc-grid">'+
+      (t.pros?'<div class="pc-box pro"><span class="pb-lab">What works</span>'+esc(t.pros)+'</div>':'')+
+      (t.cons?'<div class="pc-box con"><span class="pb-lab">What doesn\'t</span>'+esc(t.cons)+'</div>':'')+'</div>':'');
+  return '<div class="card hist-card'+(open?' open':'')+'" data-hist="'+t.id+'">'+
+    '<div class="hist-top"><div style="flex:1"><div class="hist-name">'+esc(t.name)+(t.flanker?' <span class="flanker-name">'+esc(t.flanker)+'</span>':'')+'</div>'+
+      '<div class="hist-meta">'+(t.house?esc(t.house)+' \u00b7 ':'')+esc(t.type)+' \u00b7 '+fmtDate(t.startTime)+'</div>'+
+      (t.inspired?'<div class="inspired">Marketed as inspired by '+esc(t.inspired)+'</div>':'')+
+      '<div class="hist-badges">'+(t.longevity?'<div class="badge longevity">'+esc(t.longevity)+'</div>':'')+
+        (t.projection?'<div class="badge projection">'+esc(t.projection)+'</div>':'')+
+        (cpl(t)?'<div class="badge">'+cpl(t)+'</div>':'')+
+        (t.dayNight?'<div class="badge">'+esc(t.dayNight)+'</div>':'')+
+        ((t.seasons||[]).length?'<div class="badge">'+esc(t.seasons.join(', '))+'</div>':'')+
+        ((t.compliments||[]).length?'<div class="badge">'+t.compliments.length+' compliment'+(t.compliments.length>1?'s':'')+'</div>':'')+
+      '</div></div>'+
+      '<div style="text-align:right">'+
+        (t.rating?'<div class="score"><span class="sv">'+esc(t.rating)+'</span><span class="sm">/10</span></div>':'')+
+        (t.tier?'<div class="tier-chip t-'+t.tier+'" style="margin-left:auto;margin-top:6px">'+t.tier+'</div>':'')+
+      '</div>'+
+      '<div class="chevron">&rsaquo;</div></div>'+
+    '<div class="hist-detail"><div class="hist-detail-inner">'+
+      (t.verdict?'<div class="verdict-box">'+esc(t.verdict)+'</div>':'')+
+      pyramid(t)+
+      prose+
+      (dg?'<div class="detail-grid">'+dg+'</div>':'')+
+      (dg2?'<div class="detail-grid">'+dg2+'</div>':'')+
+      notesBlock(t)+
+      '<div class="hist-detail-actions">'+
+        '<button class="btn-text" data-act="copy" data-test="'+t.id+'">Copy for script</button>'+
+        '<button class="btn-text" data-act="end" data-test="'+t.id+'">Edit ratings</button>'+
+        '<button class="btn-text" data-act="retest" data-test="'+t.id+'">Test again</button>'+
+        '<button class="btn-danger-text" data-act="del" data-test="'+t.id+'">Delete</button>'+
+      '</div></div></div></div>';
+}
+
+function viewInsights(){
+  const s=tests.filter(t=>t.notebook===activeTab&&t.completed);
+  if(s.length<1) return '<div class="empty-state"><div class="icon">&#9719;</div><p>Finish a few tests and this fills up with patterns across your collection — plus video ideas pulled from your own data.</p></div>';
+  const withL=s.filter(t=>longHrs[t.longevity]);
+  const avgL=withL.length?(withL.reduce((a,t)=>a+longHrs[t.longevity],0)/withL.length).toFixed(1):'-';
+  const priced=s.filter(t=>parseFloat(t.price)&&parseFloat(t.size));
+  const avgCpl=priced.length?'$'+(priced.reduce((a,t)=>a+parseFloat(t.price)/parseFloat(t.size),0)/priced.length).toFixed(2):'-';
+  const top=s.filter(t=>t.tier==='S'||t.tier==='A').length;
+  const rated=s.filter(t=>parseInt(t.rating));
+  const avgScore=rated.length?(rated.reduce((a,t)=>a+parseInt(t.rating),0)/rated.length).toFixed(1):'-';
+
+  let h='<div class="stat-grid">'+
+    '<div class="stat-box"><div class="n">'+s.length+'</div><div class="l">Tests logged</div></div>'+
+    '<div class="stat-box"><div class="n">'+avgL+(avgL!=='-'?'h':'')+'</div><div class="l">Avg longevity</div></div>'+
+    '<div class="stat-box"><div class="n">'+avgScore+'</div><div class="l">Avg score /10</div></div>'+
+    '<div class="stat-box"><div class="n sm">'+avgCpl+'</div><div class="l">Avg cost / ml</div></div></div>'+
+    '<div class="result-count" style="margin-top:2px">'+top+' rated S or A tier</div>';
+
+  const longest=withL.slice().sort((a,b)=>longHrs[b.longevity]-longHrs[a.longevity]).slice(0,5);
+  if(longest.length) h+='<div class="section-label">Longest lasting</div><div class="card">'+
+    longest.map(t=>'<div class="rank-row"><div class="rn">'+esc(fullName(t))+'<small>'+(t.house?esc(t.house)+' \u00b7 ':'')+esc(t.type)+'</small></div><div class="rv">'+esc(t.longevity)+'</div></div>').join('')+'</div>';
+
+  const brandCount={}; s.forEach(t=>{ const b=t.house||'(no brand)'; brandCount[b]=(brandCount[b]||0)+1; });
+  const brands=Object.keys(brandCount).map(k=>[k,brandCount[k]]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(brands.length>1){ const bmx=brands[0][1];
+    h+='<div class="section-label">Most tested brands</div><div class="card">'+
+    brands.map(b=>'<div class="bar-row"><div class="bn">'+esc(b[0])+'</div><div class="bar-track"><div class="bar-fill" style="width:'+(b[1]/bmx*100)+'%"></div></div><div class="bv">'+b[1]+'</div></div>').join('')+'</div>'; }
+
+  const value=priced.filter(t=>t.tier==='S'||t.tier==='A').sort((a,b)=>(a.price/a.size)-(b.price/b.size)).slice(0,5);
+  if(value.length) h+='<div class="section-label">Best value \u2014 high tier, low price</div><div class="card">'+
+    value.map(t=>'<div class="rank-row"><div class="rn">'+esc(fullName(t))+'<small>Tier '+t.tier+' \u00b7 $'+esc(t.price)+' / '+esc(t.size)+'ml</small></div><div class="rv">'+cpl(t)+'</div></div>').join('')+'</div>';
+
+  const compTop=s.filter(t=>(t.compliments||[]).length).sort((a,b)=>b.compliments.length-a.compliments.length).slice(0,5);
+  if(compTop.length) h+='<div class="section-label">Most complimented</div><div class="card">'+
+    compTop.map(t=>'<div class="rank-row"><div class="rn">'+esc(fullName(t))+'<small>'+esc(t.complimentFactor||'')+'</small></div><div class="rv">'+t.compliments.length+'x</div></div>').join('')+'</div>';
+
+  const famCount={}; s.forEach(t=>(t.families||[]).forEach(f=>famCount[f]=(famCount[f]||0)+1));
+  const fams=Object.keys(famCount).map(k=>[k,famCount[k]]).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if(fams.length){ const mx=fams[0][1];
+    h+='<div class="section-label">Your collection leans</div><div class="card">'+
+    fams.map(f=>'<div class="bar-row"><div class="bn">'+esc(f[0])+'</div><div class="bar-track"><div class="bar-fill" style="width:'+(f[1]/mx*100)+'%"></div></div><div class="bv">'+f[1]+'</div></div>').join('')+'</div>'; }
+
+  const ideas=[];
+  const sTier=s.filter(t=>t.tier==='S'), dupes=s.filter(t=>t.type==='Dupe');
+  if(sTier.length>=3) ideas.push(['Tier list','You have '+sTier.length+' S-tier picks. That is a ranking video \u2014 reveal them one at a time, cheapest last.']);
+  if(dupes.length>=5) ideas.push(['Survivor format','You have tested '+dupes.length+' dupes. "I tested '+dupes.length+' dupes and only '+Math.max(1,dupes.filter(t=>t.tier==='S'||t.tier==='A').length)+' survived" writes itself.']);
+  const flop=s.filter(t=>t.tier==='F'||t.tier==='D'||t.longevity==='Under 2h'||t.longevity==='2–4 hours')[0];
+  if(flop) ideas.push(['Honest callout','"Do not buy '+fullName(flop)+'" \u2014 you have the receipts. Contrarian takes pull the biggest comment sections.']);
+  if(value[0]) ideas.push(['Price shock','"'+fullName(value[0])+' is '+cpl(value[0])+' per ml." Put it next to a designer bottle and let the numbers do the work.']);
+  if(compTop[0]&&compTop[0].compliments[0]) ideas.push(['Compliment story','Open with the moment, name the bottle last: "'+String(compTop[0].compliments[0].text).slice(0,70)+'..."']);
+  const seasonCount={}; s.forEach(t=>(t.seasons||[]).forEach(x=>seasonCount[x]=(seasonCount[x]||0)+1));
+  const topSeason=Object.keys(seasonCount).map(k=>[k,seasonCount[k]]).sort((a,b)=>b[1]-a[1])[0];
+  if(topSeason&&topSeason[1]>=3) ideas.push([topSeason[0]+' roundup','You have '+topSeason[1]+' picks tagged '+topSeason[0]+'. Seasonal lists get re-shared every year.']);
+  const insp=s.filter(t=>t.inspired);
+  if(insp.length>=2) ideas.push(['Side by side','You have '+insp.length+' with a stated inspiration. Compare one against the original \u2014 frame the claim as the brand\u2019s, not yours.']);
+  if(ideas.length) h+='<div class="section-label">Video ideas from your data</div>'+
+    ideas.map(i=>'<div class="idea"><div class="it">'+esc(i[0])+'</div><div class="ib">'+esc(i[1])+'</div></div>').join('');
+  return h;
+}
+
+function viewCompare(){
+  const s=tests.filter(t=>t.notebook===activeTab&&t.completed);
+  if(s.length<2) return '<div class="empty-state"><div class="icon">&#8646;</div><p>Finish two tests and you can put them head to head here \u2014 the fastest way to build a dupe-vs-original video.</p></div>';
+  const opt=sel=>'<option value="">Choose...</option>'+s.map(t=>'<option value="'+t.id+'"'+(sel===t.id?' selected':'')+'>'+esc(fullTitle(t))+'</option>').join('');
+  let h='<div class="cmp-selects"><select id="cmpA">'+opt(cmpA)+'</select><select id="cmpB">'+opt(cmpB)+'</select></div>';
+  const A=s.filter(t=>t.id===cmpA)[0], B=s.filter(t=>t.id===cmpB)[0];
+  if(!A||!B) return h+'<div class="empty-state"><p>Pick two to compare.</p></div>';
+  const rows=[['Brand',A.house,B.house],['Flanker',A.flanker,B.flanker],['Type',A.type,B.type],['Concentration',A.concentration,B.concentration],
+    ['Price',A.price?'$'+A.price:'',B.price?'$'+B.price:''],['Cost / ml',cpl(A),cpl(B)],
+    ['Longevity',A.longevity,B.longevity],['Projection',A.projection,B.projection],['Sillage',A.sillage,B.sillage],
+    ['Family',(A.families||[]).join(', '),(B.families||[]).join(', ')],
+    ['Season',(A.seasons||[]).join(', '),(B.seasons||[]).join(', ')],
+    ['Top notes',A.topNotes,B.topNotes],['Heart',A.heartNotes,B.heartNotes],['Base',A.baseNotes,B.baseNotes],
+    ['Day/night',A.dayNight,B.dayNight],['Occasion',(A.occasions||[]).join(', '),(B.occasions||[]).join(', ')],
+    ['Gender lean',A.gender,B.gender],['Age read',A.age,B.age],
+    ['Compliments',String((A.compliments||[]).length),String((B.compliments||[]).length)],
+    ['Score',A.rating?A.rating+'/10':'',B.rating?B.rating+'/10':''],
+    ['Tier',A.tier,B.tier],['Worth it',A.value,B.value],['Buy again',A.rebuy,B.rebuy],
+    ['What works',A.pros,B.pros],['What doesn\'t',A.cons,B.cons],['Verdict',A.verdict,B.verdict]];
+  function better(l,a,b){
+    if(l==='Longevity'){ const x=longHrs[a]||0,y=longHrs[b]||0; return x>y?'a':y>x?'b':''; }
+    if(l==='Cost / ml'){ const x=parseFloat(String(a).replace(/[^0-9.]/g,'')),y=parseFloat(String(b).replace(/[^0-9.]/g,'')); return x&&y?(x<y?'a':y<x?'b':''):''; }
+    if(l==='Tier'){ const o=['S','A','B','C','D','F'],x=o.indexOf(a),y=o.indexOf(b); return x>-1&&y>-1?(x<y?'a':y<x?'b':''):''; }
+    if(l==='Compliments'){ const x=+a,y=+b; return x>y?'a':y>x?'b':''; }
+    if(l==='Score'){ const x=parseInt(a)||0,y=parseInt(b)||0; return x>y?'a':y>x?'b':''; }
+    return '';
+  }
+  h+='<div class="cmp-table"><div class="cmp-row head"><div class="cl"></div><div>'+esc(A.name)+'</div><div>'+esc(B.name)+'</div></div>'+
+    rows.filter(r=>r[1]||r[2]).map(r=>{ const w=better(r[0],r[1],r[2]);
+      return '<div class="cmp-row"><div class="cl">'+r[0]+'</div><div class="'+(w==='a'?'win':'')+'">'+esc(r[1]||'-')+'</div><div class="'+(w==='b'?'win':'')+'">'+esc(r[2]||'-')+'</div></div>'; }).join('')+'</div>'+
+    '<div style="text-align:center;margin-top:16px"><button class="btn-text" data-act="copycmp">Copy comparison</button></div>';
+  return h;
+}
+
+var guideData=[
+['Longevity vs projection vs sillage',
+ '<p>Three different things people constantly mix up. Getting this right on camera makes you sound like you know what you are talking about.</p>'+
+ '<p><strong>Longevity</strong> is how long it stays detectable on your skin at all \u2014 even if you have to press your nose to your wrist.</p>'+
+ '<p><strong>Projection</strong> is how far it pushes off you while you stand still. Skin scent, arm\u2019s length, or filling a room.</p>'+
+ '<p><strong>Sillage</strong> is the trail left behind after you walk past someone.</p>'+
+ '<div class="say">"This one lasts 10 hours but only projects for the first two \u2014 so it is long-lasting, not loud."</div>'],
+['Top, heart and base notes',
+ '<p>A fragrance unfolds in three stages, which is exactly why a 10-second store sniff tells you almost nothing.</p>'+
+ '<p><strong>Top notes</strong> hit first and burn off in 15\u201330 minutes. Usually citrus, light fruit, fresh herbs. This is the part people smell in the store \u2014 and the part that lies to you.</p>'+
+ '<p><strong>Heart notes</strong> arrive 30\u201390 minutes in and last a few hours. Florals, spices, fruit. This is the actual personality.</p>'+
+ '<p><strong>Base notes</strong> are what is left after that \u2014 vanilla, amber, musk, woods, oud. Heavy molecules that cling to skin the longest.</p>'+
+ '<div class="say">"Do not judge anything off the first spray. Give it an hour before you decide."</div>'],
+['EDT vs EDP vs Extrait',
+ '<p>The difference is how much perfume oil is in the bottle versus alcohol.</p>'+
+ '<p><strong>EDC</strong> \u2014 roughly 2\u20135% oil. Light, fades fast.<br><strong>EDT</strong> \u2014 roughly 5\u201315%. Fresher, lighter, often better in heat.<br><strong>EDP</strong> \u2014 roughly 15\u201320%. The most common modern format.<br><strong>Extrait / Parfum</strong> \u2014 20\u201340%. Richest, usually sits closer to skin but lasts longest.</p>'+
+ '<p>Higher concentration does not automatically mean better \u2014 it means denser. An EDT can outperform an EDP if the notes are stronger.</p>'+
+ '<div class="say">"Extrait does not mean stronger, it means more concentrated. It usually projects less and lasts longer."</div>'],
+['Why the same bottle smells different on people',
+ '<p>Skin chemistry is real, and it comes down to a few things people can actually control.</p>'+
+ '<p><strong>Skin type.</strong> Oily skin holds fragrance longer \u2014 oil gives the molecules something to grip. Dry skin burns through it faster.</p>'+
+ '<p><strong>pH and diet.</strong> Affects how sweet or sour a fragrance reads on you.</p>'+
+ '<p><strong>Body heat.</strong> Warmer skin projects harder and burns off faster.</p>'+
+ '<p>The fix for dry skin: unscented lotion on the spot before you spray. Costs nothing and can add hours.</p>'+
+ '<div class="say">"If it dies on you in two hours, moisturize first. Fragrance grips oil, not dry skin."</div>'],
+['How many sprays, and where',
+ '<p>Most people either drown themselves or under-apply and think the fragrance is weak.</p>'+
+ '<p><strong>Start with 2\u20134 sprays.</strong> For an EDP, 3 is a solid baseline. Extrait, drop to 1\u20132.</p>'+
+ '<p><strong>Best spots:</strong> base of the neck, chest, behind the ears. Warm areas, close to nose level for people near you.</p>'+
+ '<p><strong>Wrists work</strong>, but do not rub them together \u2014 it crushes the top notes and shortens the opening.</p>'+
+ '<p><strong>On clothing</strong> it lasts far longer but smells flatter, because it never interacts with your skin. Some fragrances stain.</p>'+
+ '<div class="say">"If you can smell yourself all day, everyone else is getting way too much."</div>'],
+['Heat, cold and season',
+ '<p>Temperature changes performance more than almost any other variable \u2014 which is why logging weather with every test matters.</p>'+
+ '<p><strong>Heat amplifies and accelerates.</strong> Sweet, heavy fragrances can turn cloying in summer, and burn off faster.</p>'+
+ '<p><strong>Cold suppresses.</strong> Fresh, citrus and aquatic scents can go nearly invisible in winter.</p>'+
+ '<p>General rule: fresh and citrus in the heat, sweet and woody in the cold. A starting point, not a law.</p>'+
+ '<div class="say">"Same bottle, 90-degree day versus 40-degree day \u2014 completely different fragrance."</div>'],
+['Storage \u2014 the mistake almost everyone makes',
+ '<p>Three things kill a fragrance: <strong>light, heat, and temperature swings.</strong></p>'+
+ '<p>The bathroom is the worst room in the house for it. Every shower spikes the heat and humidity, and that cycle breaks down the oils faster than anything else.</p>'+
+ '<p>Store bottles in a closet, drawer, or the original box. Somewhere dark and stable. Kept properly, most last 3\u20135 years, often longer.</p>'+
+ '<p>Signs it has turned: the color darkens, the opening goes sour or sharply alcoholic, longevity drops off a cliff.</p>'+
+ '<div class="say">"If your collection lives in the bathroom, you are slowly cooking it."</div>'],
+['Dupes, clones and how to talk about them',
+ '<p>A <strong>dupe</strong> or <strong>clone</strong> is a fragrance built to smell close to a more expensive one. Perfume formulas cannot be copyrighted, which is why the category exists legally.</p>'+
+ '<p>The honest framing: say the <em>brand</em> markets it as inspired by the original \u2014 do not assert the match yourself. It protects you and it is more accurate, because most dupes are close on the opening and drift apart in the dry down.</p>'+
+ '<p>What usually separates a dupe from the original: <strong>longevity and smoothness.</strong> Cheaper aroma chemicals often nail the first 20 minutes and then flatten out.</p>'+
+ '<div class="say">"The brand markets this as inspired by X. First hour, it is close. Hour four is where you hear the price difference."</div>'],
+['Batches and reformulations',
+ '<p>Fragrances get reformulated \u2014 sometimes for cost, often because a raw material gets restricted by regulation. Oakmoss and certain musks are common examples.</p>'+
+ '<p>That is why people say the vintage is better. Sometimes true, sometimes nostalgia.</p>'+
+ '<p>Logging the batch or year you tested protects you when someone comments that your review does not match their bottle.</p>'+
+ '<div class="say">"Worth noting this is a 2025 batch \u2014 if yours is older, it may perform differently."</div>'],
+['Nose blindness',
+ '<p>Your nose stops registering a smell after constant exposure. It is called olfactory fatigue, and it is why people over-apply.</p>'+
+ '<p>You will lose the ability to smell your own fragrance long before other people do. That is normal and not a longevity problem.</p>'+
+ '<p>To reset while testing: step outside for fresh air, or smell your own skin somewhere unscented. Coffee beans are a myth \u2014 plain air works better.</p>'+
+ '<p>Never test more than 3\u20134 fragrances in one session.</p>'+
+ '<div class="say">"I cannot smell it anymore \u2014 but that is me going nose blind, not the fragrance dying."</div>'],
+['Decants, samples and splits',
+ '<p>Useful vocabulary your audience asks about constantly.</p>'+
+ '<p><strong>Sample</strong> \u2014 a tiny vial, usually 1\u20132ml, often free with an order or a few dollars.</p>'+
+ '<p><strong>Decant</strong> \u2014 a larger amount, typically 5\u201330ml, transferred from a full bottle into a travel atomizer.</p>'+
+ '<p><strong>Split</strong> \u2014 a group buys one bottle together and divides it. Cheapest way to try expensive things.</p>'+
+ '<p>Decants and splits are how people try niche without a $300 blind buy. The trade-off is trusting the seller.</p>'+
+ '<div class="say">"You do not need the full bottle. Grab a 5ml decant first and live with it for a week."</div>'],
+['Blind buying',
+ '<p>Buying without smelling it first. Fun, and how most people end up with bottles they never wear.</p>'+
+ '<p>It makes more sense at the budget end \u2014 a $25 gamble is a very different decision than a $250 one.</p>'+
+ '<p>Before you blind buy: check the note list against things you already know you like, and read reviews specifically about the dry down, not the opening.</p>'+
+ '<div class="say">"Blind buying under $30 is a hobby. Blind buying over $200 is a mistake waiting to happen."</div>']
+];
+function viewGuide(){
+  return '<div class="section-label">Explain it simply</div>'+
+  '<p style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:-4px 4px 16px">Plain-language answers to what your audience actually asks \u2014 each with a line you can say on camera.</p>'+
+  guideData.map(function(g,i){ return '<div class="acc" data-acc="'+i+'"><div class="acc-head">'+g[0]+'<span class="ch">&rsaquo;</span></div><div class="acc-body"><div class="acc-body-inner">'+g[1]+'</div></div></div>'; }).join('');
+}
+
+function bind(){
+  var si=document.getElementById('searchInput');
+  if(si) si.addEventListener('input',function(e){ searchQ=e.target.value; visibleCount=PAGE; var p=e.target.selectionStart; render();
+    var n=document.getElementById('searchInput'); if(n){ n.focus(); n.setSelectionRange(p,p); } });
+
+  document.querySelectorAll('[data-act]').forEach(function(el){
+    el.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var a=el.dataset.act, id=el.dataset.test;
+      if(a==='note'||a==='editnote') openNote(id,el.dataset.key,el.dataset.label);
+      else if(a==='custom'){ document.getElementById('customLabel').value=''; noteCtx={testId:id}; show('customOverlay'); }
+      else if(a==='comp'){ noteCtx={testId:id}; document.getElementById('compText').value=''; show('compOverlay'); }
+      else if(a==='end') openEnd(id);
+      else if(a==='del') askDelete(id);
+      else if(a==='copy') copyOne(id);
+      else if(a==='retest') retest(id);
+      else if(a==='exportall') exportAll();
+      else if(a==='copycmp') copyCmp();
+      else if(a==='clearfilters'){ filters={}; visibleCount=PAGE; render(); }
+      else if(a==='more'){ visibleCount+=PAGE; render(); }
+    });
+  });
+
+  document.querySelectorAll('.hist-card').forEach(function(c){
+    c.addEventListener('click',function(e){
+      if(e.target.closest('[data-act]')) return;
+      openHistId = openHistId===c.dataset.hist ? null : c.dataset.hist; render();
+    });
+  });
+
+  document.querySelectorAll('.acc').forEach(function(a){
+    a.querySelector('.acc-head').addEventListener('click',function(){ a.classList.toggle('open'); });
+  });
+
+  var ss=document.getElementById('sortSel');
+  if(ss) ss.addEventListener('change',function(e){ sortBy=e.target.value; visibleCount=PAGE; save(); render(); });
+
+  var fb=document.getElementById('filterBtn');
+  if(fb) fb.addEventListener('click',function(){ filterOpen=!filterOpen;
+    var p=document.getElementById('filterPanel'); if(p) p.classList.toggle('show',filterOpen); });
+
+  document.querySelectorAll('.fchip').forEach(function(ch){
+    ch.addEventListener('click',function(){
+      var g=ch.dataset.fg, v=ch.dataset.fv;
+      if(!filters[g]) filters[g]=[];
+      var i=filters[g].indexOf(v);
+      if(i>-1) filters[g].splice(i,1); else filters[g].push(v);
+      if(!filters[g].length) delete filters[g];
+      filterOpen=true; visibleCount=PAGE; render();
+    });
+  });
+
+  var ca=document.getElementById('cmpA'), cb=document.getElementById('cmpB');
+  if(ca) ca.addEventListener('change',function(e){ cmpA=e.target.value; render(); });
+  if(cb) cb.addEventListener('change',function(e){ cmpB=e.target.value; render(); });
+}
+
+var pendingDelete=null;
+function askDelete(id){
+  var t=tests.filter(function(x){return x.id===id;})[0]; if(!t) return;
+  pendingDelete=id;
+  document.getElementById('confirmTitle').textContent = t.completed ? 'Delete this test?' : 'Discard this test?';
+  document.getElementById('confirmSub').textContent = fullTitle(t) + " \u2014 this can't be undone.";
+  show('confirmOverlay');
+}
+function show(id){ document.getElementById(id).classList.add('show'); }
+function hide(id){ document.getElementById(id).classList.remove('show'); }
+
+function chipSingle(cid){ var c=document.getElementById(cid); if(!c) return;
+  c.addEventListener('click',function(e){ var ch=e.target.closest('.chip'); if(!ch) return;
+    c.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('selected'); }); ch.classList.add('selected'); }); }
+function chipMulti(cid){ var c=document.getElementById(cid); if(!c) return;
+  c.addEventListener('click',function(e){ var ch=e.target.closest('.chip'); if(!ch) return; ch.classList.toggle('selected'); }); }
+function getSingle(cid){ var s=document.querySelector('#'+cid+' .chip.selected'); return s?s.dataset.val:''; }
+function getMulti(cid){ return Array.prototype.slice.call(document.querySelectorAll('#'+cid+' .chip.selected')).map(function(x){ return x.dataset.val; }); }
+function setSingle(cid,v){ document.querySelectorAll('#'+cid+' .chip').forEach(function(c){ c.classList.toggle('selected',c.dataset.val===v); }); }
+function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .chip').forEach(function(c){ c.classList.toggle('selected',a.indexOf(c.dataset.val)>-1); }); }
+
+['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
+ 'eDayNight','eGender','eAge','eRating','eValue'].forEach(chipSingle);
+['fSpots','eFam','eSeason','eOcc'].forEach(chipMulti);
+
+document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
+  sec.querySelector('.sec-head').addEventListener('click',function(){ sec.classList.toggle('open'); });
+});
+function markSections(t){
+  var map={ notes:[t.topNotes,t.heartNotes,t.baseNotes,(t.families||[]).length,t.similar],
+            when:[(t.seasons||[]).length,t.seasonNotes,t.dayNight,(t.occasions||[]).length,t.layers],
+            who:[t.gender,t.age,t.complimentFactor],
+            verdict:[t.rating,t.tier,t.value,t.rebuy,t.pros,t.cons,t.verdict] };
+  document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
+    var k=sec.dataset.sec, head=sec.querySelector('.sec-head');
+    var old=head.querySelector('.sdone'); if(old) old.remove();
+    if(!map[k]) return;
+    var n=map[k].filter(function(v){ return v; }).length;
+    if(n){ var b=document.createElement('span'); b.className='sdone'; b.textContent=n+' filled';
+      head.insertBefore(b, head.querySelector('.sc')); }
+  });
+}
+
+document.getElementById('moreToggleNew').addEventListener('click',function(){
+  var m=document.getElementById('moreFieldsNew'); m.classList.toggle('show');
+  this.textContent=m.classList.contains('show')?'- Less detail':'+ More detail (weather, price, batch)';
+});
+function updCpl(){ var p=parseFloat(document.getElementById('fPrice').value), s=parseFloat(document.getElementById('fSize').value);
+  document.getElementById('cplOut').textContent=(p&&s)?'\u2248 $'+(p/s).toFixed(2)+' per ml':''; }
+document.getElementById('fPrice').addEventListener('input',updCpl);
+document.getElementById('fSize').addEventListener('input',updCpl);
+
+document.getElementById('newTestBtn').addEventListener('click',function(){
+  ['fName','fHouse','fFlanker','fInspired','fPrice','fSize','fBatch','fYear','fPerfumer','fContext'].forEach(function(i){ document.getElementById(i).value=''; });
+  var seen={}; tests.forEach(function(t){ if(t.house) seen[t.house]=1; });
+  document.getElementById('brandList').innerHTML=Object.keys(seen).sort().map(function(b){ return '<option value="'+esc(b)+'">'; }).join('');
+  setSingle('fType','Dupe'); setSingle('fConc','EDP'); setSingle('fSprays','3');
+  setSingle('fWeather',''); setSingle('fHumidity',''); setMulti('fSpots',[]);
+  document.getElementById('cplOut').textContent='';
+  document.getElementById('moreFieldsNew').classList.remove('show');
+  document.getElementById('moreToggleNew').textContent='+ More detail (weather, price, batch)';
+  document.getElementById('newTestSub').textContent='Starts the clock the moment you save \u2014 logging to '+nbLabel(activeTab)+'.';
+  show('newTestOverlay'); setTimeout(function(){ document.getElementById('fHouse').focus(); },150);
+});
+
+document.getElementById('saveNewTestBtn').addEventListener('click',function(){
+  var name=document.getElementById('fName').value.trim();
+  var house=document.getElementById('fHouse').value.trim();
+  if(!house){ toast('Add the brand first'); document.getElementById('fHouse').focus(); return; }
+  if(!name){ toast('Add a fragrance name'); document.getElementById('fName').focus(); return; }
+  tests.push(norm({ id:uid(), name:name, house:house, flanker:document.getElementById('fFlanker').value.trim(),
+    type:getSingle('fType')||'Dupe', inspired:document.getElementById('fInspired').value.trim(),
+    concentration:getSingle('fConc'), sprays:getSingle('fSprays'), spots:getMulti('fSpots'),
+    weather:getSingle('fWeather'), humidity:getSingle('fHumidity'),
+    price:document.getElementById('fPrice').value.trim(), size:document.getElementById('fSize').value.trim(),
+    batch:document.getElementById('fBatch').value.trim(), year:document.getElementById('fYear').value.trim(),
+    perfumer:document.getElementById('fPerfumer').value.trim(), context:document.getElementById('fContext').value.trim(),
+    notebook:activeTab, startTime:new Date().toISOString(), checkpoints:[], compliments:[], completed:false }));
+  save(); hide('newTestOverlay'); render(); toast('Test started');
+});
+
+function openNote(testId,key,label){
+  var t=tests.filter(function(x){return x.id===testId;})[0]; if(!t) return;
+  var ex=(t.checkpoints||[]).filter(function(c){return c.key===key;})[0];
+  noteCtx={testId:testId,key:key,label:label};
+  document.getElementById('noteTitle').textContent=label;
+  var ph=phases.filter(function(p){return p.key===key;})[0];
+  document.getElementById('noteSub').textContent=ex?'Editing your note \u2014 the original timestamp stays.':'What do you smell right now? Be specific \u2014 this becomes your script.';
+  document.getElementById('noteHint').textContent=ph?ph.hint:'';
+  document.getElementById('noteText').value=ex?ex.note:'';
+  setSingle('noteProj',ex?ex.projection:'');
+  show('noteOverlay'); setTimeout(function(){ document.getElementById('noteText').focus(); },150);
+}
+
+document.getElementById('saveNoteBtn').addEventListener('click',function(){
+  if(!noteCtx||!noteCtx.key) return;
+  var t=tests.filter(function(x){return x.id===noteCtx.testId;})[0]; if(!t) return;
+  var note=document.getElementById('noteText').value.trim(), proj=getSingle('noteProj');
+  var i=(t.checkpoints||[]).map(function(c){return c.key;}).indexOf(noteCtx.key);
+  if(i>=0){ t.checkpoints[i].note=note; t.checkpoints[i].projection=proj; }
+  else { t.checkpoints.push({ key:noteCtx.key, label:noteCtx.label,
+    minutes:Math.floor((Date.now()-new Date(t.startTime).getTime())/60000), note:note, projection:proj, loggedAt:new Date().toISOString() }); }
+  save(); hide('noteOverlay'); noteCtx=null; render(); toast('Check-in saved');
+});
+
+document.getElementById('saveCustomBtn').addEventListener('click',function(){
+  var l=document.getElementById('customLabel').value.trim();
+  if(!l){ toast('Give it a label'); return; }
+  var id=noteCtx.testId; hide('customOverlay');
+  openNote(id,'custom_'+Date.now(),l);
+});
+
+document.getElementById('saveCompBtn').addEventListener('click',function(){
+  var t=tests.filter(function(x){return x.id===noteCtx.testId;})[0]; if(!t) return;
+  var txt=document.getElementById('compText').value.trim();
+  if(!txt){ toast('Add what they said'); return; }
+  t.compliments.push({ text:txt, minutes:Math.floor((Date.now()-new Date(t.startTime).getTime())/60000), loggedAt:new Date().toISOString() });
+  save(); hide('compOverlay'); noteCtx=null; render(); toast('Compliment logged');
+});
+
+function openEnd(id){
+  var t=tests.filter(function(x){return x.id===id;})[0]; if(!t) return; endId=id;
+  document.getElementById('endTitle').textContent=t.completed?'Edit ratings':'Wrap up the test';
+  setSingle('eLong',t.longevity); setSingle('eProj',t.projection); setSingle('eSill',t.sillage);
+  setMulti('eFam',t.families); setMulti('eSeason',t.seasons); setMulti('eOcc',t.occasions);
+  setSingle('eCompF',t.complimentFactor); setSingle('eTier',t.tier); setSingle('eRebuy',t.rebuy);
+  setSingle('eDayNight',t.dayNight); setSingle('eGender',t.gender); setSingle('eAge',t.age);
+  setSingle('eRating',t.rating); setSingle('eValue',t.value);
+  document.getElementById('eTop').value=t.topNotes||'';
+  document.getElementById('eHeart').value=t.heartNotes||'';
+  document.getElementById('eBase').value=t.baseNotes||'';
+  document.getElementById('eSimilar').value=t.similar||'';
+  document.getElementById('eSeasonNotes').value=t.seasonNotes||'';
+  document.getElementById('eLayers').value=t.layers||'';
+  document.getElementById('ePros').value=t.pros||'';
+  document.getElementById('eCons').value=t.cons||'';
+  document.getElementById('eVerdict').value=t.verdict||'';
+  document.querySelectorAll('#endOverlay .sec').forEach(function(sec){ sec.classList.toggle('open', sec.dataset.sec==='perf'); });
+  markSections(t);
+  show('endOverlay');
+}
+
+document.getElementById('saveEndBtn').addEventListener('click',function(){
+  var t=tests.filter(function(x){return x.id===endId;})[0]; if(!t) return;
+  t.longevity=getSingle('eLong'); t.projection=getSingle('eProj'); t.sillage=getSingle('eSill');
+  t.families=getMulti('eFam'); t.seasons=getMulti('eSeason'); t.occasions=getMulti('eOcc');
+  t.complimentFactor=getSingle('eCompF'); t.tier=getSingle('eTier'); t.rebuy=getSingle('eRebuy');
+  t.dayNight=getSingle('eDayNight'); t.gender=getSingle('eGender'); t.age=getSingle('eAge');
+  t.rating=getSingle('eRating'); t.value=getSingle('eValue');
+  t.topNotes=document.getElementById('eTop').value.trim();
+  t.heartNotes=document.getElementById('eHeart').value.trim();
+  t.baseNotes=document.getElementById('eBase').value.trim();
+  t.similar=document.getElementById('eSimilar').value.trim();
+  t.seasonNotes=document.getElementById('eSeasonNotes').value.trim();
+  t.layers=document.getElementById('eLayers').value.trim();
+  t.pros=document.getElementById('ePros').value.trim();
+  t.cons=document.getElementById('eCons').value.trim();
+  t.verdict=document.getElementById('eVerdict').value.trim();
+  if(!t.completed){ t.completed=true; t.endTime=new Date().toISOString(); }
+  save(); hide('endOverlay'); endId=null; render(); toast('Saved to your log');
+});
+
+function retest(id){
+  var o=tests.filter(function(x){return x.id===id;})[0]; if(!o) return;
+  tests.push(norm({ id:uid(), name:o.name, house:o.house, flanker:o.flanker, type:o.type, inspired:o.inspired,
+    concentration:o.concentration, sprays:o.sprays, spots:o.spots, price:o.price, size:o.size, batch:o.batch,
+    year:o.year, perfumer:o.perfumer, topNotes:o.topNotes, heartNotes:o.heartNotes, baseNotes:o.baseNotes,
+    notebook:o.notebook, startTime:new Date().toISOString(), checkpoints:[], compliments:[], completed:false }));
+  save(); activeView='tests'; visibleCount=PAGE; render(); toast('New test started from '+fullName(o));
+}
+
+function testToText(t){
+  var x=(t.house?t.house+' ':'')+fullName(t)+' ('+t.type+')\n';
+  if(t.inspired) x+='Brand markets it as inspired by: '+t.inspired+'\n';
+  var setup=[t.concentration,t.sprays?t.sprays+' sprays':'',(t.spots||[]).join('/'),[t.weather,t.humidity].filter(Boolean).join(' '),t.context].filter(Boolean).join(' \u00b7 ');
+  if(setup) x+='Setup: '+setup+'\n';
+  if(t.price&&t.size) x+='Price: $'+t.price+' / '+t.size+'ml ('+cpl(t)+')\n';
+  if(t.batch||t.year||t.perfumer) x+=[t.batch?'Batch: '+t.batch:'',t.year?'Released: '+t.year:'',t.perfumer?'Perfumer: '+t.perfumer:''].filter(Boolean).join(' \u00b7 ')+'\n';
+  x+='Tested: '+fmtDate(t.startTime)+'\n\n';
+  (t.checkpoints||[]).slice().sort(function(a,b){return a.minutes-b.minutes;}).forEach(function(c){
+    x+=c.label+' ('+fmtEl(c.minutes*60000)+' in): '+(c.note||'(no note)')+(c.projection?' \u2014 '+c.projection:'')+'\n'; });
+  if((t.compliments||[]).length){ x+='\nCompliments:\n'; t.compliments.forEach(function(c){ x+='- '+fmtEl(c.minutes*60000)+' in: '+c.text+'\n'; }); }
+  x+='\nLongevity: '+(t.longevity||'-')+'\nProjection: '+(t.projection||'-')+'\nSillage: '+(t.sillage||'-')+'\n';
+  if(t.topNotes) x+='Top: '+t.topNotes+'\n';
+  if(t.heartNotes) x+='Heart: '+t.heartNotes+'\n';
+  if(t.baseNotes) x+='Base: '+t.baseNotes+'\n';
+  if((t.families||[]).length) x+='Accords: '+t.families.join(', ')+'\n';
+  if(t.similar) x+='Similar to: '+t.similar+'\n';
+  if((t.seasons||[]).length) x+='Season: '+t.seasons.join(', ')+'\n';
+  if(t.seasonNotes) x+='Why that season: '+t.seasonNotes+'\n';
+  if(t.dayNight) x+='Day/night: '+t.dayNight+'\n';
+  if((t.occasions||[]).length) x+='Occasion: '+t.occasions.join(', ')+'\n';
+  if(t.layers) x+='Layers with: '+t.layers+'\n';
+  if(t.gender) x+='Gender lean: '+t.gender+'\n';
+  if(t.age) x+='Age read: '+t.age+'\n';
+  if(t.complimentFactor) x+='Compliment factor: '+t.complimentFactor+'\n';
+  if(t.rating) x+='Score: '+t.rating+'/10\n';
+  if(t.tier) x+='Tier: '+t.tier+'\n';
+  if(t.value) x+='Worth it: '+t.value+'\n';
+  if(t.pros) x+='What works: '+t.pros+'\n';
+  if(t.cons) x+='What does not: '+t.cons+'\n';
+  if(t.rebuy) x+='Buy again: '+t.rebuy+'\n';
+  if(t.verdict) x+='Verdict: '+t.verdict+'\n';
+  return x;
+}
+function clip(txt,msg){ if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast(msg); }).catch(function(){ toast('Copy failed'); }); } else toast('Copy not supported here'); }
+function copyOne(id){ var t=tests.filter(function(x){return x.id===id;})[0]; if(t) clip(testToText(t),'Copied \u2014 paste into your script'); }
+function exportAll(){
+  var s=tests.filter(function(t){return t.notebook===activeTab&&t.completed;}).sort(function(a,b){return new Date(a.startTime)-new Date(b.startTime);});
+  if(!s.length){ toast('Nothing to export yet'); return; }
+  clip(nbLabel(activeTab)+' \u2014 Scent Log\n\n'+s.map(testToText).join('\n---\n\n'), s.length+' tests copied');
+}
+function copyCmp(){
+  var A=tests.filter(function(t){return t.id===cmpA;})[0], B=tests.filter(function(t){return t.id===cmpB;})[0];
+  if(!A||!B) return;
+  clip(fullName(A)+' vs '+fullName(B)+'\n\n'+testToText(A)+'\n---\n\n'+testToText(B),'Comparison copied');
+}
+
+document.getElementById('tabBar').addEventListener('click',function(e){ var t=e.target.closest('.tab');
+  if(t&&t.dataset.tab!==activeTab){ activeTab=t.dataset.tab; cmpA=''; cmpB=''; searchQ=''; openHistId=null; filters={}; filterOpen=false; visibleCount=PAGE; theme(); save(); render(); } });
+document.getElementById('viewBar').addEventListener('click',function(e){ var v=e.target.closest('.vtab');
+  if(v&&v.dataset.view!==activeView){ activeView=v.dataset.view; save(); render(); } });
+document.getElementById('confirmYesBtn').addEventListener('click',function(){
+  if(!pendingDelete) return;
+  var id=pendingDelete; pendingDelete=null;
+  tests=tests.filter(function(t){ return t.id!==id; });
+  if(openHistId===id) openHistId=null;
+  if(cmpA===id) cmpA=''; if(cmpB===id) cmpB='';
+  save(); hide('confirmOverlay'); render(); toast('Deleted');
+});
+document.getElementById('confirmNoBtn').addEventListener('click',function(){ pendingDelete=null; hide('confirmOverlay'); });
+
+document.querySelectorAll('.overlay').forEach(function(o){ o.addEventListener('click',function(e){ if(e.target===o){ o.classList.remove('show'); if(o.id==='confirmOverlay') pendingDelete=null; } }); });
+
+load();
+</script>
+</body>
+</html>
