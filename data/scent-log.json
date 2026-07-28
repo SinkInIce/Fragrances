@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T18:59:38.171Z",
+  "updatedAt": "2026-07-28T19:00:25.037Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -19,7 +19,16 @@
       "size": "",
       "batch": "",
       "context": "",
-      "checkpoints": [],
+      "checkpoints": [
+        {
+          "key": "spray",
+          "label": "Initial Spray",
+          "minutes": 3,
+          "note": "A mixture of musk, orange, birch, and ginger. Very clean and elegant for the heat.",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-28T19:00:22.271Z"
+        }
+      ],
       "compliments": [],
       "longevity": "",
       "projection": "",
@@ -57,7 +66,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:56:42.538Z",
       "completed": false,
-      "updatedAt": "2026-07-28T18:56:42.538Z"
+      "updatedAt": "2026-07-28T19:00:22.271Z"
     },
     {
       "notebook": "stevnscents",
