@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T21:39:27.432Z",
+  "updatedAt": "2026-07-28T21:39:37.984Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -317,16 +317,16 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "PDM",
+      "house": "Parfums De Marly",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
+      "price": "275",
+      "size": "75",
       "batch": "",
       "context": "",
       "checkpoints": [],
@@ -362,12 +362,12 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "92",
       "covered": false,
       "id": "t17852735124862ifk5c",
       "name": "Castley",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Niche",
+      "updatedAt": "2026-07-28T21:39:35.318Z"
     },
     {
       "notebook": "stevnscents",
