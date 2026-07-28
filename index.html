@@ -1721,6 +1721,22 @@ function viewGuide(){
   guideData.map(function(g,i){ return '<div class="acc" data-acc="'+i+'"><div class="acc-head">'+g[0]+'<span class="ch">&rsaquo;</span></div><div class="acc-body"><div class="acc-body-inner">'+g[1]+'</div></div></div>'; }).join('');
 }
 
+/* Expanding a card grows it in place. Further down a list that puts its
+   actions below the fold — or under the floating button — so the card
+   looks like it did nothing. Scroll just enough to bring them into reach. */
+function revealActions(cardSel,actionsSel){
+  setTimeout(function(){
+    var card=document.querySelector(cardSel); if(!card) return;
+    var target=card.querySelector(actionsSel)||card;
+    var r=target.getBoundingClientRect();
+    var fab=document.getElementById('fabWrap');
+    var fabH=(fab&&!fab.classList.contains('hidden'))?fab.offsetHeight:0;
+    var limit=window.innerHeight-fabH-12;
+    if(r.bottom>limit) window.scrollBy({top:r.bottom-limit+8,behavior:'smooth'});
+    else if(r.top<8) window.scrollBy({top:r.top-12,behavior:'smooth'});
+  },70);
+}
+
 function bind(){
   var si=document.getElementById('searchInput');
   if(si) si.addEventListener('input',function(e){ searchQ=e.target.value; visibleCount=PAGE; var p=e.target.selectionStart; render();
@@ -1761,14 +1777,20 @@ function bind(){
   document.querySelectorAll('.bottle-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('[data-act]')) return;
-      openBottleId = openBottleId===c.dataset.bottle ? null : c.dataset.bottle; render();
+      var opening = openBottleId!==c.dataset.bottle;
+      openBottleId = opening ? c.dataset.bottle : null;
+      render();
+      if(opening) revealActions('.bottle-card.open','.bottle-actions');
     });
   });
 
   document.querySelectorAll('.hist-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('[data-act]')) return;
-      openHistId = openHistId===c.dataset.hist ? null : c.dataset.hist; render();
+      var opening = openHistId!==c.dataset.hist;
+      openHistId = opening ? c.dataset.hist : null;
+      render();
+      if(opening) revealActions('.hist-card.open','.hist-detail-actions');
     });
   });
 
