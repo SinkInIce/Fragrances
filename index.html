@@ -79,6 +79,9 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .note-item:last-child{ border-bottom:none; padding-bottom:0; }
 .note-time{ font-weight:700; color:var(--accent-deep); font-size:10.5px; padding-top:1px; line-height:1.35; }
 .note-time span{ display:block; font-weight:600; color:var(--ink-soft); font-size:9.5px; }
+/* A long custom label would shred into one-word lines in the 74px column. */
+.note-item.wide{ grid-template-columns:1fr; gap:5px; }
+.note-item.wide .note-time span{ display:inline; margin-left:7px; }
 .note-text{ color:var(--ink); }
 .note-text.empty{ color:var(--ink-soft); font-style:italic; }
 .note-proj{ display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--wine); background:rgba(140,74,72,.1); padding:2px 6px; border-radius:3px; margin-top:4px; }
@@ -469,7 +472,8 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <h2>Extra check-in</h2>
   <div class="sheet-sub">Log a moment outside the three main phases.</div>
   <div class="field"><label>Label</label>
-    <input type="text" id="customLabel" placeholder="e.g. Hour 8, after the gym" autocomplete="off"></div>
+    <input type="text" id="customLabel" placeholder="e.g. Hour 8, after the gym" autocomplete="off">
+    <div class="helper">Keep it short — this just names the moment. What you actually smell goes on the next screen.</div></div>
   <button class="btn btn-primary" id="saveCustomBtn">Continue</button>
 </div></div>
 
@@ -1396,7 +1400,7 @@ function notesBlock(t){
   const cps=(t.checkpoints||[]).slice().sort((a,b)=>a.minutes-b.minutes);
   let h='<div class="notes-list">';
   if(!cps.length) h+='<div class="note-item"><div></div><div class="note-text empty">No check-ins yet — tap a phase above.</div></div>';
-  else cps.forEach(cp=>{ h+='<div class="note-item" data-act="editnote" data-test="'+t.id+'" data-key="'+cp.key+'" data-label="'+esc(cp.label)+'">'+
+  else cps.forEach(cp=>{ h+='<div class="note-item'+((cp.label||'').length>22?' wide':'')+'" data-act="editnote" data-test="'+t.id+'" data-key="'+cp.key+'" data-label="'+esc(cp.label)+'">'+
     '<div class="note-time">'+esc(cp.label)+'<span>'+fmtEl(cp.minutes*60000)+' in</span></div>'+
     '<div><div class="note-text'+(cp.note?'':' empty')+'">'+(cp.note?esc(cp.note):'Logged, no note')+'</div>'+
     (cp.projection?'<span class="note-proj">'+esc(cp.projection)+'</span>':'')+'</div></div>'; });
