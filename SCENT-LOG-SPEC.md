@@ -398,7 +398,9 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
 4. ~~**No photos.**~~ Resolved once outside the sandbox. Bottle photos are downscaled to ~1200px JPEG on capture, held in IndexedDB, and synced as individual files under `data/photos/`. Records store only the filename, so the log JSON stays small enough to rewrite on every change.
 5. **No notification reminders** for the dry-down and skin-scent windows.
 6. ~~**No cross-device sync.**~~ Resolved. Optional GitHub-backed sync writes a shared
-   JSON file to the repo via the Contents API, with a per-device token. Records carry
+   JSON file to a dedicated `data` branch via the Contents API, with a per-device token.
+   Keeping it off `main` means a check-in never triggers a Pages rebuild, and the public
+   page reads the branch directly from raw so it refreshes without waiting on a deploy. Records carry
    `updatedAt`; deletions carry tombstones; merge is union-by-id with newest-wins and a
    retry on a stale blob SHA. JSON backup/restore remains as the offline bridge.
 7. **Guide content is hardcoded** in a JS array rather than data-driven.

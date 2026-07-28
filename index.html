@@ -698,7 +698,8 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <div class="field"><label>Repo name</label>
     <input type="text" id="syRepo" placeholder="Fragrances" autocomplete="off" spellcheck="false"></div>
   <div class="field"><label>Branch</label>
-    <input type="text" id="syBranch" placeholder="main" autocomplete="off" spellcheck="false"></div>
+    <input type="text" id="syBranch" placeholder="data" autocomplete="off" spellcheck="false">
+    <div class="helper">Use <strong>data</strong>. Keeping the log off <strong>main</strong> means saving a check-in does not rebuild the site.</div></div>
   <div class="field"><label>File path</label>
     <input type="text" id="syPath" placeholder="data/scent-log.json" autocomplete="off" spellcheck="false"></div>
   <div class="field"><label>Access token</label>
@@ -856,9 +857,8 @@ function compressImage(file,maxPx,quality){
 }
 const photoURLCache={};
 function photoRemoteURL(id){
-  if(sync.owner&&sync.repo)
-    return 'https://raw.githubusercontent.com/'+sync.owner+'/'+sync.repo+'/'+(sync.branch||'main')+'/data/photos/'+id;
-  return 'data/photos/'+id;
+  const owner=sync.owner||PUBLIC_OWNER, repo=sync.repo||PUBLIC_REPO, br=sync.branch||DATA_BRANCH;
+  return 'https://raw.githubusercontent.com/'+owner+'/'+repo+'/'+br+'/data/photos/'+id;
 }
 async function photoSrc(id){
   if(!id) return '';
@@ -905,10 +905,26 @@ async function load(){
   theme(); render(); renderDataBar(); startTick();
   if(!readOnly && syncConfigured()) syncNow(false);
 }
+/* Never let a network hiccup block first paint — bounded, and both
+   candidates raced rather than tried in turn. */
+async function fetchWithTimeout(url,ms){
+  const ctl=new AbortController();
+  const timer=setTimeout(function(){ ctl.abort(); },ms);
+  try{
+    const r=await fetch(url+'?_='+Date.now(),{cache:'no-store',signal:ctl.signal});
+    return r.ok?r:null;
+  }catch(e){ return null; }
+  finally{ clearTimeout(timer); }
+}
 async function tryPublic(force){
   try{
-    const res=await fetch('data/scent-log.json?_='+Date.now(),{cache:'no-store'});
-    if(!res.ok) return false;
+    const urls=[
+      'https://raw.githubusercontent.com/'+PUBLIC_OWNER+'/'+PUBLIC_REPO+'/'+DATA_BRANCH+'/data/scent-log.json',
+      'data/scent-log.json'                     /* local/dev fallback */
+    ];
+    const tried=await Promise.all(urls.map(function(u){ return fetchWithTimeout(u,1500); }));
+    const res=tried[0]||tried[1];
+    if(!res) return false;
     const doc=await res.json();
     /* Bottles are all public by design; tests only when explicitly shared. */
     const list=(doc&&Array.isArray(doc.tests))?doc.tests.map(norm).filter(function(t){
@@ -994,7 +1010,11 @@ function mergeDocs(localTests,localTombs,remote){
 
 /* ---- GitHub sync ----------------------------------------------------- */
 const SYNC_KEY='scent-log-sync';
-let sync={owner:'',repo:'',branch:'main',path:'data/scent-log.json',token:''};
+/* The log lives on its own branch so writing a check-in does not commit to
+   main and trigger a full Pages rebuild. The public page reads it from raw
+   instead of the deployed site, which also makes it update immediately. */
+const PUBLIC_OWNER='SinkInIce', PUBLIC_REPO='Fragrances', DATA_BRANCH='data';
+let sync={owner:'',repo:'',branch:DATA_BRANCH,path:'data/scent-log.json',token:''};
 let syncState='off', syncMsg='', lastSync=null, syncTimer=null, syncing=false;
 
 function syncConfigured(){ return !!(sync.owner&&sync.repo&&sync.path&&sync.token); }
@@ -1007,6 +1027,11 @@ async function loadSyncConfig(){
     const up=await store.get(PHOTOS_UP_KEY);
     if(up) uploadedPhotos=JSON.parse(up)||{};
   }catch(e){}
+  /* Devices configured before the split still point at main — move them once. */
+  if(sync.branch==='main'&&!sync.movedToDataBranch){
+    sync.branch=DATA_BRANCH; sync.movedToDataBranch=true;
+    await saveSyncConfig();
+  }
   syncState=syncConfigured()?'idle':'off';
 }
 async function saveSyncConfig(){ try{ await store.set(SYNC_KEY,JSON.stringify(sync)); }catch(e){} }
@@ -2198,7 +2223,7 @@ document.getElementById('syncNowBtn').addEventListener('click',function(){ syncN
 document.getElementById('syncBtn').addEventListener('click',function(){
   document.getElementById('syOwner').value=sync.owner||'';
   document.getElementById('syRepo').value=sync.repo||'';
-  document.getElementById('syBranch').value=sync.branch||'main';
+  document.getElementById('syBranch').value=sync.branch||DATA_BRANCH;
   document.getElementById('syPath').value=sync.path||'data/scent-log.json';
   document.getElementById('syToken').value=sync.token||'';
   show('syncOverlay');
@@ -2207,7 +2232,7 @@ document.getElementById('syncSaveBtn').addEventListener('click',async function()
   const v=function(id){ return document.getElementById(id).value.trim(); };
   sync.owner=v('syOwner').replace(/^\/+|\/+$/g,'');
   sync.repo=v('syRepo').replace(/^\/+|\/+$/g,'');
-  sync.branch=v('syBranch')||'main';
+  sync.branch=v('syBranch')||DATA_BRANCH;
   sync.path=v('syPath').replace(/^\/+/,'')||'data/scent-log.json';
   sync.token=v('syToken');
   if(!syncConfigured()){ toast('Fill in owner, repo, path and token'); return; }

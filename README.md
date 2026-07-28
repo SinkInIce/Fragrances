@@ -61,7 +61,7 @@ Copy the token (it is shown once). Then in the app: **Sync setup**, and fill in:
 ```
 Repo owner   SinkInIce
 Repo name    Fragrances
-Branch       main
+Branch       data
 File path    data/scent-log.json
 Access token github_pat_…
 ```
@@ -73,7 +73,11 @@ backup file.
 
 ### How syncing behaves
 
-- Pushes about 2.5 seconds after you stop making changes.
+- Pushes about 2.5 seconds after you stop making changes, to the **`data`** branch —
+  never to `main`. That matters: a commit to `main` rebuilds the whole site, so logging a
+  wear used to fire a deploy per check-in.
+- Your public page reads the log straight from that branch, so it updates within moments
+  of a sync instead of waiting on a build.
 - Pulls when you switch back to the app, so picking up your phone gets the latest.
 - **Sync now** forces it immediately.
 - Edits on two devices merge per test — the most recently edited version wins, and
@@ -189,7 +193,7 @@ I'll set either up.
 | `manifest.webmanifest` | Name, colours and icons for Home Screen install |
 | `sw.js` | Service worker — offline shell and font caching |
 | `icons/` | App icons (192, 512, and 180 for iOS) |
-| `data/scent-log.json` | Your synced log — created on first sync, and public |
-| `data/photos/` | Bottle photos, uploaded on sync — also public |
+| `data/scent-log.json` | Your synced log — lives on the **`data`** branch, and is public |
+| `data/photos/` | Bottle photos, also on the `data` branch — also public |
 | `SCENT-LOG-SPEC.md` | Design spec, data model and roadmap |
 | `.github/workflows/pages.yml` | Publishes the app to GitHub Pages |
