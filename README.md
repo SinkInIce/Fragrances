@@ -120,6 +120,21 @@ enough to save on every keystroke.
 **Every bottle in your collection is public** — there is no per-bottle toggle, by your
 choice. That is different from tests, which stay private until you share each one.
 
+## Exporting for a review
+
+Three buttons, all copy to the clipboard:
+
+| Where | Button | What you get |
+|---|---|---|
+| A finished test | **Copy as review** | The wearing written up as prose — conditions, how it developed, notes, performance, seasons, compliments, pros/cons, value, verdict, rating |
+| A bottle | **Copy as review** | The bottle's details plus every completed wearing of it, written up the same way |
+| Collection | **Copy my whole collection** | A sorted list of what you own with cost/ml, test count and average score |
+
+**Copy as review** is deliberately different from **Copy for script**. The script export
+dumps everything including your working notes; the review export leaves out the internal
+scaffolding (the context field, tier, share flags) and reads as something you can paste
+into Fragrantica or a caption and lightly edit.
+
 ## Your public page
 
 Followers get the same URL you use. With no token in their browser and no log of their

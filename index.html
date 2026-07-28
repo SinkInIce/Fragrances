@@ -32,7 +32,7 @@ header .eyebrow{ font-size:10px; letter-spacing:.28em; text-transform:uppercase;
 header h1{ font-family:'Libre Caslon Text',serif; font-style:italic; font-weight:400; font-size:clamp(26px,7.5vw,32px); line-height:1.05; letter-spacing:-.01em; }
 header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1.5; max-width:44ch; }
 .tab-bar{ display:flex; gap:8px; margin:4px 4px 14px; }   /* top-level section switch: wear log vs collection */
-.tab{ flex:1; text-align:center; padding:12px 8px; border-radius:6px; border:1.5px solid var(--line); font-size:12.5px; font-weight:800; color:var(--ink-soft); cursor:pointer; background:#fff; transition:.15s; }
+.tab{ flex:1; text-align:center; padding:14px 8px; border-radius:6px; border:1.5px solid var(--line); font-size:12.5px; font-weight:800; color:var(--ink-soft); cursor:pointer; background:#fff; transition:.15s; }
 .tab.selected{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
 .view-bar{ display:flex; gap:4px; margin:0 4px 18px; background:rgba(43,36,29,.05); padding:4px; border-radius:7px; }
 .vtab{ flex:1; text-align:center; padding:9px 4px; border-radius:5px; font-size:11.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
@@ -112,7 +112,19 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .dg-item{ font-size:11.5px; }
 .dg-item .k{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; display:block; margin-bottom:3px; }
 .dg-item .v{ color:var(--ink); line-height:1.4; }
-.hist-detail-actions{ display:flex; gap:12px; margin-top:15px; flex-wrap:wrap; }
+/* Card actions sit inside a card that toggles shut when tapped, so a near
+   miss used to collapse the card instead of firing the button. Give them a
+   real 44px target and a button shape rather than a small text link. */
+.hist-detail-actions, .bottle-actions{ display:flex; gap:8px; margin-top:15px; flex-wrap:wrap; }
+.hist-detail-actions button, .bottle-actions button{
+  min-height:44px; padding:12px 14px; flex:1 1 auto;
+  border:1.5px solid var(--line); border-radius:6px; background:#fff;
+  font-size:12.5px; font-weight:700; color:var(--ink-soft);
+  text-decoration:none; cursor:pointer; transition:.15s;
+}
+.hist-detail-actions .btn-danger-text, .bottle-actions .btn-danger-text{
+  color:var(--wine); border-color:rgba(140,74,72,.28);
+}
 .empty-state{ text-align:center; padding:38px 20px; color:var(--ink-soft); }
 .empty-state .icon{ font-size:30px; margin-bottom:10px; opacity:.5; }
 .empty-state p{ font-size:13px; line-height:1.5; max-width:34ch; margin:0 auto; }
@@ -211,7 +223,7 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .bottle-thumb-empty{ color:var(--ink-soft); opacity:.45; font-size:20px; }
 .bottle-info{ flex:1; min-width:0; }
 .bottle-note{ font-size:12px; color:var(--ink-soft); line-height:1.5; margin-top:7px; }
-.bottle-actions{ display:flex; flex-wrap:wrap; gap:16px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line); }
+.bottle-actions{ padding-top:13px; border-top:1px solid var(--line); }
 .photo-pick{ display:flex; gap:14px; align-items:center; }
 .photo-preview{ width:92px; height:92px; flex:0 0 92px; border-radius:6px; overflow:hidden; background:var(--paper-deep); display:flex; align-items:center; justify-content:center; }
 .photo-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -1213,6 +1225,7 @@ function viewCollection(){
   if(!list.length) return h+'<div class="empty-state"><p>Nothing matches that search.</p></div>';
   if(colQ&&list.length!==all) h+='<div class="result-count">Showing <b>'+list.length+'</b> of '+all+'</div>';
   list.forEach(b=>h+=cardBottle(b));
+  if(!readOnly) h+='<div style="text-align:center;margin-top:16px"><button class="btn-text" data-act="exportcol">Copy my whole collection</button></div>';
   return h;
 }
 
@@ -1255,6 +1268,7 @@ function cardBottle(b){
     if(!readOnly) inner+='<div class="bottle-actions">'+
       '<button class="btn-text" data-act="bottletest" data-bottle="'+b.id+'">Log a test</button>'+
       '<button class="btn-text" data-act="bottlelink" data-bottle="'+b.id+'">Link a past test</button>'+
+      '<button class="btn-text" data-act="review" data-test="'+b.id+'">Copy as review</button>'+
       '<button class="btn-text" data-act="bottleedit" data-bottle="'+b.id+'">Edit</button>'+
       '<button class="btn-danger-text" data-act="bottledel" data-bottle="'+b.id+'">Remove</button>'+
     '</div>';
@@ -1459,6 +1473,7 @@ function cardHist(t){
       notesBlock(t)+
       (readOnly?'':'<div class="hist-detail-actions">'+
         '<button class="btn-text" data-act="copy" data-test="'+t.id+'">Copy for script</button>'+
+        '<button class="btn-text" data-act="review" data-test="'+t.id+'">Copy as review</button>'+
         '<button class="btn-text" data-act="end" data-test="'+t.id+'">Edit ratings</button>'+
         '<button class="btn-text" data-act="retest" data-test="'+t.id+'">Test again</button>'+
         '<button class="btn-text" data-act="share" data-test="'+t.id+'">'+(t.shared?'Remove from public page':'Add to public page')+'</button>'+
@@ -1654,6 +1669,8 @@ function bind(){
       else if(a==='end') openEnd(id);
       else if(a==='del') askDelete(id);
       else if(a==='copy') copyOne(id);
+      else if(a==='review') copyReview(id);
+      else if(a==='exportcol') exportCollection();
       else if(a==='retest') retest(id);
       else if(a==='share'){
         const st=tests.filter(function(x){ return x.id===id; })[0];
@@ -2137,6 +2154,99 @@ function testToText(t){
   if(t.rebuy) x+='Buy again: '+t.rebuy+'\n';
   if(t.verdict) x+='Verdict: '+t.verdict+'\n';
   return x;
+}
+/* testToText() is the internal dump for script drafting. This is the
+   public-facing version — prose you can paste into a review and edit,
+   with the working scaffolding left out. */
+function testToReview(t){
+  var L=[fullTitle(t)+(t.concentration?' ('+t.concentration+')':'')];
+  if(t.inspired) L.push('Marketed as inspired by '+t.inspired);
+
+  var cond=[];
+  if(t.sprays) cond.push(t.sprays+' spray'+(t.sprays==='1'?'':'s'));
+  if((t.spots||[]).length) cond.push('on '+t.spots.join(', ').toLowerCase());
+  if(t.weather) cond.push(t.weather.toLowerCase()+' weather');
+  if(t.humidity) cond.push(t.humidity.toLowerCase()+' humidity');
+  if(cond.length) L.push('','Tested with '+cond.join(', ')+'.');
+
+  var cps=(t.checkpoints||[]).slice().sort(function(a,b){ return a.minutes-b.minutes; });
+  if(cps.length){
+    L.push('','How it wore:');
+    cps.forEach(function(cp){
+      var when=cp.minutes===0?'On the spray':fmtEl(cp.minutes*60000)+' in';
+      L.push('- '+when+' — '+(cp.note||cp.label)+(cp.projection?' ('+cp.projection+')':''));
+    });
+  }
+
+  var pyr=[];
+  if(t.topNotes) pyr.push('Top: '+t.topNotes);
+  if(t.heartNotes) pyr.push('Heart: '+t.heartNotes);
+  if(t.baseNotes) pyr.push('Base: '+t.baseNotes);
+  if((t.families||[]).length) pyr.push('Main accords: '+t.families.join(', '));
+  if(pyr.length){ L.push(''); L=L.concat(pyr); }
+
+  var perf=[];
+  if(t.longevity) perf.push('Longevity: '+t.longevity);
+  if(t.projection) perf.push('Projection: '+t.projection);
+  if(t.sillage) perf.push('Sillage: '+t.sillage);
+  if(perf.length){ L.push(''); L=L.concat(perf); }
+
+  var wear=[];
+  if((t.seasons||[]).length) wear.push(t.seasons.join(', '));
+  if(t.dayNight) wear.push(t.dayNight);
+  if((t.occasions||[]).length) wear.push(t.occasions.join(', '));
+  if(wear.length) L.push('','Best for: '+wear.join(' · '));
+  if(t.seasonNotes) L.push('Why: '+t.seasonNotes);
+  if(t.gender||t.age) L.push('Reads as: '+[t.gender,t.age].filter(Boolean).join(', '));
+  if(t.similar) L.push('Smells similar to: '+t.similar);
+  if(t.layers) L.push('Layers well with: '+t.layers);
+
+  if((t.compliments||[]).length){
+    L.push('','Compliments while wearing it:');
+    t.compliments.forEach(function(c){ L.push('- '+c.text); });
+  }
+  if(t.pros) L.push('','What works: '+t.pros);
+  if(t.cons) L.push((t.pros?'':'\n')+"What doesn't: "+t.cons);
+  if(cpl(t)) L.push('','Value: '+cpl(t)+(t.value?' — '+t.value:''));
+  if(t.verdict) L.push('','Verdict: '+t.verdict);
+  if(t.rating) L.push('Rating: '+t.rating+'/10');
+  return L.join('\n');
+}
+function bottleToReview(b){
+  var meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(', ');
+  var L=[fullTitle(b)+(meta?' ('+meta+')':'')];
+  if(b.inspired) L.push('Marketed as inspired by '+b.inspired);
+  if(cpl(b)) L.push('Cost: '+cpl(b)+(b.price?' — $'+b.price+' for '+b.size+'ml':''));
+  if(b.bottleNotes) L.push('',b.bottleNotes);
+  var done=bottleTests(b).filter(function(t){ return t.completed; });
+  if(!done.length) L.push('','No completed tests on this bottle yet.');
+  done.forEach(function(t,i){ L.push('','--- Wearing '+(i+1)+' of '+done.length+' ---','',testToReview(t)); });
+  return L.join('\n');
+}
+function copyReview(id){
+  var t=tests.filter(function(x){ return x.id===id; })[0]; if(!t) return;
+  clip(isBottle(t)?bottleToReview(t):testToReview(t),'Review copied — paste and edit');
+}
+function exportCollection(){
+  var list=tests.filter(function(t){ return isBottle(t)&&t.notebook===activeTab; })
+    .sort(function(a,b){ return (a.house+' '+a.name).localeCompare(b.house+' '+b.name); });
+  if(!list.length){ toast('Nothing in your collection yet'); return; }
+  var L=['My collection — '+list.length+' bottle'+(list.length>1?'s':''),''];
+  list.forEach(function(b){
+    var meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(', ');
+    L.push(fullTitle(b)+(meta?' ('+meta+')':''));
+    if(b.inspired) L.push('  Inspired by '+b.inspired);
+    var done=bottleTests(b).filter(function(t){ return t.completed; });
+    var scores=done.map(function(t){ return parseInt(t.rating); }).filter(function(n){ return n>0; });
+    var bits=[];
+    if(cpl(b)) bits.push(cpl(b));
+    bits.push(done.length?done.length+' test'+(done.length>1?'s':''):'untested');
+    if(scores.length) bits.push('avg '+(scores.reduce(function(a,n){ return a+n; },0)/scores.length).toFixed(1)+'/10');
+    L.push('  '+bits.join(' · '));
+    if(b.bottleNotes) L.push('  '+b.bottleNotes);
+    L.push('');
+  });
+  clip(L.join('\n'),list.length+' bottles copied');
 }
 function clip(txt,msg){ if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast(msg); }).catch(function(){ toast('Copy failed'); }); } else toast('Copy not supported here'); }
 function copyOne(id){ var t=tests.filter(function(x){return x.id===id;})[0]; if(t) clip(testToText(t),'Copied \u2014 paste into your script'); }
