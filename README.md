@@ -8,70 +8,112 @@ Full design and data-model documentation: [`SCENT-LOG-SPEC.md`](SCENT-LOG-SPEC.m
 
 ---
 
-## Opening it
+## Setup — do these once
 
-**On your phone (the intended way).** Once Pages is switched on (one-time step below),
-the app lives at:
+### 1. Make the repo public
+
+**Settings → General →** scroll to **Danger Zone → Change visibility → Public.**
+
+Required because GitHub Pages does not serve private repos on the free plan.
+
+> **Know what this means.** The app code, the spec, and your synced log file all become
+> readable by anyone. Your wear tests are unpublished video material — ratings and
+> verdicts will be visible before you post. Nobody can *edit* anything without being
+> added as a collaborator, but they can read it. If that stops being acceptable, see
+> *Making it private again* at the bottom.
+
+### 2. Turn on Pages
+
+**Settings → Pages → Source: GitHub Actions.**
+
+### 3. Merge to `main`
+
+The deploy workflow only runs on `main`. Once merged, the app publishes automatically
+on every push and lives at:
 
 ```
 https://sinkinice.github.io/Fragrances/
 ```
 
-Open that in Safari → Share → **Add to Home Screen**. It then launches full-screen with
-no browser chrome and works with no signal.
+### 4. Put it on your phone
 
-**On a computer.** Double-click `index.html`. Everything works except the service
-worker, which browsers only run over `http(s)`.
+Open that URL in **Safari** — Chrome cannot install to the iOS Home Screen — then
+**Share → Add to Home Screen.**
 
-**Inside a Claude Artifact.** Still supported — paste the contents of `index.html`. It
-detects which environment it is in and picks the right storage automatically.
+It launches full-screen with its own icon, no address bar, and works with no signal.
 
-### One-time setup for the phone URL
+---
 
-GitHub Pages needs to be enabled by hand once:
+## Turning on sync
 
-1. Repo **Settings → Pages**
-2. **Source: GitHub Actions**
-3. Merge this branch into `main`
+Without sync, each device keeps its own separate log. Sync stores one shared JSON file
+in this repo at `data/scent-log.json`.
 
-The included workflow (`.github/workflows/pages.yml`) publishes on every push to `main`
-after that. If this repo is private, Pages requires a paid plan — otherwise make it
-public, or just use `index.html` locally.
+**Make a token** at **github.com/settings/personal-access-tokens/new**:
+
+| Field | Value |
+|---|---|
+| Repository access | **Only select repositories** → `Fragrances` |
+| Permissions → Repository → **Contents** | **Read and write** |
+| Expiration | Your call — you re-paste the token when it lapses |
+
+Copy the token (it is shown once). Then in the app: **Sync setup**, and fill in:
+
+```
+Repo owner   SinkInIce
+Repo name    Fragrances
+Branch       main
+File path    data/scent-log.json
+Access token github_pat_…
+```
+
+**Save and sync now.** Repeat on each device you use.
+
+The token is stored only on that device. It is never committed and never written into a
+backup file.
+
+### How syncing behaves
+
+- Pushes about 2.5 seconds after you stop making changes.
+- Pulls when you switch back to the app, so picking up your phone gets the latest.
+- **Sync now** forces it immediately.
+- Edits on two devices merge per test — the most recently edited version wins, and
+  tests only one device has are kept.
+- Deleting a test deletes it everywhere; it will not reappear from the other device.
+- If two devices write at once, the loser re-reads, re-merges and retries.
+- Offline changes queue up and go out on the next sync.
 
 ---
 
 ## Where your data lives
 
-It saves **automatically on every change** — there is no save button. The footer of the
-app shows where it is stored and the time of the last write:
+It saves **automatically on every change** — there is no save button. The footer shows
+where it is stored, the last write, and sync state:
 
 > YOUR DATA
 > Saved on this device · last saved 3:04 PM
+> Synced with SinkInIce/Fragrances · 3:04 PM
 
-Data is stored in the browser on the device you are using. It is **not** synced between
-your phone and your computer, and it is not stored on GitHub.
+## Backing up
 
-## Backing up — please actually do this
+**Back up to file** writes a dated `.json` of every test; **Restore from file** reads one
+back. Restore **merges by test ID and never deletes**, so it is safe to run against a log
+that already has data.
 
-The **Back up to file** button writes a dated `.json` file containing every test.
-**Restore from file** reads one back.
+Worth doing even with sync on — sync keeps devices in step, but it will just as happily
+sync a mistake. A file is the only copy that cannot be overwritten.
 
-Restore **merges by test ID and never deletes anything** — records not already present
-get added, and matching records are updated from the file. It is safe to run against a
-log that already has data in it, so it doubles as the way to move your log between
-devices: back up on one, restore on the other.
-
-Two reasons to keep backups:
-
-- Safari clears storage for websites you have not opened in about a week. Adding the app
-  to your Home Screen gives it storage that is not subject to that, but a file backup is
-  the only real guarantee.
-- Clearing browser data, or a lost phone, takes the log with it.
-
-If anything ever goes wrong with the stored data, the app keeps the unreadable copy
-instead of overwriting it, and tells you so rather than starting silently empty.
+If stored data ever becomes unreadable, the app keeps the bad copy instead of
+overwriting it, and says so rather than starting silently empty.
 
 ---
+
+## Making it private again
+
+If you later want the log out of public view: switch the repo back to private, and
+either move sync to a second private repo (change **Repo name** in Sync setup on each
+device) or move hosting to Cloudflare Pages, which serves private repos free. Ask and
+I'll set either up.
 
 ## Files
 
@@ -81,5 +123,6 @@ instead of overwriting it, and tells you so rather than starting silently empty.
 | `manifest.webmanifest` | Name, colours and icons for Home Screen install |
 | `sw.js` | Service worker — offline shell and font caching |
 | `icons/` | App icons (192, 512, and 180 for iOS) |
+| `data/scent-log.json` | Your synced log — created on first sync |
 | `SCENT-LOG-SPEC.md` | Design spec, data model and roadmap |
 | `.github/workflows/pages.yml` | Publishes the app to GitHub Pages |

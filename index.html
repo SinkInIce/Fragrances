@@ -160,7 +160,7 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .field{ margin-bottom:16px; }
 .field label{ display:block; font-size:10px; letter-spacing:.16em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); margin-bottom:7px; }
 .field label .opt{ text-transform:none; letter-spacing:0; font-weight:500; font-size:10.5px; opacity:.7; }
-.field input[type=text], .field input[type=number], .field textarea{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:5px; padding:12px 13px; font-family:'Manrope',sans-serif; font-size:15px; color:var(--ink); }
+.field input[type=text], .field input[type=number], .field input[type=password], .field textarea{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:5px; padding:12px 13px; font-family:'Manrope',sans-serif; font-size:15px; color:var(--ink); }
 .field textarea{ resize:vertical; min-height:68px; line-height:1.5; }
 .field input:focus, .field textarea:focus{ outline:none; border-color:var(--accent-deep); }
 .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -188,8 +188,13 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .data-status{ font-size:12px; color:var(--ink-soft); line-height:1.55; }
 .data-status strong{ color:var(--ink); font-weight:700; }
 .data-status.warn, .data-status.warn strong{ color:var(--wine); }
-.data-actions{ display:flex; gap:18px; margin-top:10px; }
+.data-actions{ display:flex; flex-wrap:wrap; gap:18px; margin-top:10px; }
 .data-actions .btn-text{ padding:4px 0; }
+.sync-line{ font-size:12px; line-height:1.55; margin-top:5px; color:var(--ink-soft); }
+.sync-line.on{ color:var(--accent-deep); font-weight:600; }
+.sync-line.warn{ color:var(--wine); }
+.sync-note{ font-size:11px; color:var(--ink-soft); line-height:1.6; background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 12px; margin:0 0 18px; }
+.sync-note strong{ color:var(--ink); font-weight:700; }
 .controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
 .sort-sel{ position:relative; }
 .sort-sel select{ width:100%; -webkit-appearance:none; appearance:none; background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 30px 11px 12px; font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer; }
@@ -273,9 +278,12 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
   <div class="data-bar">
     <div class="data-label">Your data</div>
     <div class="data-status" id="dataStatus">Checking storage…</div>
+    <div class="sync-line" id="syncStatus"></div>
     <div class="data-actions">
       <button class="btn-text" id="backupBtn">Back up to file</button>
       <button class="btn-text" id="restoreBtn">Restore from file</button>
+      <button class="btn-text" id="syncNowBtn" style="display:none">Sync now</button>
+      <button class="btn-text" id="syncBtn">Sync setup</button>
     </div>
     <input type="file" id="restoreInput" accept="application/json,.json" hidden>
   </div>
@@ -536,6 +544,30 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
   <button class="btn btn-ghost btn-stack" id="confirmNoBtn">Keep it</button>
 </div></div>
 
+<div class="overlay" id="syncOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Sync across devices</h2>
+  <div class="sheet-sub">Keeps your log in a file in a GitHub repo, so your phone and your computer stay in step.</div>
+  <div class="field"><label>Repo owner</label>
+    <input type="text" id="syOwner" placeholder="SinkInIce" autocomplete="off" spellcheck="false"></div>
+  <div class="field"><label>Repo name</label>
+    <input type="text" id="syRepo" placeholder="Fragrances" autocomplete="off" spellcheck="false"></div>
+  <div class="field"><label>Branch</label>
+    <input type="text" id="syBranch" placeholder="main" autocomplete="off" spellcheck="false"></div>
+  <div class="field"><label>File path</label>
+    <input type="text" id="syPath" placeholder="data/scent-log.json" autocomplete="off" spellcheck="false"></div>
+  <div class="field"><label>Access token</label>
+    <input type="password" id="syToken" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></div>
+  <div class="sync-note">
+    The token stays on this device. It is never committed and never included in a backup file.<br><br>
+    Make a <strong>fine-grained personal access token</strong> on GitHub, limited to this one repository, with
+    <strong>Contents: read and write</strong>. Enter it once on each device you use.<br><br>
+    <strong>This repo is public</strong> — anything synced to it can be read by anyone.
+  </div>
+  <button class="btn btn-primary" id="syncSaveBtn">Save and sync now</button>
+  <div style="text-align:center;margin-top:12px"><button class="btn-text" id="syncOffBtn">Turn sync off on this device</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 <script>
 const KEY='scent-log-tests';
@@ -623,7 +655,10 @@ async function load(){
     try{
       const p=JSON.parse(raw);
       if(Array.isArray(p)){ tests=p.map(norm); }
-      else { tests=(p.tests||[]).map(norm); activeTab=p.activeTab||'stevnscents'; activeView=p.activeView||'tests'; sortBy=p.sortBy||'recent'; }
+      else {
+        tests=(p.tests||[]).map(norm); activeTab=p.activeTab||'stevnscents'; activeView=p.activeView||'tests'; sortBy=p.sortBy||'recent';
+        tombstones=Array.isArray(p.deleted)?p.deleted:[];
+      }
     }catch(e){
       /* Keep the unreadable copy rather than letting the next save overwrite it. */
       tests=[]; saveState='error';
@@ -631,12 +666,17 @@ async function load(){
       toast('Saved data was unreadable — a copy was kept');
     }
   }
+  seedSnapshot();
+  await loadSyncConfig();
   theme(); render(); renderDataBar(); startTick();
+  if(syncConfigured()) syncNow(false);
 }
-async function save(){
+/* Writes the current log to this device. save() adds change tracking and
+   queues a sync on top; syncNow() calls persist() directly to avoid a loop. */
+async function persist(){
   saveState='saving'; renderDataBar();
   try{
-    const ok=await store.set(KEY,JSON.stringify({tests,activeTab,activeView,sortBy}));
+    const ok=await store.set(KEY,JSON.stringify({tests,activeTab,activeView,sortBy,deleted:tombstones}));
     if(ok){ saveState='saved'; lastSaved=new Date(); }
     else { saveState='error'; toast('Could not save — back up to a file'); }
   }catch(e){
@@ -645,6 +685,138 @@ async function save(){
   }
   renderDataBar();
 }
+async function save(){ stampChanges(); await persist(); scheduleSync(); }
+
+/* ---- Change tracking -------------------------------------------------
+   Every mutation funnels through save(), but none of them say what
+   changed. Diffing against a snapshot taken at the last write gives each
+   record an accurate updatedAt, and turns a removal into a tombstone, so
+   two devices can be merged without edits or deletions being lost.     */
+let snapshot={}, tombstones=[];
+function seedSnapshot(){
+  snapshot={};
+  tests.forEach(function(t){ if(t.id) snapshot[t.id]=JSON.stringify(t); });
+}
+function stampChanges(){
+  const now=new Date().toISOString(), seen={};
+  tests.forEach(function(t){
+    if(!t.id) return;
+    seen[t.id]=1;
+    if(snapshot[t.id]!==JSON.stringify(t)){
+      t.updatedAt=now;
+      snapshot[t.id]=JSON.stringify(t);
+    }
+  });
+  Object.keys(snapshot).forEach(function(id){
+    if(!seen[id]){ delete snapshot[id]; tombstones.push({id:id,at:now}); }
+  });
+}
+function stampOf(t){ return t.updatedAt||t.endTime||t.startTime||''; }
+
+/* Union by id, newest wins; a tombstone removes a record only if the
+   delete happened after that record's last edit. */
+function mergeDocs(localTests,localTombs,remote){
+  const rTests=(remote&&Array.isArray(remote.tests))?remote.tests.map(norm):[];
+  const rTombs=(remote&&Array.isArray(remote.deleted))?remote.deleted:[];
+  const byId={};
+  localTests.concat(rTests).forEach(function(t){
+    if(!t.id) return;
+    const cur=byId[t.id];
+    if(!cur||stampOf(t)>=stampOf(cur)) byId[t.id]=t;
+  });
+  const tombs={};
+  localTombs.concat(rTombs).forEach(function(d){
+    if(d&&d.id&&(!tombs[d.id]||d.at>tombs[d.id])) tombs[d.id]=d.at;
+  });
+  Object.keys(tombs).forEach(function(id){
+    if(!byId[id]) return;
+    if(tombs[id]>stampOf(byId[id])) delete byId[id];
+    else delete tombs[id];                       /* edited after the delete — keep it */
+  });
+  const cutoff=new Date(Date.now()-90*864e5).toISOString();
+  return {
+    tests:Object.keys(byId).map(function(k){ return byId[k]; }),
+    deleted:Object.keys(tombs).filter(function(id){ return tombs[id]>cutoff; })
+                              .map(function(id){ return {id:id,at:tombs[id]}; })
+  };
+}
+
+/* ---- GitHub sync ----------------------------------------------------- */
+const SYNC_KEY='scent-log-sync';
+let sync={owner:'',repo:'',branch:'main',path:'data/scent-log.json',token:''};
+let syncState='off', syncMsg='', lastSync=null, syncTimer=null, syncing=false;
+
+function syncConfigured(){ return !!(sync.owner&&sync.repo&&sync.path&&sync.token); }
+async function loadSyncConfig(){
+  try{
+    const raw=await store.get(SYNC_KEY);
+    if(raw) sync=Object.assign(sync,JSON.parse(raw));
+  }catch(e){}
+  syncState=syncConfigured()?'idle':'off';
+}
+async function saveSyncConfig(){ try{ await store.set(SYNC_KEY,JSON.stringify(sync)); }catch(e){} }
+
+function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64dec(s){ return decodeURIComponent(escape(atob((s||'').replace(/\s/g,'')))); }
+function ghHeaders(){
+  return { 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28', 'Authorization':'Bearer '+sync.token };
+}
+function ghUrl(){
+  return 'https://api.github.com/repos/'+encodeURIComponent(sync.owner)+'/'+encodeURIComponent(sync.repo)
+    +'/contents/'+sync.path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+}
+async function ghRead(){
+  const res=await fetch(ghUrl()+'?ref='+encodeURIComponent(sync.branch||'main')+'&_='+Date.now(),
+    {headers:ghHeaders(),cache:'no-store'});
+  if(res.status===404) return {doc:null,sha:null};          /* first sync — file not there yet */
+  if(res.status===401||res.status===403) throw new Error('Token rejected — check it has Contents: read and write');
+  if(!res.ok) throw new Error('Could not read from GitHub ('+res.status+')');
+  const j=await res.json();
+  let doc=null;
+  try{ doc=JSON.parse(b64dec(j.content)); }catch(e){ doc=null; }
+  return {doc:doc,sha:j.sha||null};
+}
+async function ghWrite(doc,sha){
+  const body={ message:'Scent Log sync', content:b64enc(JSON.stringify(doc,null,2)), branch:sync.branch||'main' };
+  if(sha) body.sha=sha;
+  const res=await fetch(ghUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghHeaders()),body:JSON.stringify(body)});
+  if(res.status===409||res.status===422) return null;        /* someone else wrote first */
+  if(res.status===401||res.status===403) throw new Error('Token rejected — check it has Contents: read and write');
+  if(!res.ok) throw new Error('Could not write to GitHub ('+res.status+')');
+  return true;
+}
+
+async function syncNow(manual){
+  if(!syncConfigured()){ if(manual) toast('Add your repo and token first'); return; }
+  if(syncing) return;
+  syncing=true; syncState='syncing'; renderDataBar();
+  try{
+    let settled=false;
+    for(let attempt=0;attempt<2&&!settled;attempt++){
+      const r=await ghRead();
+      const merged=mergeDocs(tests,tombstones,r.doc);
+      tests=merged.tests; tombstones=merged.deleted;
+      const ok=await ghWrite({app:'scent-log',version:1,updatedAt:new Date().toISOString(),tests:tests,deleted:tombstones},r.sha);
+      if(ok) settled=true;
+    }
+    if(!settled) throw new Error('Another device was writing — try again in a moment');
+    seedSnapshot();
+    await persist();
+    syncState='idle'; syncMsg=''; lastSync=new Date();
+    render();
+    if(manual) toast('Synced');
+  }catch(e){
+    syncState='error'; syncMsg=e.message||'Sync failed';
+    if(manual) toast(syncMsg);
+  }
+  syncing=false; renderDataBar();
+}
+function scheduleSync(){
+  if(!syncConfigured()) return;
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(function(){ syncTimer=null; syncNow(false); },2500);
+}
+
 function renderDataBar(){
   const el=document.getElementById('dataStatus'); if(!el) return;
   let s;
@@ -655,6 +827,16 @@ function renderDataBar(){
   else s=storeLabel[store.mode]+' · saves automatically as you type';
   el.innerHTML=s;
   el.className='data-status'+((store.mode==='memory'||saveState==='error')?' warn':'');
+
+  const sy=document.getElementById('syncStatus'); if(!sy) return;
+  let t='', cls='sync-line';
+  if(syncState==='off') t='Sync is off — this log stays on this device.';
+  else if(syncState==='syncing') t='Syncing…';
+  else if(syncState==='error'){ t=syncMsg||'Sync failed'; cls+=' warn'; }
+  else { t='Synced with '+sync.owner+'/'+sync.repo+(lastSync?' · '+lastSync.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):''); cls+=' on'; }
+  sy.textContent=t; sy.className=cls;
+  const now=document.getElementById('syncNowBtn');
+  if(now) now.style.display=syncConfigured()?'':'none';
 }
 function theme(){ document.body.className='nb-'+activeTab; document.getElementById('fabNotebookLabel').textContent=nbLabel(activeTab); }
 function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!t.completed&&t.notebook===activeTab)) render(); },60000); }
@@ -1356,6 +1538,37 @@ document.getElementById('restoreInput').addEventListener('change',function(e){
   var f=e.target.files&&e.target.files[0];
   if(f) restoreFromFile(f);
   e.target.value='';
+});
+
+document.getElementById('syncNowBtn').addEventListener('click',function(){ syncNow(true); });
+document.getElementById('syncBtn').addEventListener('click',function(){
+  document.getElementById('syOwner').value=sync.owner||'';
+  document.getElementById('syRepo').value=sync.repo||'';
+  document.getElementById('syBranch').value=sync.branch||'main';
+  document.getElementById('syPath').value=sync.path||'data/scent-log.json';
+  document.getElementById('syToken').value=sync.token||'';
+  show('syncOverlay');
+});
+document.getElementById('syncSaveBtn').addEventListener('click',async function(){
+  const v=function(id){ return document.getElementById(id).value.trim(); };
+  sync.owner=v('syOwner').replace(/^\/+|\/+$/g,'');
+  sync.repo=v('syRepo').replace(/^\/+|\/+$/g,'');
+  sync.branch=v('syBranch')||'main';
+  sync.path=v('syPath').replace(/^\/+/,'')||'data/scent-log.json';
+  sync.token=v('syToken');
+  if(!syncConfigured()){ toast('Fill in owner, repo, path and token'); return; }
+  await saveSyncConfig();
+  syncState='idle'; hide('syncOverlay'); renderDataBar();
+  syncNow(true);
+});
+document.getElementById('syncOffBtn').addEventListener('click',async function(){
+  sync.token=''; await saveSyncConfig();
+  syncState='off'; syncMsg=''; lastSync=null;
+  hide('syncOverlay'); renderDataBar(); toast('Sync turned off on this device');
+});
+/* Coming back to the app is the moment another device's changes matter. */
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&syncConfigured()&&(!lastSync||Date.now()-lastSync.getTime()>3000)) syncNow(false);
 });
 
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){

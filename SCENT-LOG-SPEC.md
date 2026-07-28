@@ -347,8 +347,10 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
 3. **No untested backlog.** The app only holds fragrances already tested. A ~160-bottle collection has no queue view showing what remains.
 4. **No photos.** Sandbox limitation.
 5. **No notification reminders** for the dry-down and skin-scent windows.
-6. **No cross-device sync.** Storage is per-device. JSON backup/restore is the manual
-   bridge between devices — restore merges by test ID and never deletes.
+6. ~~**No cross-device sync.**~~ Resolved. Optional GitHub-backed sync writes a shared
+   JSON file to the repo via the Contents API, with a per-device token. Records carry
+   `updatedAt`; deletions carry tombstones; merge is union-by-id with newest-wins and a
+   retry on a stale blob SHA. JSON backup/restore remains as the offline bridge.
 7. **Guide content is hardcoded** in a JS array rather than data-driven.
 8. **No undo** after deletion.
 
