@@ -1,78 +1,16 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T18:11:21.289Z",
-  "tests": [
-    {
-      "notebook": "stevnscents",
-      "house": "Bujairami",
-      "flanker": "",
-      "inspired": "Valentino Born in Roma Extradose",
-      "concentration": "EDP",
-      "sprays": "2",
-      "spots": [
-        "Forearms"
-      ],
-      "weather": "Cool",
-      "humidity": "Average",
-      "price": "",
-      "size": "",
-      "batch": "",
-      "context": "WFH",
-      "checkpoints": [
-        {
-          "key": "custom_1785259232570",
-          "label": "After 30 minutes projection is less than arm length",
-          "minutes": 36,
-          "note": "More of a musky clean bubblegum scent",
-          "projection": "Arm's length",
-          "loggedAt": "2026-07-28T17:00:00.000Z"
-        }
-      ],
-      "compliments": [],
-      "longevity": "",
-      "projection": "",
-      "sillage": "",
-      "families": [],
-      "seasons": [],
-      "occasions": [],
-      "complimentFactor": "",
-      "tier": "",
-      "rebuy": "",
-      "verdict": "",
-      "perfumer": "",
-      "year": "",
-      "topNotes": "",
-      "heartNotes": "",
-      "baseNotes": "",
-      "similar": "",
-      "seasonNotes": "",
-      "dayNight": "",
-      "layers": "",
-      "gender": "",
-      "age": "",
-      "rating": "",
-      "value": "",
-      "pros": "",
-      "cons": "",
-      "shared": false,
-      "kind": "test",
-      "photo": "",
-      "added": "",
-      "bottleNotes": "",
-      "bottleId": "",
-      "id": "t1785255848903vtc30l",
-      "name": "High Roller",
-      "type": "Dupe",
-      "startTime": "2026-07-28T16:24:08.903Z",
-      "completed": false,
-      "updatedAt": "2026-07-28T18:11:18.548Z"
-    }
-  ],
+  "updatedAt": "2026-07-28T18:11:32.145Z",
+  "tests": [],
   "deleted": [
     {
       "id": "t1785254773981dy0l14",
       "at": "2026-07-28T16:26:39.624Z"
+    },
+    {
+      "id": "t1785255848903vtc30l",
+      "at": "2026-07-28T18:11:25.058Z"
     }
   ]
 }
