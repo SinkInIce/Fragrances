@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T16:24:11.787Z",
+  "updatedAt": "2026-07-28T16:24:52.246Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -19,7 +19,16 @@
       "size": "",
       "batch": "",
       "context": "WFH",
-      "checkpoints": [],
+      "checkpoints": [
+        {
+          "key": "spray",
+          "label": "Initial Spray",
+          "minutes": 0,
+          "note": "a bunch of sugary bubblegum thats super super sweet.",
+          "projection": "Room-filling",
+          "loggedAt": "2026-07-28T16:24:49.125Z"
+        }
+      ],
       "compliments": [],
       "longevity": "",
       "projection": "",
@@ -52,7 +61,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T16:24:08.903Z",
       "completed": false,
-      "updatedAt": "2026-07-28T16:24:08.903Z"
+      "updatedAt": "2026-07-28T16:24:49.125Z"
     }
   ],
   "deleted": []
