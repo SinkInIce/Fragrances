@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T19:31:42.610Z",
+  "updatedAt": "2026-07-28T19:32:47.971Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -27,6 +27,14 @@
           "note": "A mixture of musk, orange, birch, and ginger. Very clean and elegant for the heat.",
           "projection": "Arm's length",
           "loggedAt": "2026-07-28T19:00:22.271Z"
+        },
+        {
+          "key": "drydown",
+          "label": "Dry Down",
+          "minutes": 36,
+          "note": "The citruses die down a bit and the birch becomes more prominent. With a bit of sweetness",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-28T19:32:45.184Z"
         }
       ],
       "compliments": [],
@@ -66,7 +74,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:56:42.538Z",
       "completed": false,
-      "updatedAt": "2026-07-28T19:00:22.271Z"
+      "updatedAt": "2026-07-28T19:32:45.184Z"
     },
     {
       "notebook": "stevnscents",
