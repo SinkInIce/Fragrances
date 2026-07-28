@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T19:31:10.175Z",
+  "updatedAt": "2026-07-28T19:31:42.610Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -92,6 +92,14 @@
           "note": "Vanilla with a very juice fresh pomegranate. 80% pomegranate 30% vanilla",
           "projection": "Arm's length",
           "loggedAt": "2026-07-28T18:58:13.679Z"
+        },
+        {
+          "key": "drydown",
+          "label": "Dry Down",
+          "minutes": 34,
+          "note": "More of the vanilla comes out and the pomegranate turns into a sweeter version",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-28T19:31:39.858Z"
         }
       ],
       "compliments": [],
@@ -131,7 +139,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:57:17.388Z",
       "completed": false,
-      "updatedAt": "2026-07-28T18:58:13.679Z"
+      "updatedAt": "2026-07-28T19:31:39.858Z"
     },
     {
       "notebook": "stevnscents",
