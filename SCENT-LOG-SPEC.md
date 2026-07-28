@@ -11,10 +11,10 @@ This document is the complete specification. It is written to be handed to Claud
 | | |
 |---|---|
 | **Form factor** | Single self-contained `.html` file |
-| **Filename** | `scent-log.html` (~93 KB) |
+| **Filename** | `index.html` (~97 KB) |
 | **Stack** | Vanilla HTML / CSS / JS. No framework, no build step, no bundler |
-| **Runtime** | Claude Artifacts sandboxed iframe; added to iOS Home Screen as a PWA-style shortcut |
-| **Persistence** | `window.storage` key-value API (Artifacts-provided) |
+| **Runtime** | Any browser. Installs to the iOS Home Screen as a real PWA (manifest + service worker); still runs unchanged inside a Claude Artifact |
+| **Persistence** | Storage adapter — `window.storage` in Artifacts, `localStorage` in a normal browser, in-memory as a last resort. Plus JSON backup / restore to file |
 | **External deps** | Google Fonts only (Libre Caslon Text, Manrope) |
 | **Target device** | iPhone, portrait, one-handed use while out of the house |
 
@@ -316,6 +316,10 @@ Tier chips carry their own colors: S `#8f6529`, A `#5d6b4b`, B `#4a5a68`, C `#6b
 
 These are hard limits of the Artifacts runtime and were the source of one shipped bug.
 
+> **Note:** these apply only when the app is running *inside* a Claude Artifact. Served
+> as an ordinary web page (see `README.md`), `localStorage` is available and the storage
+> adapter selects it automatically — no code change needed between the two environments.
+
 | Constraint | Consequence |
 |---|---|
 | `localStorage` / `sessionStorage` **unavailable** | Must use `window.storage` |
@@ -343,7 +347,8 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
 3. **No untested backlog.** The app only holds fragrances already tested. A ~160-bottle collection has no queue view showing what remains.
 4. **No photos.** Sandbox limitation.
 5. **No notification reminders** for the dry-down and skin-scent windows.
-6. **No cross-device sync.** Storage is per-user but tied to the artifact context.
+6. **No cross-device sync.** Storage is per-device. JSON backup/restore is the manual
+   bridge between devices — restore merges by test ID and never deletes.
 7. **Guide content is hardcoded** in a JS array rather than data-driven.
 8. **No undo** after deletion.
 

@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Scent Log — Testing Tracker</title>
+<meta name="description" content="Fragrance wear-testing tracker — log the spray, the dry down and the skin scent as they happen.">
+<meta name="theme-color" content="#ece2ce">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Scent Log">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -174,6 +183,13 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .fab-wrap .btn{ max-width:600px; margin:0 auto; }
 .fab-wrap.hidden{ display:none; }
 .loading{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
+.data-bar{ margin:26px 0 96px; padding:14px 16px; border:1px solid var(--line); border-radius:6px; background:var(--card); }
+.data-bar .data-label{ font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; margin-bottom:7px; }
+.data-status{ font-size:12px; color:var(--ink-soft); line-height:1.55; }
+.data-status strong{ color:var(--ink); font-weight:700; }
+.data-status.warn, .data-status.warn strong{ color:var(--wine); }
+.data-actions{ display:flex; gap:18px; margin-top:10px; }
+.data-actions .btn-text{ padding:4px 0; }
 .controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
 .sort-sel{ position:relative; }
 .sort-sel select{ width:100%; -webkit-appearance:none; appearance:none; background:#fff; border:1.5px solid var(--line); border-radius:6px; padding:11px 30px 11px 12px; font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer; }
@@ -253,6 +269,16 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
   </div>
 
   <div id="content"><div class="loading">Loading your log…</div></div>
+
+  <div class="data-bar">
+    <div class="data-label">Your data</div>
+    <div class="data-status" id="dataStatus">Checking storage…</div>
+    <div class="data-actions">
+      <button class="btn-text" id="backupBtn">Back up to file</button>
+      <button class="btn-text" id="restoreBtn">Restore from file</button>
+    </div>
+    <input type="file" id="restoreInput" accept="application/json,.json" hidden>
+  </div>
 </div>
 
 <div class="fab-wrap" id="fabWrap">
@@ -562,19 +588,73 @@ function fullName(t){ return t.name + (t.flanker ? ' ' + t.flanker : ''); }
 function fullTitle(t){ return (t.house ? t.house + ' ' : '') + fullName(t); }
 function longBand(t){ const h=longHrs[t.longevity]; if(!h) return ''; return h<4?'Under 4h':h<8?'4-8h':'8h+'; }
 
+/* Storage adapter. The Artifacts sandbox provides window.storage and blocks
+   localStorage; a normal browser is the reverse. Try each in turn so the same
+   file works in both, and fall back to memory rather than throwing. */
+const store=(function(){
+  const artifact=!!(window.storage&&typeof window.storage.get==='function');
+  let ls=null;
+  if(!artifact){
+    try{ const p='__scentlog_probe'; window.localStorage.setItem(p,'1'); window.localStorage.removeItem(p); ls=window.localStorage; }
+    catch(e){ ls=null; }
+  }
+  const mem=Object.create(null);
+  return {
+    mode: artifact?'artifact':(ls?'local':'memory'),
+    async get(k){
+      if(artifact){ const r=await window.storage.get(k,false); return r?r.value:null; }
+      if(ls) return ls.getItem(k);
+      return k in mem?mem[k]:null;
+    },
+    async set(k,v){
+      if(artifact) return !!(await window.storage.set(k,v,false));
+      if(ls){ ls.setItem(k,v); return true; }
+      mem[k]=v; return true;
+    }
+  };
+})();
+const storeLabel={ artifact:'Saved in this artifact', local:'Saved on this device', memory:'Held in memory only' };
+let saveState='idle', lastSaved=null;
+
 async function load(){
-  try{
-    const r=await window.storage.get(KEY,false);
-    if(r){ const p=JSON.parse(r.value);
+  let raw=null;
+  try{ raw=await store.get(KEY); }catch(e){ raw=null; }
+  if(raw){
+    try{
+      const p=JSON.parse(raw);
       if(Array.isArray(p)){ tests=p.map(norm); }
       else { tests=(p.tests||[]).map(norm); activeTab=p.activeTab||'stevnscents'; activeView=p.activeView||'tests'; sortBy=p.sortBy||'recent'; }
+    }catch(e){
+      /* Keep the unreadable copy rather than letting the next save overwrite it. */
+      tests=[]; saveState='error';
+      try{ await store.set(KEY+'-corrupt',raw); }catch(_){}
+      toast('Saved data was unreadable — a copy was kept');
     }
-  }catch(e){ tests=[]; }
-  theme(); render(); startTick();
+  }
+  theme(); render(); renderDataBar(); startTick();
 }
 async function save(){
-  try{ const r=await window.storage.set(KEY,JSON.stringify({tests,activeTab,activeView,sortBy}),false); if(!r) toast('Could not save — try again'); }
-  catch(e){ toast('Storage error — last change may not be saved'); }
+  saveState='saving'; renderDataBar();
+  try{
+    const ok=await store.set(KEY,JSON.stringify({tests,activeTab,activeView,sortBy}));
+    if(ok){ saveState='saved'; lastSaved=new Date(); }
+    else { saveState='error'; toast('Could not save — back up to a file'); }
+  }catch(e){
+    saveState='error';
+    toast(e&&e.name==='QuotaExceededError' ? 'Out of space — back up, then remove old tests' : 'Storage error — last change may not be saved');
+  }
+  renderDataBar();
+}
+function renderDataBar(){
+  const el=document.getElementById('dataStatus'); if(!el) return;
+  let s;
+  if(store.mode==='memory') s='<strong>Nothing is being saved.</strong> This browser is blocking storage — back up to a file before you close the tab.';
+  else if(saveState==='error') s='<strong>Your last change may not be saved.</strong> Back up to a file.';
+  else if(saveState==='saving') s='Saving…';
+  else if(lastSaved) s=storeLabel[store.mode]+' · last saved '+lastSaved.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  else s=storeLabel[store.mode]+' · saves automatically as you type';
+  el.innerHTML=s;
+  el.className='data-status'+((store.mode==='memory'||saveState==='error')?' warn':'');
 }
 function theme(){ document.body.className='nb-'+activeTab; document.getElementById('fabNotebookLabel').textContent=nbLabel(activeTab); }
 function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!t.completed&&t.notebook===activeTab)) render(); },60000); }
@@ -1234,6 +1314,53 @@ document.getElementById('confirmYesBtn').addEventListener('click',function(){
 document.getElementById('confirmNoBtn').addEventListener('click',function(){ pendingDelete=null; hide('confirmOverlay'); });
 
 document.querySelectorAll('.overlay').forEach(function(o){ o.addEventListener('click',function(e){ if(e.target===o){ o.classList.remove('show'); if(o.id==='confirmOverlay') pendingDelete=null; } }); });
+
+function backupFilename(){
+  var d=new Date(), p=function(n){ return String(n).padStart(2,'0'); };
+  return 'scent-log-'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'.json';
+}
+function backupToFile(){
+  if(!tests.length){ toast('Nothing to back up yet'); return; }
+  var payload=JSON.stringify({ app:'scent-log', version:1, exportedAt:new Date().toISOString(), tests:tests, activeTab:activeTab, activeView:activeView, sortBy:sortBy }, null, 2);
+  var url=URL.createObjectURL(new Blob([payload],{type:'application/json'}));
+  var a=document.createElement('a'); a.href=url; a.download=backupFilename();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  toast(tests.length+' tests backed up');
+}
+/* Restore merges by id and never deletes — safe to run against a live log. */
+function restoreFromFile(file){
+  var fr=new FileReader();
+  fr.onload=function(){
+    var p;
+    try{ p=JSON.parse(String(fr.result)); }catch(e){ toast('That file is not a Scent Log backup'); return; }
+    var incoming=Array.isArray(p)?p:(p&&Array.isArray(p.tests)?p.tests:null);
+    if(!incoming){ toast('That file is not a Scent Log backup'); return; }
+    var byId={}; tests.forEach(function(t){ byId[t.id]=t; });
+    var added=0, updated=0;
+    incoming.map(norm).forEach(function(t){
+      if(!t.id) return;
+      if(byId[t.id]) updated++; else added++;
+      byId[t.id]=t;
+    });
+    tests=Object.keys(byId).map(function(k){ return byId[k]; });
+    save(); render();
+    toast(added+' added, '+updated+' updated');
+  };
+  fr.onerror=function(){ toast('Could not read that file'); };
+  fr.readAsText(file);
+}
+document.getElementById('backupBtn').addEventListener('click',backupToFile);
+document.getElementById('restoreBtn').addEventListener('click',function(){ document.getElementById('restoreInput').click(); });
+document.getElementById('restoreInput').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];
+  if(f) restoreFromFile(f);
+  e.target.value='';
+});
+
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
 
 load();
 </script>
