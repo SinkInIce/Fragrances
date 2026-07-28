@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:29:53.163Z",
+  "updatedAt": "2026-07-28T23:32:49.431Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -35,6 +35,14 @@
           "note": "The citruses die down a bit and the birch becomes more prominent. With a bit of sweetness",
           "projection": "Arm's length",
           "loggedAt": "2026-07-28T19:32:45.184Z"
+        },
+        {
+          "key": "skin",
+          "label": "Skin Scent",
+          "minutes": 276,
+          "note": "Turns into the lighter aventus style, you still get the light citrus with mostly the birch.",
+          "projection": "Skin scent",
+          "loggedAt": "2026-07-28T23:32:46.598Z"
         }
       ],
       "compliments": [],
@@ -76,7 +84,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:56:42.538Z",
       "completed": false,
-      "updatedAt": "2026-07-28T19:32:45.184Z"
+      "updatedAt": "2026-07-28T23:32:46.598Z"
     },
     {
       "notebook": "stevnscents",
