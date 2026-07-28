@@ -31,7 +31,7 @@ header{ padding:6px 4px 16px; }
 header .eyebrow{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; margin-bottom:6px; }
 header h1{ font-family:'Libre Caslon Text',serif; font-style:italic; font-weight:400; font-size:clamp(26px,7.5vw,32px); line-height:1.05; letter-spacing:-.01em; }
 header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1.5; max-width:44ch; }
-.tab-bar{ display:none; gap:8px; margin:4px 4px 12px; }   /* single notebook — nothing to switch between */
+.tab-bar{ display:flex; gap:8px; margin:4px 4px 14px; }   /* top-level section switch: wear log vs collection */
 .tab{ flex:1; text-align:center; padding:12px 8px; border-radius:6px; border:1.5px solid var(--line); font-size:12.5px; font-weight:800; color:var(--ink-soft); cursor:pointer; background:#fff; transition:.15s; }
 .tab.selected{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
 .view-bar{ display:flex; gap:4px; margin:0 4px 18px; background:rgba(43,36,29,.05); padding:4px; border-radius:7px; }
@@ -212,7 +212,20 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .photo-preview{ width:92px; height:92px; flex:0 0 92px; border-radius:6px; overflow:hidden; background:var(--paper-deep); display:flex; align-items:center; justify-content:center; }
 .photo-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
 .photo-pick-actions{ display:flex; flex-direction:column; gap:9px; align-items:flex-start; }
+.view-bar.hidden{ display:none; }
+.bottle-card{ cursor:pointer; }
+.bottle-card.open .chevron{ transform:rotate(90deg); }
+.bottle-card .chevron{ align-self:center; }
+.bottle-detail{ margin-top:14px; padding-top:13px; border-top:1px solid var(--line); }
+.bottle-tests-label{ font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; margin-bottom:10px; }
+.mini-test{ display:flex; align-items:center; gap:11px; padding:11px 12px; border:1px solid var(--line); border-radius:5px; background:var(--paper); margin-bottom:8px; cursor:pointer; transition:.15s; }
+.mini-test-main{ flex:1; min-width:0; }
+.mini-test-date{ font-size:12.5px; font-weight:700; }
+.mini-test-meta{ font-size:11px; color:var(--ink-soft); margin-top:3px; }
+.mini-test-score{ font-family:'Libre Caslon Text',serif; font-style:italic; font-size:17px; color:var(--accent-deep); }
+.mini-test-score span{ font-size:10px; }
 @media (max-width:420px){ .vtab{ font-size:10.5px; padding:9px 2px; } }
+@media (hover:hover) and (pointer:fine){ .mini-test:hover{ border-color:var(--accent-deep); } }
 body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
 .controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:12px; }
 .sort-sel{ position:relative; }
@@ -315,12 +328,12 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <!-- Fallowmark is retired from the UI for now. The notebook field stays in the
        data model, so records keep their tag and the tab can come back unchanged. -->
   <div class="tab-bar" id="tabBar">
-    <div class="tab" data-tab="stevnscents">StevnScents</div>
+    <div class="tab" data-section="log">Wear log</div>
+    <div class="tab" data-section="collection">My collection</div>
   </div>
 
   <div class="view-bar" id="viewBar">
     <div class="vtab" data-view="tests">Tests</div>
-    <div class="vtab" data-view="collection">Collection</div>
     <div class="vtab" data-view="insights">Insights</div>
     <div class="vtab" data-view="compare">Compare</div>
     <div class="vtab" data-view="guide">Guide</div>
@@ -615,6 +628,13 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <button class="btn btn-ghost btn-stack" id="confirmNoBtn">Keep it</button>
 </div></div>
 
+<div class="overlay" id="linkOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Link a past test</h2>
+  <div class="sheet-sub" id="linkSub">Attach a test you already logged to this bottle.</div>
+  <div id="linkList"></div>
+</div></div>
+
 <div class="overlay" id="bottleOverlay"><div class="sheet">
   <div class="sheet-handle"></div>
   <h2 id="bottleTitle">Add to collection</h2>
@@ -696,6 +716,7 @@ const KEY='scent-log-tests';
 let tests=[], activeTab='stevnscents', activeView='tests';
 let noteCtx=null, endId=null, openHistId=null, tick=null, searchQ='', cmpA='', cmpB='';
 let sortBy='recent', filters={}, filterOpen=false, visibleCount=30, colQ='';
+let activeSection='log', openBottleId=null;
 const urlParams=new URLSearchParams(location.search);
 let readOnly=false;   /* public visitor mode — no editing, no saving, no sync */
 const PAGE=30;
@@ -737,7 +758,7 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', added:'', bottleNotes:'' }, t);
+    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -859,7 +880,7 @@ async function load(){
       const p=JSON.parse(raw);
       if(Array.isArray(p)){ tests=p.map(norm); }
       else {
-        tests=(p.tests||[]).map(norm); activeTab=p.activeTab||'stevnscents'; activeView=p.activeView||'tests'; sortBy=p.sortBy||'recent';
+        tests=(p.tests||[]).map(norm); activeTab=p.activeTab||'stevnscents'; activeView=p.activeView||'tests'; sortBy=p.sortBy||'recent'; activeSection=p.activeSection||'log';
         tombstones=Array.isArray(p.deleted)?p.deleted:[];
       }
     }catch(e){
@@ -901,7 +922,7 @@ async function tryPublic(force){
 async function persist(){
   saveState='saving'; renderDataBar();
   try{
-    const ok=await store.set(KEY,JSON.stringify({tests,activeTab,activeView,sortBy,deleted:tombstones}));
+    const ok=await store.set(KEY,JSON.stringify({tests,activeTab,activeView,activeSection,sortBy,deleted:tombstones}));
     if(ok){ saveState='saved'; lastSaved=new Date(); }
     else { saveState='error'; toast('Could not save — back up to a file'); }
   }catch(e){
@@ -1117,14 +1138,16 @@ function theme(){ document.body.className='nb-'+activeTab+(readOnly?' public-mod
 function startTick(){ if(tick) clearInterval(tick); tick=setInterval(()=>{ if(activeView==='tests'&&tests.some(t=>!isBottle(t)&&!t.completed&&t.notebook===activeTab)) render(); },60000); }
 
 function render(){
-  document.querySelectorAll('#tabBar .tab').forEach(t=>t.classList.toggle('selected',t.dataset.tab===activeTab));
+  const inCol=activeSection==='collection';
+  document.querySelectorAll('#tabBar .tab').forEach(t=>t.classList.toggle('selected',t.dataset.section===activeSection));
   document.querySelectorAll('#viewBar .vtab').forEach(t=>t.classList.toggle('selected',t.dataset.view===activeView));
-  document.getElementById('fabWrap').classList.toggle('hidden', activeView!=='tests'&&activeView!=='collection');
+  document.getElementById('viewBar').classList.toggle('hidden', inCol);
+  document.getElementById('fabWrap').classList.toggle('hidden', !inCol&&activeView!=='tests');
   const fl=document.getElementById('fabLabel');
-  if(fl) fl.textContent=activeView==='collection'?'+ Add to collection':'+ New test';
+  if(fl) fl.textContent=inCol?'+ Add a bottle':'+ New test';
   const c=document.getElementById('content');
-  if(activeView==='tests') c.innerHTML=viewTests();
-  else if(activeView==='collection') c.innerHTML=viewCollection();
+  if(inCol) c.innerHTML=viewCollection();
+  else if(activeView==='tests') c.innerHTML=viewTests();
   else if(activeView==='insights') c.innerHTML=viewInsights();
   else if(activeView==='compare') c.innerHTML=viewCompare();
   else c.innerHTML=viewGuide();
@@ -1144,7 +1167,9 @@ function viewCollection(){
   list=list.sort((a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name));
   const all=tests.filter(t=>isBottle(t)&&t.notebook===activeTab).length;
 
-  let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+(all?' · '+all:'')+'</div>';
+  const untested=tests.filter(t=>isBottle(t)&&t.notebook===activeTab&&!bottleTests(t).some(x=>x.completed)).length;
+  let h='<div class="section-label">'+(readOnly?'The collection':'Bottles owned')+(all?' · '+all:'')+
+    (!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
   if(all>4) h+='<div class="search-wrap"><input type="text" id="colSearch" placeholder="Search your collection..." value="'+esc(colQ)+'"></div>';
   if(!all){
     h+='<div class="empty-state"><div class="icon">&#9672;</div><p>'+
@@ -1157,10 +1182,52 @@ function viewCollection(){
   return h;
 }
 
+/* A bottle's tests: explicitly linked ones, plus any unlinked test whose
+   naming matches — so tests logged before the collection existed attach
+   themselves without the user having to link anything by hand. */
+function bottleTests(b){
+  return testRecords().filter(function(t){
+    if(t.notebook!==b.notebook) return false;
+    if(t.bottleId) return t.bottleId===b.id;
+    return t.house===b.house&&t.name===b.name&&t.flanker===b.flanker;
+  }).sort(function(x,y){ return new Date(y.startTime)-new Date(x.startTime); });
+}
+
 function cardBottle(b){
-  const testCount=testRecords().filter(t=>t.completed&&t.house===b.house&&t.name===b.name&&t.flanker===b.flanker).length;
+  const mine=bottleTests(b), done=mine.filter(t=>t.completed), open=openBottleId===b.id;
   const meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(' · ');
-  return '<div class="card bottle-card" data-bottle="'+b.id+'">'+
+  const scores=done.map(t=>parseInt(t.rating)).filter(n=>n>0);
+  const avg=scores.length?(scores.reduce((a,n)=>a+n,0)/scores.length):0;
+
+  let inner='';
+  if(open){
+    inner+='<div class="bottle-detail">';
+    if(mine.length){
+      inner+='<div class="bottle-tests-label">'+mine.length+' test'+(mine.length>1?'s':'')+' on this bottle</div>';
+      mine.forEach(function(t){
+        inner+='<div class="mini-test" data-act="gototest" data-test="'+t.id+'">'+
+          '<div class="mini-test-main">'+
+            '<div class="mini-test-date">'+(t.completed?fmtDate(t.startTime):'In progress')+'</div>'+
+            '<div class="mini-test-meta">'+[t.weather,t.sprays?t.sprays+' sprays':'',t.longevity].filter(Boolean).map(esc).join(' · ')+'</div>'+
+          '</div>'+
+          (t.rating?'<div class="mini-test-score">'+esc(t.rating)+'<span>/10</span></div>':'')+
+          (t.tier?'<div class="tier-chip t-'+t.tier+'">'+t.tier+'</div>':'')+
+        '</div>';
+      });
+    } else {
+      inner+='<div class="bottle-tests-label">No tests on this bottle yet.</div>';
+    }
+    if(b.bottleNotes) inner+='<div class="prose-box"><span class="pb-lab">Notes</span>'+esc(b.bottleNotes)+'</div>';
+    if(!readOnly) inner+='<div class="bottle-actions">'+
+      '<button class="btn-text" data-act="bottletest" data-bottle="'+b.id+'">Log a test</button>'+
+      '<button class="btn-text" data-act="bottlelink" data-bottle="'+b.id+'">Link a past test</button>'+
+      '<button class="btn-text" data-act="bottleedit" data-bottle="'+b.id+'">Edit</button>'+
+      '<button class="btn-danger-text" data-act="bottledel" data-bottle="'+b.id+'">Remove</button>'+
+    '</div>';
+    inner+='</div>';
+  }
+
+  return '<div class="card bottle-card'+(open?' open':'')+'" data-bottle="'+b.id+'">'+
     '<div class="bottle-row">'+
       '<div class="bottle-thumb">'+
         (b.photo?'<img data-photo="'+esc(b.photo)+'" alt="" loading="lazy">':'<span class="bottle-thumb-empty">&#9672;</span>')+
@@ -1170,16 +1237,13 @@ function cardBottle(b){
         '<div class="hist-meta">'+(b.house?esc(b.house):'')+(meta?' · '+esc(meta):'')+'</div>'+
         '<div class="hist-badges">'+
           (cpl(b)?'<div class="badge">'+cpl(b)+'</div>':'')+
-          (testCount?'<div class="badge">'+testCount+' test'+(testCount>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
+          (done.length?'<div class="badge">'+done.length+' test'+(done.length>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
+          (avg?'<div class="badge longevity">avg '+avg.toFixed(1)+'/10</div>':'')+
         '</div>'+
-        (b.bottleNotes?'<div class="bottle-note">'+esc(b.bottleNotes)+'</div>':'')+
       '</div>'+
+      '<div class="chevron">&rsaquo;</div>'+
     '</div>'+
-    (readOnly?'':'<div class="bottle-actions">'+
-      '<button class="btn-text" data-act="bottleedit" data-bottle="'+b.id+'">Edit</button>'+
-      '<button class="btn-text" data-act="bottletest" data-bottle="'+b.id+'">Test this</button>'+
-      '<button class="btn-danger-text" data-act="bottledel" data-bottle="'+b.id+'">Remove</button>'+
-    '</div>')+
+    inner+
   '</div>';
 }
 
@@ -1562,10 +1626,21 @@ function bind(){
       else if(a==='bottleedit') openBottle(el.dataset.bottle);
       else if(a==='bottletest') testFromBottle(el.dataset.bottle);
       else if(a==='bottledel') askDelete(el.dataset.bottle);
+      else if(a==='bottlelink') openLink(el.dataset.bottle);
+      else if(a==='linkpick') linkTest(el.dataset.bottle,el.dataset.test);
+      else if(a==='gototest'){ activeSection='log'; activeView='tests'; openHistId=id; save(); render();
+        setTimeout(function(){ var c=document.querySelector('[data-hist="'+id+'"]'); if(c) c.scrollIntoView({block:'center',behavior:'smooth'}); },60); }
       else if(a==='exportall') exportAll();
       else if(a==='copycmp') copyCmp();
       else if(a==='clearfilters'){ filters={}; visibleCount=PAGE; render(); }
       else if(a==='more'){ visibleCount+=PAGE; render(); }
+    });
+  });
+
+  document.querySelectorAll('.bottle-card').forEach(function(c){
+    c.addEventListener('click',function(e){
+      if(e.target.closest('[data-act]')) return;
+      openBottleId = openBottleId===c.dataset.bottle ? null : c.dataset.bottle; render();
     });
   });
 
@@ -1694,14 +1769,55 @@ function openBottle(id){
 /* Start a wear test from a bottle you own, carrying the identity across. */
 function testFromBottle(id){
   var b=tests.filter(function(x){ return x.id===id; })[0]; if(!b) return;
-  var t=norm({ id:uid(), kind:'test', notebook:b.notebook, house:b.house, name:b.name, flanker:b.flanker,
+  var t=norm({ id:uid(), kind:'test', notebook:b.notebook, bottleId:b.id,
+    house:b.house, name:b.name, flanker:b.flanker,
     type:b.type, concentration:b.concentration, inspired:b.inspired, price:b.price, size:b.size,
     perfumer:b.perfumer, year:b.year, batch:b.batch, sprays:'3',
     startTime:new Date().toISOString(), completed:false });
   tests.push(t);
-  activeView='tests'; visibleCount=PAGE;
+  activeSection='log'; activeView='tests'; visibleCount=PAGE;
   save(); render(); toast('Test started from '+fullName(b));
 }
+/* Tests already attached elsewhere are excluded; matching ones attach
+   themselves automatically, so this is only for the odd ones out. */
+function openLink(bottleId){
+  var b=tests.filter(function(x){ return x.id===bottleId; })[0]; if(!b) return;
+  var mine=bottleTests(b).map(function(t){ return t.id; });
+  var avail=testRecords().filter(function(t){
+    return t.notebook===b.notebook && mine.indexOf(t.id)<0 && t.bottleId!==b.id &&
+      !tests.some(function(o){ return isBottle(o)&&o.id===t.bottleId; });
+  }).sort(function(x,y){ return new Date(y.startTime)-new Date(x.startTime); });
+  document.getElementById('linkSub').textContent=avail.length
+    ? 'Attach a test you already logged to '+fullName(b)+'.'
+    : 'Every test is already attached to a bottle — nothing left to link.';
+  document.getElementById('linkList').innerHTML=avail.length
+    ? avail.map(function(t){
+        return '<div class="mini-test" data-act="linkpick" data-bottle="'+b.id+'" data-test="'+t.id+'">'+
+          '<div class="mini-test-main">'+
+            '<div class="mini-test-date">'+esc(fullTitle(t))+'</div>'+
+            '<div class="mini-test-meta">'+(t.completed?fmtDate(t.startTime):'In progress')+
+              (t.longevity?' · '+esc(t.longevity):'')+'</div>'+
+          '</div>'+
+          (t.rating?'<div class="mini-test-score">'+esc(t.rating)+'<span>/10</span></div>':'')+
+        '</div>';
+      }).join('')
+    : '<div class="empty-state"><p>Nothing to link right now.</p></div>';
+  show('linkOverlay');
+}
+function linkTest(bottleId,testId){
+  var t=tests.filter(function(x){ return x.id===testId; })[0];
+  var b=tests.filter(function(x){ return x.id===bottleId; })[0];
+  if(!t||!b) return;
+  t.bottleId=bottleId;
+  openBottleId=bottleId;
+  save(); hide('linkOverlay'); render(); toast('Linked to '+fullName(b));
+}
+/* The link list is injected after bind() has run, so it needs its own
+   delegated handler rather than the per-render [data-act] wiring. */
+document.getElementById('linkList').addEventListener('click',function(e){
+  var el=e.target.closest('[data-act="linkpick"]');
+  if(el) linkTest(el.dataset.bottle,el.dataset.test);
+});
 document.getElementById('bottlePhotoBtn').addEventListener('click',function(){ document.getElementById('bottlePhotoInput').click(); });
 document.getElementById('bottlePhotoClear').addEventListener('click',function(){ bottlePhoto=''; renderBottlePhoto(); });
 document.getElementById('bottlePhotoInput').addEventListener('change',async function(e){
@@ -1738,7 +1854,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
 });
 
 document.getElementById('newTestBtn').addEventListener('click',function(){
-  if(activeView==='collection'){ openBottle(null); return; }
+  if(activeSection==='collection'){ openBottle(null); return; }
   ['fName','fHouse','fFlanker','fInspired','fPrice','fSize','fBatch','fYear','fPerfumer','fContext'].forEach(function(i){ document.getElementById(i).value=''; });
   var seen={}; tests.forEach(function(t){ if(t.house) seen[t.house]=1; });
   document.getElementById('brandList').innerHTML=Object.keys(seen).sort().map(function(b){ return '<option value="'+esc(b)+'">'; }).join('');
@@ -1974,7 +2090,7 @@ function copyCmp(){
 }
 
 document.getElementById('tabBar').addEventListener('click',function(e){ var t=e.target.closest('.tab');
-  if(t&&t.dataset.tab!==activeTab){ activeTab=t.dataset.tab; cmpA=''; cmpB=''; searchQ=''; openHistId=null; filters={}; filterOpen=false; visibleCount=PAGE; theme(); save(); render(); } });
+  if(t&&t.dataset.section!==activeSection){ activeSection=t.dataset.section; openBottleId=null; colQ=''; save(); render(); } });
 document.getElementById('viewBar').addEventListener('click',function(e){ var v=e.target.closest('.vtab');
   if(v&&v.dataset.view!==activeView){ activeView=v.dataset.view; save(); render(); } });
 document.getElementById('confirmYesBtn').addEventListener('click',function(){

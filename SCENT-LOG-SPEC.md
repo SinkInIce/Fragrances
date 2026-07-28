@@ -46,7 +46,8 @@ Single key, personal scope:
 await window.storage.set('scent-log-tests', JSON.stringify({
   tests: Test[],
   activeTab: 'stevnscents' | 'fallowmark',
-  activeView: 'tests' | 'collection' | 'insights' | 'compare' | 'guide',
+  activeSection: 'log' | 'collection',
+  activeView: 'tests' | 'insights' | 'compare' | 'guide',
   sortBy: SortKey
 }), false);
 ```
@@ -64,6 +65,10 @@ interface Test {
                                  // Bottles share this shape but use only the identity,
                                  // reference and economics fields. Every test-based view
                                  // filters them out via isBottle().
+
+  // Linkage
+  bottleId: string;              // on a test: the Collection bottle it belongs to.
+                                 // Blank falls back to name matching — see §4.3.
 
   // Collection-only
   photo: string;                 // filename in data/photos/, blob held in IndexedDB
@@ -175,9 +180,13 @@ interface Compliment {
 Two levels, both persisted:
 
 ```
-[ StevnScents | Fallowmark ]        ← notebook tabs (data partition + theme)
-[ Tests | Collection | Insights | Compare | Guide ]  ← view tabs
+[ Wear log | My collection ]                ← section (top level)
+[ Tests | Insights | Compare | Guide ]      ← view tabs, wear log only
 ```
+
+The top bar was the notebook switcher. With one notebook active it was dead space, so it
+now carries the section switch. Collection was briefly a fifth view tab and was missed
+entirely in use — it is a peer of the whole wear log, not a sibling of Compare.
 
 ### 4.2 View: Tests
 
@@ -217,9 +226,17 @@ before its first wearing — so these are separate records, not two states of on
 - One card per bottle: photo thumbnail, name with flanker, brand, type, concentration, size
 - Badges for cost/ml and either a completed-test count or `Untested`
 - Free-text search across brand, name, flanker, type, concentration and notes; appears past four bottles
-- Actions: **Edit** | **Test this** | **Remove**
-- **Test this** starts a wear test with identity and reference fields carried over, then switches to the Tests view
+- Cards expand to reveal that bottle's tests, its notes, and the actions
+- Actions: **Log a test** | **Link a past test** | **Edit** | **Remove**
+- **Log a test** starts a wear test with identity and reference fields carried over and `bottleId` set, then switches to the wear log
+- Tapping a listed test jumps to it in the log, expanded
 - Sorted by brand then name
+
+**Attachment.** `bottleTests(b)` returns tests whose `bottleId` matches, *plus* any test
+with no `bottleId` whose `house`/`name`/`flanker` match the bottle. Tests logged before a
+bottle was catalogued therefore attach themselves with no migration and no manual step;
+**Link a past test** exists only for the ones whose naming differs (a flanker recorded
+under its own name, say). The card rolls up a completed-test count and mean score.
 
 Every bottle is public on the collection page — unlike tests, there is no per-item share
 toggle, by explicit choice.

@@ -86,12 +86,27 @@ backup file.
 
 ## Your collection
 
-The **Collection** tab is a catalogue of what you own, separate from wear tests — so you
-can test something in a shop without owning it, and own bottles you have not tested yet.
+The app has two sections, switched at the very top: **Wear log** and **My collection**.
+The collection is a catalogue of what you own, separate from wear tests — so you can test
+something in a shop without owning it, and own bottles you have not tested yet.
 
-Add a bottle with **+ Add to collection**: brand, name, type, concentration, price, size,
-notes, and a **photo**. Each card shows cost per ml and how many completed tests it has,
-or `Untested`. **Test this** starts a wear test with the details already filled in.
+Add a bottle with **+ Add a bottle**: brand, name, type, concentration, price, size,
+notes, and a **photo**. Each card shows cost per ml, how many completed tests it has (or
+`Untested`), and its average score.
+
+**Tap a bottle to open it** and you get its full test history, plus four actions:
+
+| Action | What it does |
+|---|---|
+| **Log a test** | Starts a wear test with the details filled in, attached to this bottle |
+| **Link a past test** | Attaches a test you already logged |
+| **Edit** | Change details or the photo |
+| **Remove** | Take it out of the collection |
+
+Tests you logged *before* cataloguing a bottle attach themselves automatically when the
+brand, name and flanker match — you should not have to link most things by hand. **Link a
+past test** is there for the odd one out, like a flanker you recorded under its own name.
+Tapping any test in that list jumps straight to it in the wear log.
 
 **Photos** are downscaled to about 1200px on capture (a 3MB phone photo lands near
 200KB), stored on your device, and uploaded to the repo as separate image files under
