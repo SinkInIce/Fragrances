@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T16:24:52.246Z",
+  "updatedAt": "2026-07-28T16:27:19.457Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -64,5 +64,10 @@
       "updatedAt": "2026-07-28T16:24:49.125Z"
     }
   ],
-  "deleted": []
+  "deleted": [
+    {
+      "id": "t1785254773981dy0l14",
+      "at": "2026-07-28T16:26:39.624Z"
+    }
+  ]
 }
