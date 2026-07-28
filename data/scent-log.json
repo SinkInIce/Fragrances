@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:23:03.868Z",
+  "updatedAt": "2026-07-28T23:23:18.849Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1292,8 +1292,8 @@
       "covered": false,
       "id": "t17852735124863ethl6",
       "name": "Sauvage",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-28T23:23:16.191Z"
     },
     {
       "notebook": "stevnscents",
