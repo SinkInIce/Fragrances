@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:21:14.433Z",
+  "updatedAt": "2026-07-28T23:22:17.206Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -544,14 +544,14 @@
       "house": "Dior",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
       "price": "",
-      "size": "",
-      "batch": "",
+      "size": "100",
+      "batch": "1M02",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -590,8 +590,8 @@
       "covered": false,
       "id": "t178527351248608d87a",
       "name": "Homme Intense",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-28T23:22:14.381Z"
     },
     {
       "notebook": "stevnscents",
