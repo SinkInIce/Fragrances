@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T18:57:20.170Z",
+  "updatedAt": "2026-07-28T18:58:17.512Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -75,7 +75,16 @@
       "size": "",
       "batch": "",
       "context": "",
-      "checkpoints": [],
+      "checkpoints": [
+        {
+          "key": "spray",
+          "label": "Initial Spray",
+          "minutes": 0,
+          "note": "Vanilla with a very juice fresh pomegranate. 80% pomegranate 30% vanilla",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-28T18:58:13.679Z"
+        }
+      ],
       "compliments": [],
       "longevity": "",
       "projection": "",
@@ -113,7 +122,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:57:17.388Z",
       "completed": false,
-      "updatedAt": "2026-07-28T18:57:17.388Z"
+      "updatedAt": "2026-07-28T18:58:13.679Z"
     }
   ],
   "deleted": [
