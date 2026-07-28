@@ -202,8 +202,8 @@ The primary working view.
 - Contextual hint naming the next unlogged phase with guidance on when it typically occurs
 - `+ Extra check-in` — custom-labeled checkpoint at any moment
 - `+ Log a compliment` — timestamped record of what someone said
-- Chronological note list; tapping any entry re-opens it for editing (timestamp preserved)
-- Compliments render as accent-bordered callouts
+- Chronological note list; tapping any entry re-opens it for editing, where its time can be corrected or the entry deleted
+- Compliments render as accent-bordered callouts, each with its own **Remove**
 - Actions: Discard | Finish test
 
 **Past tests section:**
@@ -226,6 +226,7 @@ before its first wearing — so these are separate records, not two states of on
 - One card per bottle: photo thumbnail, name with flanker, brand, type, concentration, size
 - Badges for cost/ml and either a completed-test count or `Untested`
 - Free-text search across brand, name, flanker, type, concentration and notes; appears past four bottles
+- Records `inspired` — the original a dupe is marketed against — shown on the card as *Marketed as inspired by X* and included in collection search
 - Cards expand to reveal that bottle's tests, its notes, and the actions
 - Actions: **Log a test** | **Link a past test** | **Edit** | **Remove**
 - **Log a test** starts a wear test with identity and reference fields carried over and `bottleId` set, then switches to the wear log
@@ -401,7 +402,7 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
    `updatedAt`; deletions carry tombstones; merge is union-by-id with newest-wins and a
    retry on a stale blob SHA. JSON backup/restore remains as the offline bridge.
 7. **Guide content is hardcoded** in a JS array rather than data-driven.
-8. **No undo** after deletion.
+8. **No undo** after deletion. Every destructive action is confirmed in a custom sheet naming what is going — a whole record, a single check-in, or one compliment — but once confirmed it is gone. A file backup is the only way back.
 
 ---
 

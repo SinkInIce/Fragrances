@@ -84,6 +84,7 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .note-proj{ display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--wine); background:rgba(140,74,72,.1); padding:2px 6px; border-radius:3px; margin-top:4px; }
 .comp-item{ background:rgba(184,130,60,.09); border-left:2px solid var(--accent); padding:8px 10px; border-radius:0 4px 4px 0; font-size:12.5px; line-height:1.45; margin-top:8px; }
 .comp-item .ct{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--accent-deep); display:block; margin-bottom:3px; }
+.comp-item .comp-del{ display:block; margin-top:6px; padding:2px 0; font-size:11px; }
 .active-actions{ display:flex; gap:8px; margin-top:15px; }
 .active-actions .btn{ flex:1; }
 .hist-card{ cursor:pointer; }
@@ -460,6 +461,7 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
     </div>
   </div>
   <button class="btn btn-primary" id="saveNoteBtn">Save check-in</button>
+  <div style="text-align:center;margin-top:12px"><button class="btn-danger-text" id="deleteNoteBtn">Delete this check-in</button></div>
 </div></div>
 
 <div class="overlay" id="customOverlay"><div class="sheet">
@@ -664,6 +666,9 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <div class="chip" data-val="Niche">Niche</div>
       <div class="chip" data-val="Indie">Indie</div>
     </div></div>
+  <div class="field"><label>Brand markets it as inspired by <span class="opt">optional</span></label>
+    <input type="text" id="bInspired" placeholder="e.g. Angels' Share by Kilian" autocomplete="off">
+    <div class="helper">The original it clones. Keeps the claim on the brand, not on you.</div></div>
   <div class="field"><label>Concentration</label>
     <div class="rating-row" id="bConc">
       <div class="chip sm" data-val="EDC">EDC</div>
@@ -1235,6 +1240,7 @@ function cardBottle(b){
       '<div class="bottle-info">'+
         '<div class="hist-name">'+esc(b.name)+(b.flanker?' <span class="flanker-name">'+esc(b.flanker)+'</span>':'')+'</div>'+
         '<div class="hist-meta">'+(b.house?esc(b.house):'')+(meta?' · '+esc(meta):'')+'</div>'+
+        (b.inspired?'<div class="inspired">Marketed as inspired by '+esc(b.inspired)+'</div>':'')+
         '<div class="hist-badges">'+
           (cpl(b)?'<div class="badge">'+cpl(b)+'</div>':'')+
           (done.length?'<div class="badge">'+done.length+' test'+(done.length>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
@@ -1370,7 +1376,8 @@ function notesBlock(t){
     '<div><div class="note-text'+(cp.note?'':' empty')+'">'+(cp.note?esc(cp.note):'Logged, no note')+'</div>'+
     (cp.projection?'<span class="note-proj">'+esc(cp.projection)+'</span>':'')+'</div></div>'; });
   h+='</div>';
-  (t.compliments||[]).forEach(c=>{ h+='<div class="comp-item"><span class="ct">Compliment \u00b7 '+fmtEl(c.minutes*60000)+' in</span>'+esc(c.text)+'</div>'; });
+  (t.compliments||[]).forEach((c,i)=>{ h+='<div class="comp-item"><span class="ct">Compliment \u00b7 '+fmtEl(c.minutes*60000)+' in</span>'+esc(c.text)+
+    (readOnly?'':'<button class="btn-danger-text comp-del" data-act="delcomp" data-test="'+t.id+'" data-idx="'+i+'">Remove</button>')+'</div>'; });
   return h;
 }
 
@@ -1626,6 +1633,7 @@ function bind(){
       else if(a==='bottleedit') openBottle(el.dataset.bottle);
       else if(a==='bottletest') testFromBottle(el.dataset.bottle);
       else if(a==='bottledel') askDelete(el.dataset.bottle);
+      else if(a==='delcomp') askDeleteCompliment(id,parseInt(el.dataset.idx,10));
       else if(a==='bottlelink') openLink(el.dataset.bottle);
       else if(a==='linkpick') linkTest(el.dataset.bottle,el.dataset.test);
       else if(a==='gototest'){ activeSection='log'; activeView='tests'; openHistId=id; save(); render();
@@ -1685,7 +1693,7 @@ function bind(){
 var pendingDelete=null;
 function askDelete(id){
   var t=tests.filter(function(x){return x.id===id;})[0]; if(!t) return;
-  pendingDelete=id;
+  pendingDelete={kind:'record',id:id};
   document.getElementById('confirmTitle').textContent = isBottle(t) ? 'Remove from your collection?' : (t.completed ? 'Delete this test?' : 'Discard this test?');
   document.getElementById('confirmSub').textContent = fullTitle(t) + " \u2014 this can't be undone.";
   show('confirmOverlay');
@@ -1757,6 +1765,7 @@ function openBottle(id){
   document.getElementById('bHouse').value=b?b.house:'';
   document.getElementById('bName').value=b?b.name:'';
   document.getElementById('bFlanker').value=b?b.flanker:'';
+  document.getElementById('bInspired').value=b?b.inspired:'';
   setSingle('bType',b?b.type:'Dupe');
   setSingle('bConc',b?b.concentration:'');
   document.getElementById('bPrice').value=b?b.price:'';
@@ -1839,6 +1848,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
   if(!name){ toast('Add a fragrance name'); document.getElementById('bName').focus(); return; }
   var data={ kind:'bottle', notebook:activeTab, house:house, name:name,
     flanker:document.getElementById('bFlanker').value.trim(),
+    inspired:document.getElementById('bInspired').value.trim(),
     type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'),
     price:document.getElementById('bPrice').value.trim(),
     size:document.getElementById('bSize').value.trim(),
@@ -1943,8 +1953,31 @@ function openNote(testId,key,label){
   document.getElementById('noteText').value=ex?ex.note:'';
   setSingle('noteProj',ex?ex.projection:'');
   resetTimeField('noteTimeFields','noteTimeToggle','fNoteTime','noteTimeOut',ex?ex.loggedAt:null);
+  document.getElementById('deleteNoteBtn').style.display=ex?'':'none';   /* nothing to delete on a new one */
   show('noteOverlay'); setTimeout(function(){ document.getElementById('noteText').focus(); },150);
 }
+function askDeleteCheckpoint(testId,key){
+  var t=tests.filter(function(x){ return x.id===testId; })[0]; if(!t) return;
+  var cp=(t.checkpoints||[]).filter(function(c){ return c.key===key; })[0]; if(!cp) return;
+  pendingDelete={kind:'checkpoint',id:testId,key:key};
+  document.getElementById('confirmTitle').textContent='Delete this check-in?';
+  document.getElementById('confirmSub').textContent=cp.label+' at '+fmtEl(cp.minutes*60000)+" in — this can't be undone.";
+  show('confirmOverlay');
+}
+function askDeleteCompliment(testId,idx){
+  var t=tests.filter(function(x){ return x.id===testId; })[0]; if(!t) return;
+  var c=(t.compliments||[])[idx]; if(!c) return;
+  pendingDelete={kind:'compliment',id:testId,index:idx};
+  document.getElementById('confirmTitle').textContent='Delete this compliment?';
+  document.getElementById('confirmSub').textContent='"'+c.text.slice(0,70)+(c.text.length>70?'…':'')+"\" — this can't be undone.";
+  show('confirmOverlay');
+}
+document.getElementById('deleteNoteBtn').addEventListener('click',function(){
+  if(!noteCtx||!noteCtx.key) return;
+  var testId=noteCtx.testId, key=noteCtx.key;
+  hide('noteOverlay'); noteCtx=null;
+  askDeleteCheckpoint(testId,key);
+});
 
 document.getElementById('saveNoteBtn').addEventListener('click',function(){
   if(!noteCtx||!noteCtx.key) return;
@@ -2094,11 +2127,21 @@ document.getElementById('tabBar').addEventListener('click',function(e){ var t=e.
 document.getElementById('viewBar').addEventListener('click',function(e){ var v=e.target.closest('.vtab');
   if(v&&v.dataset.view!==activeView){ activeView=v.dataset.view; save(); render(); } });
 document.getElementById('confirmYesBtn').addEventListener('click',function(){
-  if(!pendingDelete) return;
-  var id=pendingDelete; pendingDelete=null;
-  tests=tests.filter(function(t){ return t.id!==id; });
-  if(openHistId===id) openHistId=null;
-  if(cmpA===id) cmpA=''; if(cmpB===id) cmpB='';
+  var p=pendingDelete; pendingDelete=null;
+  if(!p) return;
+  var t=tests.filter(function(x){ return x.id===p.id; })[0];
+  if(p.kind==='checkpoint'){
+    if(t) t.checkpoints=(t.checkpoints||[]).filter(function(c){ return c.key!==p.key; });
+    save(); hide('confirmOverlay'); render(); toast('Check-in deleted'); return;
+  }
+  if(p.kind==='compliment'){
+    if(t&&t.compliments) t.compliments.splice(p.index,1);
+    save(); hide('confirmOverlay'); render(); toast('Compliment deleted'); return;
+  }
+  tests=tests.filter(function(x){ return x.id!==p.id; });
+  if(openHistId===p.id) openHistId=null;
+  if(openBottleId===p.id) openBottleId=null;
+  if(cmpA===p.id) cmpA=''; if(cmpB===p.id) cmpB='';
   save(); hide('confirmOverlay'); render(); toast('Deleted');
 });
 document.getElementById('confirmNoBtn').addEventListener('click',function(){ pendingDelete=null; hide('confirmOverlay'); });
