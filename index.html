@@ -747,6 +747,14 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <div class="chip sm" data-val="Parfum">Parfum</div>
       <div class="chip sm" data-val="Oil / Attar">Oil</div>
     </div></div>
+  <div class="field"><label>How you got it</label>
+    <div class="rating-row" id="bPr">
+      <div class="chip" data-val="bought">Bought it</div>
+      <div class="chip" data-val="pr">PR / gifted</div>
+    </div></div>
+  <div class="field" id="bPrFromField" hidden><label>Sent by <span class="opt">optional</span></label>
+    <input type="text" id="bPrFrom" placeholder="e.g. Bujairami, via their PR agency" autocomplete="off">
+    <div class="helper">Gifted product has to be disclosed. Mark it here and the review export says so for you.</div></div>
   <div class="field"><label>How full is it now <span class="opt">optional</span></label>
     <div class="rating-row" id="bFill">
       <div class="chip sm" data-val="100">Full</div>
@@ -852,7 +860,7 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'', fill:'', covered:false }, t);
+    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'', fill:'', covered:false, pr:false, prFrom:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -1294,6 +1302,8 @@ function viewCollection(){
   }
   if(colFilter==='untested') list=list.filter(t=>!bottleTests(t).some(x=>x.completed));
   else if(colFilter==='low') list=list.filter(t=>fillPct(t)!==null&&fillPct(t)<=25);
+  else if(colFilter==='pr') list=list.filter(t=>t.pr);
+  else if(colFilter==='bought') list=list.filter(t=>!t.pr);
   else if(colFilter) list=list.filter(t=>t.type===colFilter);
 
   const byName=(a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name);
@@ -1335,6 +1345,7 @@ function viewCollection(){
     const sorts=[['brand','Brand A-Z'],['name','Name A-Z'],['cheap','Cheapest per ml'],['dear','Priciest per ml'],
       ['tested','Most tested'],['empty','Emptiest first'],['added','Recently added']];
     const filters=[['','All'],['untested','Untested'],['low','Running low'],
+      ['pr','PR gifts'],['bought','Bought'],
       ['Dupe','Dupes'],['Designer','Designer'],['Niche','Niche'],['Indie','Indie']];
     h+='<div class="controls"><div class="sort-sel"><select id="colSort">'+
       sorts.map(o=>'<option value="'+o[0]+'"'+(colSort===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+
@@ -1400,9 +1411,14 @@ function valueLeft(b){
 
 function collectionStats(list){
   if(!list.length) return '';
-  const priced=list.filter(b=>parseFloat(b.price)>0);
+  /* Gifted product is not money you spent. Counted separately at its
+     retail value so the spend figures stay honest. */
+  const bought=list.filter(b=>!b.pr), gifted=list.filter(b=>b.pr);
+  const priced=bought.filter(b=>parseFloat(b.price)>0);
   const sized=list.filter(b=>parseFloat(b.size)>0);
-  const both=list.filter(b=>parseFloat(b.price)>0&&parseFloat(b.size)>0);
+  const both=bought.filter(b=>parseFloat(b.price)>0&&parseFloat(b.size)>0);
+  const giftedValued=gifted.filter(b=>parseFloat(b.price)>0);
+  const giftedValue=giftedValued.reduce((a,b)=>a+parseFloat(b.price),0);
   const spent=priced.reduce((a,b)=>a+parseFloat(b.price),0);
   const ml=sized.reduce((a,b)=>a+parseFloat(b.size),0);
   const avgCpl=both.length?both.reduce((a,b)=>a+cplNum(b),0)/both.length:0;
@@ -1414,11 +1430,13 @@ function collectionStats(list){
   let h='<div class="stat-grid">'+
     '<div class="stat-box"><div class="n">'+list.length+'</div><div class="l">Bottles owned</div></div>'+
     '<div class="stat-box"><div class="n'+(spent>=1000?' sm':'')+'">'+(priced.length?money(spent):'—')+'</div>'+
-      '<div class="l">Total spent'+(priced.length&&priced.length<list.length?' · '+priced.length+' priced':'')+'</div></div>'+
+      '<div class="l">Total spent'+(priced.length&&priced.length<bought.length?' · '+priced.length+' priced':'')+'</div></div>'+
     '<div class="stat-box"><div class="n'+(ml>=10000?' sm':'')+'">'+(ml?Math.round(ml).toLocaleString():'—')+'</div><div class="l">Total ml</div></div>'+
     '<div class="stat-box"><div class="n sm">'+(avgCpl?'$'+avgCpl.toFixed(2):'—')+'</div><div class="l">Avg cost / ml</div></div>'+
   '</div>'+
-  '<div class="result-count" style="margin-top:2px"><b>'+tested+'</b> tested · <b>'+(list.length-tested)+'</b> still untested</div>';
+  '<div class="result-count" style="margin-top:2px"><b>'+tested+'</b> tested · <b>'+(list.length-tested)+'</b> still untested</div>'+
+  (gifted.length?'<div class="result-count"><b>'+gifted.length+'</b> sent as PR'+
+    (giftedValue?' · '+money(giftedValue)+' retail, not counted as spend':'')+'</div>':'');
 
   const withFill=list.filter(b=>mlLeft(b)!==null);
   if(withFill.length){
@@ -1545,6 +1563,7 @@ function cardBottle(b){
           (done.length?'<div class="badge">'+done.length+' test'+(done.length>1?'s':'')+'</div>':'<div class="badge">Untested</div>')+
           (avg?'<div class="badge longevity">avg '+avg.toFixed(1)+'/10</div>':'')+
           (b.fill!==''?'<div class="badge'+(fillPct(b)<=25?' projection':'')+'">'+esc(fillLabel(b.fill))+'</div>':'')+
+          (b.pr?'<div class="badge shared">PR</div>':'')+
         '</div>'+
       '</div>'+
       '<div class="chevron">&rsaquo;</div>'+
@@ -2096,7 +2115,7 @@ function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .
    they render and highlight nothing. bType/bConc were missed when the
    collection sheet was added, so every bottle saved as the default Dupe. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
- 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill'].forEach(chipSingle);
+ 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr'].forEach(chipSingle);
 ['fSpots','eFam','eSeason','eOcc'].forEach(chipMulti);
 
 document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
@@ -2215,6 +2234,9 @@ function openBottle(id){
   document.getElementById('bInspired').value=b?b.inspired:'';
   setSingle('bType',b?b.type:'Dupe');
   setSingle('bConc',b?b.concentration:'');
+  setSingle('bPr',(b&&b.pr)?'pr':'bought');
+  document.getElementById('bPrFrom').value=b?b.prFrom:'';
+  syncPrField();
   bottleFill=b?(b.fill||''):''; syncFillUI();
   document.getElementById('bPrice').value=b?b.price:'';
   document.getElementById('bSize').value=b?b.size:'';
@@ -2354,6 +2376,12 @@ document.getElementById('bFill').addEventListener('click',function(e){
 document.getElementById('bFillRange').addEventListener('input',function(){
   bottleFill=String(this.value); syncFillUI();
 });
+function syncPrField(){
+  document.getElementById('bPrFromField').hidden = getSingle('bPr')!=='pr';
+}
+document.getElementById('bPr').addEventListener('click',function(e){
+  if(e.target.closest('.chip')) syncPrField();
+});
 document.getElementById('bFillClear').addEventListener('click',function(){ bottleFill=''; syncFillUI(); });
 function stepSheetFill(by){
   var cur=bottleFill===''?100:parseInt(bottleFill,10);
@@ -2375,6 +2403,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
     flanker:document.getElementById('bFlanker').value.trim(),
     inspired:document.getElementById('bInspired').value.trim(),
     type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'), fill:bottleFill,
+    pr:getSingle('bPr')==='pr', prFrom:getSingle('bPr')==='pr'?document.getElementById('bPrFrom').value.trim():'',
     price:document.getElementById('bPrice').value.trim(),
     size:document.getElementById('bSize').value.trim(),
     batch:document.getElementById('bBatch').value.trim(),
@@ -2638,6 +2667,20 @@ function testToText(t){
 /* testToText() is the internal dump for script drafting. This is the
    public-facing version — prose you can paste into a review and edit,
    with the working scaffolding left out. */
+/* Which catalogued bottle a test belongs to — explicit link first, then
+   the same name match the collection uses. */
+function bottleFor(t){
+  if(isBottle(t)) return t;
+  if(t.bottleId){ var b=tests.filter(function(x){ return x.id===t.bottleId; })[0]; if(b) return b; }
+  return tests.filter(function(x){
+    return isBottle(x)&&x.notebook===t.notebook&&x.house===t.house&&x.name===t.name&&x.flanker===t.flanker;
+  })[0]||null;
+}
+function disclosureFor(rec){
+  var b=bottleFor(rec);
+  if(!b||!b.pr) return '';
+  return 'Disclosure: this bottle was sent to me'+(b.prFrom?' by '+b.prFrom:' as PR')+'. My opinion is my own.';
+}
 function testToReview(t){
   var L=[fullTitle(t)+(t.concentration?' ('+t.concentration+')':'')];
   if(t.inspired) L.push('Marketed as inspired by '+t.inspired);
@@ -2691,13 +2734,16 @@ function testToReview(t){
   if(cpl(t)) L.push('','Value: '+cpl(t)+(t.value?' — '+t.value:''));
   if(t.verdict) L.push('','Verdict: '+t.verdict);
   if(t.rating) L.push('Rating: '+t.rating+'/10');
+  var disc=disclosureFor(t);
+  if(disc) L.push('',disc);
   return L.join('\n');
 }
 function bottleToReview(b){
   var meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(', ');
   var L=[fullTitle(b)+(meta?' ('+meta+')':'')];
   if(b.inspired) L.push('Marketed as inspired by '+b.inspired);
-  if(cpl(b)) L.push('Cost: '+cpl(b)+(b.price?' — $'+b.price+' for '+b.size+'ml':''));
+  if(b.pr) L.push('Sent as PR'+(b.prFrom?' by '+b.prFrom:'')+'.');
+  if(cpl(b)) L.push((b.pr?'Retail: ':'Cost: ')+cpl(b)+(b.price?' — $'+b.price+' for '+b.size+'ml':''));
   if(b.bottleNotes) L.push('',b.bottleNotes);
   var done=bottleTests(b).filter(function(t){ return t.completed; });
   if(!done.length) L.push('','No completed tests on this bottle yet.');
@@ -2718,6 +2764,7 @@ function exportCollection(){
     L.push(fullTitle(b)+(meta?' ('+meta+')':''));
     if(b.inspired) L.push('  Inspired by '+b.inspired);
     if(b.batch) L.push('  Batch '+b.batch);
+    if(b.pr) L.push('  PR'+(b.prFrom?' from '+b.prFrom:''));
     var done=bottleTests(b).filter(function(t){ return t.completed; });
     var scores=done.map(function(t){ return parseInt(t.rating); }).filter(function(n){ return n>0; });
     var bits=[];

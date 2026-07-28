@@ -154,6 +154,23 @@ enough to save on every keystroke.
 **Every bottle in your collection is public** — there is no per-bottle toggle, by your
 choice. That is different from tests, which stay private until you share each one.
 
+## PR and gifted bottles
+
+Each bottle records **how you got it** — bought, or PR / gifted, with an optional note of
+who sent it.
+
+That is not just a label. Gifted product has to be disclosed, so marking a bottle as PR
+makes **Copy as review** append a disclosure line automatically:
+
+> Disclosure: this bottle was sent to me by Bujairami. My opinion is my own.
+
+It also keeps your money figures honest. Gifted bottles are **excluded from total spent
+and average cost per ml**, and reported separately as *"3 sent as PR · $150 retail, not
+counted as spend"*. Filter the collection to **PR gifts** or **Bought** to see either set.
+
+The disclosure follows the bottle, so any test of it picks it up — whether the test is
+explicitly linked or just matches by name.
+
 ## Blotter as a baseline
 
 A blotter run is a **control** — the fragrance on its own, with no skin chemistry in the
