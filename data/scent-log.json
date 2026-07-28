@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:19:52.699Z",
+  "updatedAt": "2026-07-28T23:21:14.433Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -598,14 +598,14 @@
       "house": "Dior",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDT",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "25",
+      "size": "10",
+      "batch": "3076",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -638,14 +638,14 @@
       "kind": "bottle",
       "photo": "",
       "added": "2026-07-28T21:18:32.486Z",
-      "bottleNotes": "",
+      "bottleNotes": "MINIATURE BOTTLE",
       "bottleId": "",
-      "fill": "",
+      "fill": "80",
       "covered": false,
       "id": "t1785273512486p7g7o1",
       "name": "Homme",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-28T23:21:11.600Z"
     },
     {
       "notebook": "stevnscents",
