@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:22:28.393Z",
+  "updatedAt": "2026-07-28T23:23:03.868Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -549,7 +549,7 @@
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
+      "price": "140",
       "size": "100",
       "batch": "1M02",
       "context": "",
@@ -586,12 +586,12 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "100",
       "covered": false,
       "id": "t178527351248608d87a",
       "name": "Homme Intense",
       "type": "Designer",
-      "updatedAt": "2026-07-28T23:22:14.381Z"
+      "updatedAt": "2026-07-28T23:23:01.055Z"
     },
     {
       "notebook": "stevnscents",
