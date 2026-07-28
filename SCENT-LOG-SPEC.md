@@ -309,7 +309,9 @@ Tier chips carry their own colors: S `#8f6529`, A `#5d6b4b`, B `#4a5a68`, C `#6b
 
 **Progressive disclosure.** The fast path stays fast. Starting a test requires brand + name only; weather, price, batch, perfumer, and release year sit behind a "More detail" toggle. The wrap-up sheet has five collapsible sections with only *Performance* open by default; each header shows an "N filled" badge so completion state is visible at a glance.
 
-**Automatic timestamping.** Checkpoint elapsed time is computed from `startTime` at the moment of logging. The user never enters a time. Editing an existing checkpoint preserves the original timestamp and only updates the note and projection.
+**Automatic timestamping.** Checkpoint elapsed time is computed from `startTime` at the moment of logging. The user is never *required* to enter a time.
+
+An "Adjust the time" toggle — collapsed by default, in both the check-in and compliment sheets — allows correcting when something actually happened, for the case where a check-in is logged late. Revealing it and picking a time overrides both `minutes` and `loggedAt`; leaving it closed keeps the behaviour fully automatic. Corrections are validated against `startTime` and the present moment, and re-sort the checkpoint timeline. Because the picker is minute-precision while `startTime` carries seconds, elapsed is computed minute-to-minute so the arithmetic matches what the user expects. Editing an existing checkpoint prefills its original time.
 
 **Everything editable after the fact.** Completed tests reopen the wrap-up sheet fully populated. "Test again" clones identity and reference fields into a fresh test — for re-testing the same bottle in different weather.
 
@@ -390,7 +392,7 @@ Recommended target: **Vite + React + TypeScript**, deployed as an installable PW
 
 **What should not change:**
 - The three-phase model (Initial Spray / Dry Down / Skin Scent). It matches how a fragrance actually behaves and how reviews are structured.
-- Automatic timestamping. Never make the user enter a time.
+- Automatic timestamping as the default. Never *require* the user to enter a time — correcting one late is optional and stays behind a toggle.
 - Progressive disclosure. Required fields must stay minimal.
 - The two-notebook partition.
 - Export-to-clipboard as a first-class output. The app exists to feed script writing.

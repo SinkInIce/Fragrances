@@ -160,7 +160,7 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .field{ margin-bottom:16px; }
 .field label{ display:block; font-size:10px; letter-spacing:.16em; text-transform:uppercase; font-weight:700; color:var(--ink-soft); margin-bottom:7px; }
 .field label .opt{ text-transform:none; letter-spacing:0; font-weight:500; font-size:10.5px; opacity:.7; }
-.field input[type=text], .field input[type=number], .field input[type=password], .field textarea{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:5px; padding:12px 13px; font-family:'Manrope',sans-serif; font-size:15px; color:var(--ink); }
+.field input[type=text], .field input[type=number], .field input[type=password], .field input[type=datetime-local], .field textarea{ width:100%; background:#fff; border:1.5px solid var(--line); border-radius:5px; padding:12px 13px; font-family:'Manrope',sans-serif; font-size:15px; color:var(--ink); }
 .field textarea{ resize:vertical; min-height:68px; line-height:1.5; }
 .field input:focus, .field textarea:focus{ outline:none; border-color:var(--accent-deep); }
 .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -177,6 +177,7 @@ header p{ font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1
 .more-fields.show{ display:block; }
 .helper{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; margin-top:-8px; margin-bottom:14px; font-style:italic; }
 .calc-out{ font-size:12px; color:var(--accent-deep); font-weight:700; margin-top:-8px; margin-bottom:14px; }
+#noteTimeOut, #compTimeOut{ margin-top:9px; margin-bottom:8px; }
 .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:11px 20px; border-radius:30px; font-size:12.5px; font-weight:600; opacity:0; pointer-events:none; transition:.3s; z-index:200; max-width:90vw; text-align:center; }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 /* The wrapper spans the viewport for its fade, so it must not take clicks —
@@ -422,6 +423,14 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <div class="chip" data-val="Arm's length">Arm's length</div>
       <div class="chip" data-val="Room-filling">Room</div>
     </div></div>
+  <div class="more-toggle" id="noteTimeToggle">+ Adjust the time</div>
+  <div class="more-fields" id="noteTimeFields">
+    <div class="field"><label>When this actually happened</label>
+      <input type="datetime-local" id="fNoteTime">
+      <div class="calc-out" id="noteTimeOut"></div>
+      <div class="helper">Only needed if you are logging it late — otherwise the time is taken automatically.</div>
+    </div>
+  </div>
   <button class="btn btn-primary" id="saveNoteBtn">Save check-in</button>
 </div></div>
 
@@ -440,6 +449,14 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <div class="sheet-sub">Who said it and what they said. This is the raw material for your best-performing videos.</div>
   <div class="field"><label>What happened</label>
     <textarea id="compText" placeholder="e.g. Barista asked what I was wearing, said it smelled expensive"></textarea></div>
+  <div class="more-toggle" id="compTimeToggle">+ Adjust the time</div>
+  <div class="more-fields" id="compTimeFields">
+    <div class="field"><label>When this actually happened</label>
+      <input type="datetime-local" id="fCompTime">
+      <div class="calc-out" id="compTimeOut"></div>
+      <div class="helper">Only needed if you are logging it late — otherwise the time is taken automatically.</div>
+    </div>
+  </div>
   <button class="btn btn-primary" id="saveCompBtn">Save</button>
 </div></div>
 
@@ -1291,7 +1308,7 @@ function bind(){
       var a=el.dataset.act, id=el.dataset.test;
       if(a==='note'||a==='editnote') openNote(id,el.dataset.key,el.dataset.label);
       else if(a==='custom'){ document.getElementById('customLabel').value=''; noteCtx={testId:id}; show('customOverlay'); }
-      else if(a==='comp'){ noteCtx={testId:id}; document.getElementById('compText').value=''; show('compOverlay'); }
+      else if(a==='comp'){ noteCtx={testId:id}; document.getElementById('compText').value=''; resetTimeField('compTimeFields','compTimeToggle','fCompTime','compTimeOut',null); show('compOverlay'); }
       else if(a==='end') openEnd(id);
       else if(a==='del') askDelete(id);
       else if(a==='copy') copyOne(id);
@@ -1422,16 +1439,66 @@ document.getElementById('saveNewTestBtn').addEventListener('click',function(){
   save(); hide('newTestOverlay'); render(); toast('Test started');
 });
 
+/* ---- Manual time correction -----------------------------------------
+   Timing stays automatic by default. These only come into play when a
+   check-in is logged late and the real moment needs correcting.       */
+function toLocalInput(d){
+  var p=function(n){ return String(n).padStart(2,'0'); };
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+function resetTimeField(fieldsId,toggleId,inputId,outId,existingISO){
+  document.getElementById(fieldsId).classList.remove('show');
+  document.getElementById(toggleId).textContent='+ Adjust the time';
+  document.getElementById(inputId).value=toLocalInput(existingISO?new Date(existingISO):new Date());
+  document.getElementById(outId).textContent='';
+}
+function pickedTime(inputId,t){
+  var v=document.getElementById(inputId).value;
+  if(!v) return null;
+  var d=new Date(v);
+  if(isNaN(d.getTime())) return {error:'That time is not valid'};
+  /* The picker is minute-precision but startTime carries seconds. Compare
+     minute to minute, or picking 12:08 against an 11:23:47 spray reads as
+     44 minutes when anyone doing the arithmetic expects 45. */
+  var startMin=Math.floor(new Date(t.startTime).getTime()/60000)*60000;
+  var ms=d.getTime()-startMin;
+  if(ms<0) return {error:'That is before you sprayed'};
+  if(d.getTime()>Date.now()+60000) return {error:'That is in the future'};
+  return {minutes:Math.floor(ms/60000), loggedAt:d.toISOString()};
+}
+function updateTimeOut(inputId,outId){
+  var out=document.getElementById(outId);
+  var t=noteCtx?tests.filter(function(x){return x.id===noteCtx.testId;})[0]:null;
+  if(!t){ out.textContent=''; return; }
+  var r=pickedTime(inputId,t);
+  if(!r){ out.textContent=''; return; }
+  if(r.error){ out.textContent=r.error; out.style.color='var(--wine)'; return; }
+  out.style.color='';
+  out.textContent=fmtEl(r.minutes*60000)+' after the spray';
+}
+function wireTimeToggle(toggleId,fieldsId,inputId,outId){
+  document.getElementById(toggleId).addEventListener('click',function(){
+    var f=document.getElementById(fieldsId);
+    f.classList.toggle('show');
+    this.textContent=f.classList.contains('show')?'\u2212 Use the time I logged it':'+ Adjust the time';
+    if(f.classList.contains('show')) updateTimeOut(inputId,outId);
+  });
+  document.getElementById(inputId).addEventListener('input',function(){ updateTimeOut(inputId,outId); });
+}
+wireTimeToggle('noteTimeToggle','noteTimeFields','fNoteTime','noteTimeOut');
+wireTimeToggle('compTimeToggle','compTimeFields','fCompTime','compTimeOut');
+
 function openNote(testId,key,label){
   var t=tests.filter(function(x){return x.id===testId;})[0]; if(!t) return;
   var ex=(t.checkpoints||[]).filter(function(c){return c.key===key;})[0];
   noteCtx={testId:testId,key:key,label:label};
   document.getElementById('noteTitle').textContent=label;
   var ph=phases.filter(function(p){return p.key===key;})[0];
-  document.getElementById('noteSub').textContent=ex?'Editing your note \u2014 the original timestamp stays.':'What do you smell right now? Be specific \u2014 this becomes your script.';
+  document.getElementById('noteSub').textContent=ex?'Editing your note \u2014 adjust the time below if it needs correcting.':'What do you smell right now? Be specific \u2014 this becomes your script.';
   document.getElementById('noteHint').textContent=ph?ph.hint:'';
   document.getElementById('noteText').value=ex?ex.note:'';
   setSingle('noteProj',ex?ex.projection:'');
+  resetTimeField('noteTimeFields','noteTimeToggle','fNoteTime','noteTimeOut',ex?ex.loggedAt:null);
   show('noteOverlay'); setTimeout(function(){ document.getElementById('noteText').focus(); },150);
 }
 
@@ -1439,11 +1506,23 @@ document.getElementById('saveNoteBtn').addEventListener('click',function(){
   if(!noteCtx||!noteCtx.key) return;
   var t=tests.filter(function(x){return x.id===noteCtx.testId;})[0]; if(!t) return;
   var note=document.getElementById('noteText').value.trim(), proj=getSingle('noteProj');
+  var adj=null;
+  if(document.getElementById('noteTimeFields').classList.contains('show')){
+    adj=pickedTime('fNoteTime',t);
+    if(adj&&adj.error){ toast(adj.error); return; }
+  }
   var i=(t.checkpoints||[]).map(function(c){return c.key;}).indexOf(noteCtx.key);
-  if(i>=0){ t.checkpoints[i].note=note; t.checkpoints[i].projection=proj; }
-  else { t.checkpoints.push({ key:noteCtx.key, label:noteCtx.label,
-    minutes:Math.floor((Date.now()-new Date(t.startTime).getTime())/60000), note:note, projection:proj, loggedAt:new Date().toISOString() }); }
-  save(); hide('noteOverlay'); noteCtx=null; render(); toast('Check-in saved');
+  if(i>=0){
+    t.checkpoints[i].note=note; t.checkpoints[i].projection=proj;
+    if(adj){ t.checkpoints[i].minutes=adj.minutes; t.checkpoints[i].loggedAt=adj.loggedAt; }
+  }
+  else {
+    var when=adj||{ minutes:Math.floor((Date.now()-new Date(t.startTime).getTime())/60000), loggedAt:new Date().toISOString() };
+    t.checkpoints.push({ key:noteCtx.key, label:noteCtx.label,
+      minutes:when.minutes, note:note, projection:proj, loggedAt:when.loggedAt });
+  }
+  t.checkpoints.sort(function(a,b){ return a.minutes-b.minutes; });   /* a corrected time can reorder the timeline */
+  save(); hide('noteOverlay'); noteCtx=null; render(); toast(adj?'Check-in saved with your time':'Check-in saved');
 });
 
 document.getElementById('saveCustomBtn').addEventListener('click',function(){
@@ -1457,7 +1536,14 @@ document.getElementById('saveCompBtn').addEventListener('click',function(){
   var t=tests.filter(function(x){return x.id===noteCtx.testId;})[0]; if(!t) return;
   var txt=document.getElementById('compText').value.trim();
   if(!txt){ toast('Add what they said'); return; }
-  t.compliments.push({ text:txt, minutes:Math.floor((Date.now()-new Date(t.startTime).getTime())/60000), loggedAt:new Date().toISOString() });
+  var adj=null;
+  if(document.getElementById('compTimeFields').classList.contains('show')){
+    adj=pickedTime('fCompTime',t);
+    if(adj&&adj.error){ toast(adj.error); return; }
+  }
+  var when=adj||{ minutes:Math.floor((Date.now()-new Date(t.startTime).getTime())/60000), loggedAt:new Date().toISOString() };
+  t.compliments.push({ text:txt, minutes:when.minutes, loggedAt:when.loggedAt });
+  t.compliments.sort(function(a,b){ return a.minutes-b.minutes; });
   save(); hide('compOverlay'); noteCtx=null; render(); toast('Compliment logged');
 });
 
