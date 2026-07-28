@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T23:25:33.795Z",
+  "updatedAt": "2026-07-28T23:26:25.682Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -436,14 +436,14 @@
       "house": "Dior",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "Parfum",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "225",
+      "size": "100",
+      "batch": "2602",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -478,12 +478,12 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "95",
       "covered": false,
       "id": "t1785273512486dldhuj",
       "name": "Sauvage Elixir",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-28T23:26:22.869Z"
     },
     {
       "notebook": "stevnscents",
