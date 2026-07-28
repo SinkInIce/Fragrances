@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-28T21:29:39.419Z",
+  "updatedAt": "2026-07-28T21:31:25.408Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1289,17 +1289,17 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "CarolinaHerrara",
-      "flanker": "",
+      "house": "Carolina Herrera",
+      "flanker": "Parfum Electrique",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "90.25",
+      "size": "100",
+      "batch": "13061",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -1330,16 +1330,16 @@
       "cons": "",
       "shared": false,
       "kind": "bottle",
-      "photo": "",
+      "photo": "p_1785274020360z09le.jpg",
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "95",
       "covered": false,
       "id": "t1785273512486add5sy",
-      "name": "Cobalt",
-      "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "name": "Bad Boy Cobalt",
+      "type": "Designer",
+      "updatedAt": "2026-07-28T21:31:22.594Z"
     }
   ],
   "deleted": [
