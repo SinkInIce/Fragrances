@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-29T19:46:37.493Z",
+  "updatedAt": "2026-07-29T19:46:41.609Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1507,75 +1507,6 @@
       "startTime": "2026-07-29T11:59:46.861Z",
       "completed": false,
       "updatedAt": "2026-07-29T19:46:34.795Z"
-    },
-    {
-      "notebook": "stevnscents",
-      "house": "Mind Games",
-      "flanker": "",
-      "inspired": "",
-      "concentration": "Extrait",
-      "sprays": "2",
-      "spots": [
-        "Forearms"
-      ],
-      "weather": "",
-      "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
-      "context": "Office - kennedy",
-      "checkpoints": [
-        {
-          "key": "spray",
-          "label": "Initial Spray",
-          "minutes": 11,
-          "note": "A fruity floral light passion fruit. I really enjoy the initial spray",
-          "projection": "Arm's length",
-          "loggedAt": "2026-07-29T12:11:54.392Z"
-        }
-      ],
-      "compliments": [],
-      "longevity": "",
-      "projection": "",
-      "sillage": "",
-      "families": [],
-      "seasons": [],
-      "occasions": [],
-      "complimentFactor": "",
-      "tier": "",
-      "rebuy": "",
-      "verdict": "",
-      "perfumer": "",
-      "year": "",
-      "topNotes": "",
-      "heartNotes": "",
-      "baseNotes": "",
-      "similar": "",
-      "seasonNotes": "",
-      "dayNight": "",
-      "layers": "",
-      "gender": "",
-      "age": "",
-      "rating": "",
-      "value": "",
-      "pros": "",
-      "cons": "",
-      "shared": false,
-      "kind": "test",
-      "photo": "",
-      "added": "",
-      "bottleNotes": "",
-      "bottleId": "",
-      "fill": "",
-      "covered": false,
-      "pr": false,
-      "prFrom": "",
-      "id": "t17853264181298tgsuf",
-      "name": "Lionora",
-      "type": "Niche",
-      "startTime": "2026-07-29T12:00:18.129Z",
-      "completed": false,
-      "updatedAt": "2026-07-29T12:11:54.392Z"
     }
   ],
   "deleted": [
@@ -1590,6 +1521,10 @@
     {
       "id": "t1785265628140blw8np",
       "at": "2026-07-28T19:07:13.441Z"
+    },
+    {
+      "id": "t17853264181298tgsuf",
+      "at": "2026-07-29T19:46:38.912Z"
     }
   ]
 }
