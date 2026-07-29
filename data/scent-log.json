@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-29T12:11:57.116Z",
+  "updatedAt": "2026-07-29T12:13:59.902Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1439,7 +1439,16 @@
       "size": "",
       "batch": "",
       "context": "Office",
-      "checkpoints": [],
+      "checkpoints": [
+        {
+          "key": "spray",
+          "label": "Initial Spray",
+          "minutes": 14,
+          "note": "Very light but picks up quickly. A barbershop scent like Dakkar noir with a bit of green from the petigreen. Almost got a cinnamon smell, probably the cardamom",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-29T12:13:57.006Z"
+        }
+      ],
       "compliments": [],
       "longevity": "",
       "projection": "",
@@ -1481,7 +1490,7 @@
       "type": "Niche",
       "startTime": "2026-07-29T11:59:46.861Z",
       "completed": false,
-      "updatedAt": "2026-07-29T11:59:46.862Z"
+      "updatedAt": "2026-07-29T12:13:57.007Z"
     },
     {
       "notebook": "stevnscents",
