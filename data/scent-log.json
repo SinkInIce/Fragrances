@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-29T12:11:34.194Z",
+  "updatedAt": "2026-07-29T12:11:57.116Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1499,7 +1499,16 @@
       "size": "",
       "batch": "",
       "context": "Office - kennedy",
-      "checkpoints": [],
+      "checkpoints": [
+        {
+          "key": "spray",
+          "label": "Initial Spray",
+          "minutes": 11,
+          "note": "A fruity floral light passion fruit. I really enjoy the initial spray",
+          "projection": "Arm's length",
+          "loggedAt": "2026-07-29T12:11:54.392Z"
+        }
+      ],
       "compliments": [],
       "longevity": "",
       "projection": "",
@@ -1541,7 +1550,7 @@
       "type": "Niche",
       "startTime": "2026-07-29T12:00:18.129Z",
       "completed": false,
-      "updatedAt": "2026-07-29T12:00:18.129Z"
+      "updatedAt": "2026-07-29T12:11:54.392Z"
     }
   ],
   "deleted": [
