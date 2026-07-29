@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-29T02:04:37.463Z",
+  "updatedAt": "2026-07-29T02:04:57.318Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -462,14 +462,14 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "97",
+      "fill": "73",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785273512486r06mr6",
       "name": "Percival",
       "type": "Niche",
-      "updatedAt": "2026-07-28T21:40:09.265Z"
+      "updatedAt": "2026-07-29T02:04:57.318Z"
     },
     {
       "notebook": "stevnscents",
