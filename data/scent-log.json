@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-29T19:46:11.142Z",
+  "updatedAt": "2026-07-29T19:46:37.493Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1455,6 +1455,14 @@
           "note": "Very much a barbershop scent. More similar to Dakkar noir, aftershave.",
           "projection": "Arm's length",
           "loggedAt": "2026-07-29T13:59:01.231Z"
+        },
+        {
+          "key": "skin",
+          "label": "Skin Scent",
+          "minutes": 466,
+          "note": "Turns into a very sweet Ambery weaker version of the OG scent",
+          "projection": "Skin scent",
+          "loggedAt": "2026-07-29T19:46:34.795Z"
         }
       ],
       "compliments": [],
@@ -1498,7 +1506,7 @@
       "type": "Niche",
       "startTime": "2026-07-29T11:59:46.861Z",
       "completed": false,
-      "updatedAt": "2026-07-29T13:59:01.231Z"
+      "updatedAt": "2026-07-29T19:46:34.795Z"
     },
     {
       "notebook": "stevnscents",
