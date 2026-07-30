@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-30T17:22:08.132Z",
+  "updatedAt": "2026-07-30T17:23:11.938Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1686,13 +1686,13 @@
       "house": "Xeroff",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
+      "price": "150",
+      "size": "100",
       "batch": "",
       "context": "",
       "checkpoints": [],
@@ -1728,14 +1728,14 @@
       "added": "2026-07-30T17:22:05.070Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "100",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t17854321250700t34b0",
       "name": "Erba Gold",
-      "type": "Dupe",
-      "updatedAt": "2026-07-30T17:22:05.070Z"
+      "type": "Niche",
+      "updatedAt": "2026-07-30T17:23:08.866Z"
     },
     {
       "notebook": "stevnscents",
