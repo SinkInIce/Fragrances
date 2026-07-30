@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-30T01:25:25.769Z",
+  "updatedAt": "2026-07-30T01:27:57.423Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1466,31 +1466,35 @@
         }
       ],
       "compliments": [],
-      "longevity": "",
-      "projection": "",
-      "sillage": "",
+      "longevity": "6–8 hours",
+      "projection": "Room-filling",
+      "sillage": "Heavy",
       "families": [],
-      "seasons": [],
-      "occasions": [],
-      "complimentFactor": "",
-      "tier": "",
-      "rebuy": "",
-      "verdict": "",
+      "seasons": [
+        "Year-round"
+      ],
+      "occasions": [
+        "Signature"
+      ],
+      "complimentFactor": "High",
+      "tier": "A",
+      "rebuy": "Yes",
+      "verdict": "A beautiful signature scent worthy if barbershop fragrances are your thing.",
       "perfumer": "",
       "year": "",
       "topNotes": "",
       "heartNotes": "",
       "baseNotes": "",
       "similar": "",
-      "seasonNotes": "",
-      "dayNight": "",
+      "seasonNotes": "A signature scent worthy fragrances.",
+      "dayNight": "Daytime",
       "layers": "",
-      "gender": "",
-      "age": "",
-      "rating": "",
-      "value": "",
-      "pros": "",
-      "cons": "",
+      "gender": "Masculine",
+      "age": "Mature",
+      "rating": "9",
+      "value": "Fair",
+      "pros": "The barbershop feel that feels clean and nostalgic",
+      "cons": "The green can be a bit off putting.",
       "shared": false,
       "kind": "test",
       "photo": "",
@@ -1505,8 +1509,9 @@
       "name": "Gambit",
       "type": "Niche",
       "startTime": "2026-07-29T11:59:46.861Z",
-      "completed": false,
-      "updatedAt": "2026-07-29T19:46:34.795Z"
+      "completed": true,
+      "updatedAt": "2026-07-30T01:27:54.461Z",
+      "endTime": "2026-07-30T01:27:54.461Z"
     }
   ],
   "deleted": [
