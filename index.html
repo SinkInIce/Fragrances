@@ -755,10 +755,16 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
     <div class="rating-row" id="bPr">
       <div class="chip" data-val="bought">Bought it</div>
       <div class="chip" data-val="pr">PR / gifted</div>
+      <div class="chip" data-val="trade">Traded for it</div>
     </div></div>
   <div class="field" id="bPrFromField" hidden><label>Sent by <span class="opt">optional</span></label>
     <input type="text" id="bPrFrom" placeholder="e.g. Bujairami, via their PR agency" autocomplete="off">
     <div class="helper">Gifted product has to be disclosed. Mark it here and the review export says so for you.</div></div>
+  <div class="field" id="bTradeField" hidden><label>Traded with</label>
+    <input type="text" id="bTradedWith" placeholder="Name or @handle" autocomplete="off">
+    <div class="helper">Shows on the collection card, since a trade is worth telling people about.</div></div>
+  <div class="field" id="bTradeForField" hidden><label>What you gave for it</label>
+    <textarea id="bTradedFor" placeholder="e.g. my dupe of X, 50ml, half full"></textarea></div>
   <div class="field"><label>How full is it now <span class="opt">optional</span></label>
     <div class="rating-row" id="bFill">
       <div class="chip sm" data-val="100">Full</div>
@@ -1307,7 +1313,8 @@ function viewCollection(){
   if(colFilter==='untested') list=list.filter(t=>!bottleTests(t).some(x=>x.completed));
   else if(colFilter==='low') list=list.filter(t=>fillPct(t)!==null&&fillPct(t)<=25);
   else if(colFilter==='pr') list=list.filter(t=>t.pr);
-  else if(colFilter==='bought') list=list.filter(t=>!t.pr);
+  else if(colFilter==='trade') list=list.filter(t=>t.traded);
+  else if(colFilter==='bought') list=list.filter(t=>!t.pr&&!t.traded);
   else if(colFilter) list=list.filter(t=>t.type===colFilter);
 
   const byName=(a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name);
@@ -1349,7 +1356,7 @@ function viewCollection(){
     const sorts=[['brand','Brand A-Z'],['name','Name A-Z'],['cheap','Cheapest per ml'],['dear','Priciest per ml'],
       ['tested','Most tested'],['empty','Emptiest first'],['added','Recently added']];
     const filters=[['','All'],['untested','Untested'],['low','Running low'],
-      ['pr','PR gifts'],['bought','Bought'],
+      ['pr','PR gifts'],['trade','Traded'],['bought','Bought'],
       ['Dupe','Dupes'],['Designer','Designer'],['Niche','Niche'],['Indie','Indie']];
     h+='<div class="controls"><div class="sort-sel"><select id="colSort">'+
       sorts.map(o=>'<option value="'+o[0]+'"'+(colSort===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+
@@ -1542,6 +1549,7 @@ function cardBottle(b){
       });
     }
     if(b.batch) inner+='<div class="result-count" style="margin-bottom:10px">This bottle: batch '+esc(b.batch)+'</div>';
+    if(b.traded&&b.tradedFor) inner+='<div class="prose-box"><span class="pb-lab">Traded for</span>'+esc(b.tradedFor)+'</div>';
     if(b.bottleNotes) inner+='<div class="prose-box"><span class="pb-lab">Notes</span>'+esc(b.bottleNotes)+'</div>';
     if(!readOnly) inner+='<div class="bottle-actions">'+
       '<button class="btn-text" data-act="bottletest" data-bottle="'+b.id+'">Log a test</button>'+
@@ -1568,6 +1576,7 @@ function cardBottle(b){
           (avg?'<div class="badge longevity">avg '+avg.toFixed(1)+'/10</div>':'')+
           (b.fill!==''?'<div class="badge'+(fillPct(b)<=25?' projection':'')+'">'+esc(fillLabel(b.fill))+'</div>':'')+
           (b.pr?'<div class="badge shared">PR</div>':'')+
+          (b.traded?'<div class="badge shared">Trade'+(b.tradedWith?' · '+esc(b.tradedWith):'')+'</div>':'')+
         '</div>'+
       '</div>'+
       '<div class="chevron">&rsaquo;</div>'+
@@ -2238,8 +2247,10 @@ function openBottle(id){
   document.getElementById('bInspired').value=b?b.inspired:'';
   setSingle('bType',b?b.type:'Dupe');
   setSingle('bConc',b?b.concentration:'');
-  setSingle('bPr',(b&&b.pr)?'pr':'bought');
+  setSingle('bPr',(b&&b.pr)?'pr':((b&&b.traded)?'trade':'bought'));
   document.getElementById('bPrFrom').value=b?b.prFrom:'';
+  document.getElementById('bTradedWith').value=b?(b.tradedWith||''):'';
+  document.getElementById('bTradedFor').value=b?(b.tradedFor||''):'';
   syncPrField();
   bottleFill=b?(b.fill||''):''; syncFillUI();
   document.getElementById('bPrice').value=b?b.price:'';
@@ -2382,6 +2393,9 @@ document.getElementById('bFillRange').addEventListener('input',function(){
 });
 function syncPrField(){
   document.getElementById('bPrFromField').hidden = getSingle('bPr')!=='pr';
+  var traded = getSingle('bPr')==='trade';
+  document.getElementById('bTradeField').hidden = !traded;
+  document.getElementById('bTradeForField').hidden = !traded;
 }
 document.getElementById('bPr').addEventListener('click',function(e){
   if(e.target.closest('.chip')) syncPrField();
@@ -2408,6 +2422,9 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
     inspired:document.getElementById('bInspired').value.trim(),
     type:getSingle('bType')||'Dupe', concentration:getSingle('bConc'), fill:bottleFill,
     pr:getSingle('bPr')==='pr', prFrom:getSingle('bPr')==='pr'?document.getElementById('bPrFrom').value.trim():'',
+    traded:getSingle('bPr')==='trade',
+    tradedWith:getSingle('bPr')==='trade'?document.getElementById('bTradedWith').value.trim():'',
+    tradedFor:getSingle('bPr')==='trade'?document.getElementById('bTradedFor').value.trim():'',
     price:document.getElementById('bPrice').value.trim(),
     size:document.getElementById('bSize').value.trim(),
     batch:document.getElementById('bBatch').value.trim(),

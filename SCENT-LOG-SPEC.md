@@ -74,6 +74,13 @@ interface Test {
   photo: string;                 // filename in data/photos/, blob held in IndexedDB
   bottleNotes: string;           // free text about this specific bottle
   added: string;                 // ISO, when it entered the collection
+  pr: boolean;                   // gifted/PR, disclosed on the review export
+  prFrom: string;                // who sent it, when pr is true
+  traded: boolean;               // came in via a trade rather than bought or gifted
+  tradedWith: string;            // who the trade was with — shown on the (public)
+                                  // collection card as a "Trade" badge, since a
+                                  // trade is worth telling people about
+  tradedFor: string;             // free text: what was given up for it, when traded
 
   // Naming — brand is REQUIRED, name is REQUIRED, flanker optional
   house: string;                 // brand, e.g. "Lattafa"
