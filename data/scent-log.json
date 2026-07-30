@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-30T01:27:57.423Z",
+  "updatedAt": "2026-07-30T01:28:14.456Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -60,7 +60,7 @@
         "Signature"
       ],
       "complimentFactor": "Medium",
-      "tier": "A",
+      "tier": "B",
       "rebuy": "Maybe",
       "verdict": "A stunning signature scent if you love the creed aventus style fragrances.",
       "perfumer": "",
@@ -93,7 +93,7 @@
       "type": "Dupe",
       "startTime": "2026-07-28T18:56:42.538Z",
       "completed": true,
-      "updatedAt": "2026-07-28T23:37:27.322Z",
+      "updatedAt": "2026-07-30T01:28:11.758Z",
       "endTime": "2026-07-28T23:35:32.172Z"
     },
     {
