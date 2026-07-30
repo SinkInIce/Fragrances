@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-30T17:30:36.501Z",
+  "updatedAt": "2026-07-30T17:30:47.413Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -406,14 +406,14 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "89.33",
+      "fill": "92",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t17852735124862ifk5c",
       "name": "Castley",
       "type": "Niche",
-      "updatedAt": "2026-07-30T17:30:36.501Z"
+      "updatedAt": "2026-07-30T17:30:47.413Z"
     },
     {
       "notebook": "stevnscents",
