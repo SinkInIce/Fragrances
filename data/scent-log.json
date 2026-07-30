@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-30T17:23:11.938Z",
+  "updatedAt": "2026-07-30T17:23:36.089Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1691,7 +1691,7 @@
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "150",
+      "price": "165",
       "size": "100",
       "batch": "",
       "context": "",
@@ -1735,7 +1735,7 @@
       "id": "t17854321250700t34b0",
       "name": "Erba Gold",
       "type": "Niche",
-      "updatedAt": "2026-07-30T17:23:08.866Z"
+      "updatedAt": "2026-07-30T17:23:33.382Z"
     },
     {
       "notebook": "stevnscents",
