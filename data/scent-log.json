@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-30T17:25:17.360Z",
+  "updatedAt": "2026-07-30T17:25:44.988Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1742,14 +1742,14 @@
       "house": "Xeroff",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "219",
+      "size": "100",
+      "batch": "2026",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -1784,14 +1784,14 @@
       "added": "2026-07-30T17:22:05.070Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
+      "fill": "100",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785432125070hc3vbd",
       "name": "Torino21",
-      "type": "Dupe",
-      "updatedAt": "2026-07-30T17:22:05.070Z"
+      "type": "Niche",
+      "updatedAt": "2026-07-30T17:25:42.292Z"
     },
     {
       "notebook": "stevnscents",
