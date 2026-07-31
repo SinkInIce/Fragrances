@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-31T01:17:25.396Z",
+  "updatedAt": "2026-07-31T01:17:34.200Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1567,7 +1567,10 @@
       "id": "t17854320204510qux04",
       "name": "Imagination",
       "type": "Designer",
-      "updatedAt": "2026-07-30T17:20:20.452Z"
+      "updatedAt": "2026-07-31T01:17:31.405Z",
+      "traded": false,
+      "tradedWith": "",
+      "tradedFor": ""
     },
     {
       "notebook": "stevnscents",
