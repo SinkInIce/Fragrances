@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-31T01:25:13.540Z",
+  "updatedAt": "2026-07-31T01:26:34.938Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1916,14 +1916,14 @@
       "house": "LuisVuitton",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "EDP",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
-      "batch": "",
+      "price": "360",
+      "size": "100",
+      "batch": "2026",
       "context": "",
       "checkpoints": [],
       "compliments": [],
@@ -1956,16 +1956,19 @@
       "kind": "bottle",
       "photo": "",
       "added": "2026-07-31T01:15:27.159Z",
-      "bottleNotes": "",
+      "bottleNotes": "Bought from LV",
       "bottleId": "",
-      "fill": "",
+      "fill": "100",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t17854605271600tlkpu",
       "name": "Météore",
-      "type": "Dupe",
-      "updatedAt": "2026-07-31T01:15:27.160Z"
+      "type": "Designer",
+      "updatedAt": "2026-07-31T01:26:31.990Z",
+      "traded": false,
+      "tradedWith": "",
+      "tradedFor": ""
     }
   ],
   "deleted": [
