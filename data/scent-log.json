@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-31T17:47:32.702Z",
+  "updatedAt": "2026-07-31T17:48:06.283Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -574,14 +574,14 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "75",
+      "fill": "85",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785273512486y50170",
       "name": "Vibrato",
       "type": "Niche",
-      "updatedAt": "2026-07-31T17:47:32.702Z"
+      "updatedAt": "2026-07-31T17:48:06.283Z"
     },
     {
       "notebook": "stevnscents",
