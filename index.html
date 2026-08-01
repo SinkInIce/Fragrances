@@ -1754,6 +1754,9 @@ async function ghWrite(doc,sha){
 }
 
 async function syncNow(manual){
+  /* A visitor on the public page has other people's records in memory, not
+     their own log. Writing any of that anywhere is never right. */
+  if(readOnly) return;
   if(!syncConfigured()){ if(manual) toast('Add your repo and token first'); return; }
   if(syncing) return;
   syncing=true; syncState='syncing'; renderDataBar();
