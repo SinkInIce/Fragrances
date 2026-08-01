@@ -1558,7 +1558,17 @@ async function persist(){
   }
   renderDataBar();
 }
-async function save(){ if(readOnly) return; stampChanges(); await persist(); scheduleSync(); }
+async function save(){
+  if(readOnly) return;
+  const changed=stampChanges();
+  await persist();
+  /* Switching section, sorting a list or opening a card all come through
+     here, and none of them alter a record. Pushing anyway is still a
+     commit — the synced doc carries a fresh updatedAt every time — so the
+     data branch collects a commit per tab tap. Sync when something moved,
+     or when the last attempt failed and is owed another go. */
+  if(changed||syncState==='error') scheduleSync();
+}
 
 /* ---- Change tracking -------------------------------------------------
    Every mutation funnels through save(), but none of them say what
@@ -1570,13 +1580,17 @@ function seedSnapshot(){
   snapshot={};
   tests.forEach(function(t){ if(t.id) snapshot[t.id]=JSON.stringify(t); });
 }
+/* Returns whether any record actually moved, so a save that only changed
+   which tab is on screen does not go on to push a commit. */
 function stampChanges(){
   const now=new Date().toISOString(), seen={};
+  let changed=false;
   tests.forEach(function(t){
     if(!t.id) return;
     seen[t.id]=1;
     const was=snapshot[t.id];
     if(was===JSON.stringify(t)) return;
+    changed=true;
     /* How full a bottle is gets a stamp of its own. Studio pours decants
        against this same record and decides whose figure is newer by asking
        when the level itself last moved. Measured against a whole-record
@@ -1588,8 +1602,9 @@ function stampChanges(){
     snapshot[t.id]=JSON.stringify(t);
   });
   Object.keys(snapshot).forEach(function(id){
-    if(!seen[id]){ delete snapshot[id]; tombstones.push({id:id,at:now}); }
+    if(!seen[id]){ delete snapshot[id]; tombstones.push({id:id,at:now}); changed=true; }
   });
+  return changed;
 }
 function stampOf(t){ return t.updatedAt||t.endTime||t.startTime||''; }
 /* When the level itself last moved. A record written before the field
