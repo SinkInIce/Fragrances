@@ -70,6 +70,21 @@ timeout 15 bash -c 'until tmux capture-pane -t fr -p | tail -2 | grep -q "screen
 tmux capture-pane -t fr -p
 ```
 
+**The driver opens a 390x844 phone viewport by default**, at
+`deviceScaleFactor: 2`. Scent Log is used on a phone; a 1280px-wide
+screenshot hides every mobile layout problem there is. Check the tight end
+too — `viewport 360x780` is where wrapping actually breaks — and switch to
+`viewport 1280x900` only to confirm the desktop case. `VIEWPORT=1280x900` in
+the environment sets the launch default instead.
+
+**`tmux capture-pane -p | tail -1` is unreliable for the prompt poll** — the
+pane is padded with blank lines, so the last line is usually empty. Filter
+them out first:
+
+```bash
+tmux capture-pane -t fr -p | grep -v '^[[:space:]]*$' | tail -1   # -> driver>
+```
+
 **Use a screenshot directory unique to your task** (`SCREENSHOT_DIR=/tmp/shots-fragrances`
 above), not the generic `/tmp/shots` default — this container can be shared
 with sibling agent sessions that also default to `/tmp/shots`, and their
@@ -119,6 +134,11 @@ failure and a real render can both leave the REPL looking successful.
 |---|---|
 | `launch` | open headless Chromium, navigate to the base URL |
 | `ss [name]` | screenshot → `<SCREENSHOT_DIR>/<name>.png` |
+| `ssfull [name]` | full-page screenshot — the only way to judge vertical rhythm |
+| `viewport <w>x<h>` | resize the open page, e.g. `viewport 360x780` |
+| `reload` | reload the page (picks up edits to `index.html`) |
+| `scroll <px>` | `window.scrollTo(0, px)` |
+| `evalfile <path>` | read a local `.js` file and evaluate its contents in the page |
 | `click <css-sel>` | Playwright `page.click()` |
 | `click-text <text>` | click a button/link/tab/chip by visible text (substring match fallback) |
 | `fill <css-sel> <text>` | Playwright `page.fill()` — the rest of the line is the value |

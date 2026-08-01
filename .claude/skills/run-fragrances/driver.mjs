@@ -35,6 +35,16 @@ const BASE_URL = process.argv[2] || process.env.BASE_URL || 'http://localhost:87
 const SHOT_DIR = process.env.SCREENSHOT_DIR || '/tmp/shots';
 fs.mkdirSync(SHOT_DIR, { recursive: true });
 
+// Scent Log is a phone app first, so default to a phone-sized viewport —
+// a 1280px-wide screenshot hides every mobile layout problem there is.
+// Override with VIEWPORT=1280x900 in the environment, or `viewport 1280x900`
+// at the prompt (takes effect immediately on the open page).
+function parseViewport(s) {
+  const m = /^(\d+)x(\d+)$/.exec(String(s || '').trim());
+  return m ? { width: +m[1], height: +m[2] } : null;
+}
+let viewport = parseViewport(process.env.VIEWPORT) || { width: 390, height: 844 };
+
 // Pinned Chromium install in this container — not the Playwright-managed one.
 const CHROMIUM_PATH = '/opt/pw-browsers/chromium';
 const executablePath = fs.existsSync(CHROMIUM_PATH) ? CHROMIUM_PATH : undefined;
@@ -51,7 +61,7 @@ const COMMANDS = {
       args: ['--no-sandbox'],
       executablePath,
     });
-    page = await browser.newPage();
+    page = await browser.newPage({ viewport, deviceScaleFactor: 2 });
     page.on('console', msg => {
       if (msg.type() === 'error') consoleErrors.push(msg.text());
     });
@@ -65,6 +75,46 @@ const COMMANDS = {
     const f = path.join(SHOT_DIR, (name || `ss-${Date.now()}`) + '.png');
     await page.screenshot({ path: f });
     console.log('screenshot:', f);
+  },
+
+  // Whole scrollable page in one image — the only way to judge vertical
+  // rhythm and how a long list actually scans.
+  async ssfull(name) {
+    if (!page) return console.log('ERROR: launch first');
+    const f = path.join(SHOT_DIR, (name || `ssfull-${Date.now()}`) + '.png');
+    await page.screenshot({ path: f, fullPage: true });
+    console.log('screenshot:', f);
+  },
+
+  async viewport(arg) {
+    const v = parseViewport(arg);
+    if (!v) return console.log('usage: viewport 390x844');
+    viewport = v;
+    if (page) await page.setViewportSize(viewport);
+    console.log('viewport:', viewport.width + 'x' + viewport.height);
+  },
+
+  // Run a local .js file inside the page. `eval` takes a single expression on
+  // one line, which is unusable for anything like seeding a realistic data
+  // set; this reads the file off disk and evaluates its contents instead.
+  async evalfile(file) {
+    if (!page) return console.log('ERROR: launch first');
+    try {
+      const src = fs.readFileSync(file.trim(), 'utf8');
+      console.log(JSON.stringify(await page.evaluate(src)));
+    } catch (e) { console.log('ERROR:', e.message.split('\n')[0]); }
+  },
+
+  async reload() {
+    if (!page) return console.log('ERROR: launch first');
+    await page.reload({ waitUntil: 'load' });
+    console.log('reloaded');
+  },
+
+  async scroll(px) {
+    if (!page) return console.log('ERROR: launch first');
+    await page.evaluate(n => window.scrollTo(0, n), parseInt(px, 10) || 0);
+    console.log('scrolled to', px);
   },
 
   async click(sel) {
