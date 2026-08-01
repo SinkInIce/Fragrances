@@ -1318,7 +1318,7 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', notesPhoto:'', added:'', bottleNotes:'', bottleId:'', fill:'', covered:false, pr:false, prFrom:'' }, t);
+    kind:'test', photo:'', notesPhoto:'', added:'', bottleNotes:'', bottleId:'', fill:'', fillAt:'', covered:false, pr:false, prFrom:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -1575,27 +1575,48 @@ function stampChanges(){
   tests.forEach(function(t){
     if(!t.id) return;
     seen[t.id]=1;
-    if(snapshot[t.id]!==JSON.stringify(t)){
-      t.updatedAt=now;
-      snapshot[t.id]=JSON.stringify(t);
-    }
+    const was=snapshot[t.id];
+    if(was===JSON.stringify(t)) return;
+    /* How full a bottle is gets a stamp of its own. Studio pours decants
+       against this same record and decides whose figure is newer by asking
+       when the level itself last moved. Measured against a whole-record
+       updatedAt, correcting a typo in a name here reads as newer than a
+       pour recorded there five minutes ago, and silently rolls it back. */
+    const wasFill=was?(JSON.parse(was).fill||''):'';
+    if((t.fill||'')!==wasFill) t.fillAt=now;
+    t.updatedAt=now;
+    snapshot[t.id]=JSON.stringify(t);
   });
   Object.keys(snapshot).forEach(function(id){
     if(!seen[id]){ delete snapshot[id]; tombstones.push({id:id,at:now}); }
   });
 }
 function stampOf(t){ return t.updatedAt||t.endTime||t.startTime||''; }
+/* When the level itself last moved. A record written before the field
+   existed has none and falls back to the record stamp — which is exactly
+   how it was compared before, so nothing already on disk changes hands. */
+function fillStampOf(t){ return t.fillAt||stampOf(t); }
 
 /* Union by id, newest wins; a tombstone removes a record only if the
    delete happened after that record's last edit. */
 function mergeDocs(localTests,localTombs,remote){
   const rTests=(remote&&Array.isArray(remote.tests))?remote.tests.map(norm):[];
   const rTombs=(remote&&Array.isArray(remote.deleted))?remote.deleted:[];
-  const byId={};
+  const byId={}, lost={};
   localTests.concat(rTests).forEach(function(t){
     if(!t.id) return;
     const cur=byId[t.id];
-    if(!cur||stampOf(t)>=stampOf(cur)) byId[t.id]=t;
+    if(!cur){ byId[t.id]=t; return; }
+    if(stampOf(t)>=stampOf(cur)){ byId[t.id]=t; lost[t.id]=cur; }
+    else lost[t.id]=t;
+  });
+  /* Fill is then reconciled on its own stamp rather than the record's, so
+     the copy that lost the record can still carry the level across. One
+     field crosses over; everything else stays whole-record newest-wins. */
+  Object.keys(lost).forEach(function(id){
+    const win=byId[id], other=lost[id];
+    if((win.fill||'')===(other.fill||'')) return;
+    if(fillStampOf(other)>fillStampOf(win)){ win.fill=other.fill; win.fillAt=fillStampOf(other); }
   });
   const tombs={};
   localTombs.concat(rTombs).forEach(function(d){
