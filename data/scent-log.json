@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-08-01T03:00:48.850Z",
+  "updatedAt": "2026-08-01T03:11:16.782Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -574,14 +574,14 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "80",
+      "fill": "85",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785273512486y50170",
       "name": "Vibrato",
       "type": "Niche",
-      "updatedAt": "2026-08-01T03:00:48.850Z"
+      "updatedAt": "2026-08-01T03:11:16.782Z"
     },
     {
       "notebook": "stevnscents",
@@ -1731,14 +1731,14 @@
       "added": "2026-07-30T17:22:05.070Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "96",
+      "fill": "98",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t17854321250700t34b0",
       "name": "Erba Gold",
       "type": "Niche",
-      "updatedAt": "2026-08-01T03:00:48.850Z"
+      "updatedAt": "2026-08-01T03:11:16.782Z"
     },
     {
       "notebook": "stevnscents",
