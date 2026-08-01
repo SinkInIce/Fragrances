@@ -3854,7 +3854,13 @@ function backupToFile(){
   setTimeout(function(){ URL.revokeObjectURL(url); },1000);
   toast(tests.length+' tests backed up');
 }
-/* Restore merges by id and never deletes — safe to run against a live log. */
+/* Restore merges by id and never deletes — safe to run against a live log.
+   "Merges" is the same rule sync uses: newest stamp wins. A record in the
+   file only replaces the one you have if it is genuinely newer. It used to
+   overwrite unconditionally, so restoring last month's backup to recover
+   one lost bottle quietly rolled back every level, note and rating changed
+   since — and save() then stamped all of it fresh, so the stale copies beat
+   the other device on the next sync too. */
 function restoreFromFile(file){
   var fr=new FileReader();
   fr.onload=function(){
@@ -3863,15 +3869,17 @@ function restoreFromFile(file){
     var incoming=Array.isArray(p)?p:(p&&Array.isArray(p.tests)?p.tests:null);
     if(!incoming){ toast('That file is not a Scent Log backup'); return; }
     var byId={}; tests.forEach(function(t){ byId[t.id]=t; });
-    var added=0, updated=0;
+    var added=0, updated=0, older=0;
     incoming.map(norm).forEach(function(t){
       if(!t.id) return;
-      if(byId[t.id]) updated++; else added++;
-      byId[t.id]=t;
+      var cur=byId[t.id];
+      if(!cur){ byId[t.id]=t; added++; return; }
+      if(stampOf(t)>stampOf(cur)){ byId[t.id]=t; updated++; }
+      else older++;
     });
     tests=Object.keys(byId).map(function(k){ return byId[k]; });
     save(); render();
-    toast(added+' added, '+updated+' updated');
+    toast(added+' added, '+updated+' updated'+(older?', '+older+' already newer here':''));
   };
   fr.onerror=function(){ toast('Could not read that file'); };
   fr.readAsText(file);
