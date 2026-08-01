@@ -1308,7 +1308,13 @@ const tierOrder={S:0,A:1,B:2,C:3,D:4,F:5};
 
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2300); }
 function uid(){ return 't'+Date.now()+Math.random().toString(36).slice(2,8); }
-function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+/* Almost every use of this is inside an attribute — data-label, an input's
+   value, a chip's data-val. innerHTML escapes < > & and leaves quotes
+   alone, so one double quote ends the attribute early and the rest of the
+   tag is parsed as markup: typing " into the search box truncated what you
+   typed, and a check-in labelled 5" corrupted its own card. */
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s);
+  return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtEl(ms){ if(!isFinite(ms)||ms<0) return '—'; const m=Math.floor(ms/60000), h=Math.floor(m/60), r=m%60; return h===0?r+'m':h+'h '+r+'m'; }
 function fmtDate(iso){ const d=new Date(iso); if(isNaN(d.getTime())) return '—'; return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); }
 function norm(t){
