@@ -699,6 +699,68 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <button class="btn btn-primary" id="bulkAddBtn">Add them</button>
 </div></div>
 
+<div class="overlay" id="finishOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Finish details</h2>
+  <div class="sheet-sub" id="finishProgress">Bottle in hand — this is the fast version of the full sheet.</div>
+  <div class="section-label" id="finishName" style="font-size:17px;color:var(--ink,#111);margin-bottom:2px"></div>
+
+  <div class="field"><label>Photo <span class="opt">optional</span></label>
+    <div class="photo-pick">
+      <div class="photo-preview" id="finishPhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
+      <div class="photo-pick-actions">
+        <button class="btn btn-ghost btn-sm" id="finishPhotoBtn">Take or choose photo</button>
+        <button class="btn-danger-text" id="finishPhotoClear">Remove photo</button>
+      </div>
+    </div>
+    <input type="file" id="finishPhotoInput" accept="image/*" hidden>
+  </div>
+
+  <div class="field"><label>Type</label>
+    <div class="rating-row" id="fdType">
+      <div class="chip" data-val="Dupe">Dupe / Clone</div>
+      <div class="chip" data-val="Designer">Designer</div>
+      <div class="chip" data-val="Niche">Niche</div>
+      <div class="chip" data-val="Indie">Indie</div>
+    </div></div>
+  <div class="field"><label>Concentration</label>
+    <div class="rating-row" id="fdConc">
+      <div class="chip sm" data-val="EDC">EDC</div>
+      <div class="chip sm" data-val="EDT">EDT</div>
+      <div class="chip sm" data-val="EDP">EDP</div>
+      <div class="chip sm" data-val="Extrait">Extrait</div>
+      <div class="chip sm" data-val="Parfum">Parfum</div>
+      <div class="chip sm" data-val="Oil / Attar">Oil</div>
+    </div></div>
+  <div class="two-col">
+    <div class="field"><label>Price paid</label><input type="number" id="fdPrice" placeholder="35" inputmode="decimal"></div>
+    <div class="field"><label>Bottle size (ml)</label><input type="number" id="fdSize" placeholder="100" inputmode="numeric"></div>
+  </div>
+  <div class="calc-out" id="fdCplOut"></div>
+  <div class="field"><label>How full is it now</label>
+    <div class="rating-row" id="fdFill">
+      <div class="chip sm" data-val="100">Full</div>
+      <div class="chip sm" data-val="75">&frac34;</div>
+      <div class="chip sm" data-val="50">Half</div>
+      <div class="chip sm" data-val="25">&frac14;</div>
+      <div class="chip sm" data-val="10">Nearly out</div>
+      <div class="chip sm" data-val="0">Empty</div>
+    </div>
+    <div class="fill-slide">
+      <button type="button" class="fill-step" id="fdFillMinus" aria-label="Less">&minus;</button>
+      <input type="range" id="fdFillRange" min="0" max="100" step="1" value="100">
+      <button type="button" class="fill-step" id="fdFillPlus" aria-label="More">+</button>
+      <div class="fill-readout" id="fdFillOut">Not set</div>
+    </div>
+    <div class="helper">Tap a preset or drag for an exact figure.</div></div>
+
+  <button class="btn btn-primary" id="finishSaveNextBtn">Save &amp; next</button>
+  <div class="btn-row" style="margin-top:10px">
+    <button class="btn-text" id="finishSkipBtn">Skip this one</button>
+    <button class="btn-text" id="finishDoneBtn">Done for now</button>
+  </div>
+</div></div>
+
 <div class="overlay" id="linkOverlay"><div class="sheet">
   <div class="sheet-handle"></div>
   <h2>Link a past test</h2>
@@ -1375,9 +1437,13 @@ function viewCollection(){
   if(!list.length) return h+'<div class="empty-state"><p>'+(colFilter&&!colQ?'Nothing in your collection matches that filter.':'Nothing matches that search.')+'</p></div>';
   if((colQ||colFilter)&&list.length!==all) h+='<div class="result-count">Showing <b>'+list.length+'</b> of '+all+'</div>';
   list.forEach(b=>h+=cardBottle(b));
-  if(!readOnly) h+='<div class="col-foot">'+
-    '<button class="btn-text" data-act="bulkadd">Add several at once</button>'+
-    '<button class="btn-text" data-act="exportcol">Copy my whole collection</button></div>';
+  if(!readOnly){
+    const toFinish=finishCandidates().length;
+    h+='<div class="col-foot">'+
+      (toFinish?'<button class="btn-text" data-act="finishdetails">Finish details ('+toFinish+')</button>':'')+
+      '<button class="btn-text" data-act="bulkadd">Add several at once</button>'+
+      '<button class="btn-text" data-act="exportcol">Copy my whole collection</button></div>';
+  }
   return h;
 }
 
@@ -1999,6 +2065,7 @@ function bind(){
       else if(a==='review') copyReview(id);
       else if(a==='exportcol') exportCollection();
       else if(a==='bulkadd') openBulk();
+      else if(a==='finishdetails') openFinish();
       else if(a==='retest') retest(id);
       else if(a==='covered'){
         const ct=tests.filter(function(x){ return x.id===id; })[0];
@@ -2128,7 +2195,7 @@ function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .
    they render and highlight nothing. bType/bConc were missed when the
    collection sheet was added, so every bottle saved as the default Dupe. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
- 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr'].forEach(chipSingle);
+ 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr','fdType','fdConc','fdFill'].forEach(chipSingle);
 ['fSpots','eFam','eSeason','eOcc'].forEach(chipMulti);
 
 document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
@@ -2359,12 +2426,16 @@ document.getElementById('bulkAddBtn').addEventListener('click',function(){
   var rows=bulkRows().filter(function(r){ return !r.dupe&&r.name; });
   if(!rows.length){ toast('Nothing new in that list'); return; }
   var now=new Date().toISOString();
-  rows.forEach(function(r){
+  rows.forEach(function(r,i){
+    /* Millisecond-spaced added timestamps so finishCandidates' most-
+       recent-first sort keeps this exact batch in the order it was
+       typed, instead of every row racing for the same instant. */
     tests.push(norm({ id:uid(), kind:'bottle', notebook:activeTab,
-      house:r.house, name:r.name, type:'Dupe', added:now }));
+      house:r.house, name:r.name, type:'Dupe', added:new Date(Date.parse(now)+i).toISOString() }));
   });
   save(); hide('bulkOverlay'); render();
-  toast('Added '+rows.length+' bottle'+(rows.length>1?'s':''));
+  toast('Added '+rows.length+' bottle'+(rows.length>1?'s':'')+' — now the details');
+  openFinish();
 });
 
 document.getElementById('linkList').addEventListener('click',function(e){
@@ -2438,6 +2509,110 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
   }
   bottleId=null; save(); hide('bottleOverlay'); render(); toast('Saved to your collection');
 });
+
+/* ---- Finish details queue --------------------------------------------
+   A bulk-added bottle only has a house and a name. Getting the rest
+   (size, price, fill) still needs the bottle in hand, but there is no
+   reason that has to mean re-opening the full 18-field sheet 150 times —
+   most of those fields (batch, notes, PR/trade) can wait for the full
+   "Edit bottle" sheet later. This is the tight loop instead: essentials
+   only, and Save & Next never leaves the overlay, so a whole shelf of
+   bottles can go by without touching the collection list in between. */
+function needsDetails(b){ return !b.size || !b.price || fillPct(b)===null; }
+let finishQueue=[], finishIndex=0, finishPhoto='';
+function finishCandidates(){
+  return tests.filter(function(t){ return isBottle(t)&&t.notebook===activeTab&&needsDetails(t); })
+    .sort(function(a,b){ return String(b.added||'').localeCompare(String(a.added||'')); });
+}
+function openFinish(){
+  finishQueue=finishCandidates().map(function(t){ return t.id; });
+  finishIndex=0;
+  if(!finishQueue.length){ toast('Nothing left to finish'); return; }
+  show('finishOverlay');
+  loadFinishItem();
+}
+function currentFinishBottle(){ return tests.filter(function(x){ return x.id===finishQueue[finishIndex]; })[0]; }
+function renderFinishPhoto(){
+  var el=document.getElementById('finishPhotoPreview');
+  if(!finishPhoto){ el.innerHTML='<span class="bottle-thumb-empty">&#9672;</span>'; return; }
+  el.innerHTML='<img alt="">';
+  photoSrc(finishPhoto).then(function(src){ var im=el.querySelector('img'); if(im&&src) im.src=src; });
+}
+function updFinishCpl(){
+  var p=parseFloat(document.getElementById('fdPrice').value), s=parseFloat(document.getElementById('fdSize').value);
+  document.getElementById('fdCplOut').textContent=(p&&s)?'$'+(p/s).toFixed(2)+' per ml':'';
+}
+let finishFill='';
+function syncFinishFillUI(){
+  var r=document.getElementById('fdFillRange'), out=document.getElementById('fdFillOut');
+  if(finishFill===''){ out.textContent='Not set'; setSingle('fdFill',''); r.value=100; return; }
+  r.value=finishFill; out.textContent=fillLabel(finishFill); setSingle('fdFill',finishFill);
+}
+function loadFinishItem(){
+  var b=currentFinishBottle();
+  if(!b){ finishComplete(); return; }
+  document.getElementById('finishProgress').textContent=
+    (finishIndex+1)+' of '+finishQueue.length+' left this round.';
+  document.getElementById('finishName').textContent=fullTitle(b);
+  setSingle('fdType',b.type||'Dupe');
+  setSingle('fdConc',b.concentration||'');
+  document.getElementById('fdPrice').value=b.price||'';
+  document.getElementById('fdSize').value=b.size||'';
+  updFinishCpl();
+  finishFill=b.fill||''; syncFinishFillUI();
+  finishPhoto=b.photo||''; renderFinishPhoto();
+}
+function finishComplete(){
+  hide('finishOverlay'); render();
+  toast('Details finished for this round');
+}
+function finishAdvance(){
+  finishIndex++;
+  if(finishIndex>=finishQueue.length){ finishComplete(); return; }
+  loadFinishItem();
+}
+document.getElementById('finishSaveNextBtn').addEventListener('click',function(){
+  var b=currentFinishBottle();
+  if(!b){ finishComplete(); return; }
+  Object.assign(b,{
+    type:getSingle('fdType')||'Dupe', concentration:getSingle('fdConc'),
+    price:document.getElementById('fdPrice').value.trim(),
+    size:document.getElementById('fdSize').value.trim(),
+    fill:finishFill, photo:finishPhoto
+  });
+  save(); finishAdvance();
+});
+document.getElementById('finishSkipBtn').addEventListener('click',finishAdvance);
+document.getElementById('finishDoneBtn').addEventListener('click',function(){ hide('finishOverlay'); render(); });
+document.getElementById('finishPhotoBtn').addEventListener('click',function(){ document.getElementById('finishPhotoInput').click(); });
+document.getElementById('finishPhotoClear').addEventListener('click',function(){ finishPhoto=''; renderFinishPhoto(); });
+document.getElementById('finishPhotoInput').addEventListener('change',async function(e){
+  var f=e.target.files&&e.target.files[0]; e.target.value='';
+  if(!f) return;
+  try{
+    var blob=await compressImage(f,1200,0.78);
+    var pid='p_'+Date.now()+Math.random().toString(36).slice(2,7)+'.jpg';
+    await photoPut(pid,blob);
+    finishPhoto=pid; renderFinishPhoto();
+    toast('Photo added — '+Math.round(blob.size/1024)+'KB');
+  }catch(err){ toast(err.message||'Could not use that image'); }
+});
+document.getElementById('fdPrice').addEventListener('input',updFinishCpl);
+document.getElementById('fdSize').addEventListener('input',updFinishCpl);
+document.getElementById('fdFill').addEventListener('click',function(e){
+  if(!e.target.closest('.chip')) return;
+  finishFill=getSingle('fdFill'); syncFinishFillUI();
+});
+document.getElementById('fdFillRange').addEventListener('input',function(){
+  finishFill=String(this.value); syncFinishFillUI();
+});
+function stepFinishFill(by){
+  var cur=finishFill===''?100:parseInt(finishFill,10);
+  finishFill=String(Math.max(0,Math.min(100,cur+by)));
+  syncFinishFillUI();
+}
+document.getElementById('fdFillMinus').addEventListener('click',function(){ stepFinishFill(-5); });
+document.getElementById('fdFillPlus').addEventListener('click',function(){ stepFinishFill(5); });
 
 document.getElementById('newTestBtn').addEventListener('click',function(){
   if(activeSection==='collection'){ openBottle(null); return; }
