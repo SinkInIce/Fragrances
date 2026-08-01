@@ -105,8 +105,10 @@ ml, most tested, emptiest first, recently added) and **filters** (untested, runn
 by type). Unpriced bottles sort last rather than pretending to be the most expensive.
 
 Add a single bottle with **+ Add a bottle**: brand, name, type, concentration, price, size,
-notes, and a **photo**. Each card shows cost per ml, how many completed tests it has (or
-`Untested`), and its average score.
+notes, and **two photos** — one of the bottle, one of the notes (the pyramid off the box or
+the card). Each card shows cost per ml, how many completed tests it has (or `Untested`), and
+its average score. Under the bottle thumbnail is a strip for the notes shot; when it is empty
+it reads `Notes`, so you can see down the list which bottles still need one.
 
 Each bottle can also record **how full it is now** — tap a preset (Full, ¾, half, ¼,
 nearly out, empty) or drag the slider for an exact figure like 63%. **Clear** unsets it.
@@ -138,7 +140,7 @@ so you edit the original instead of creating a second entry.
 |---|---|
 | **Log a test** | Starts a wear test with the details filled in, attached to this bottle |
 | **Link a past test** | Attaches a test you already logged |
-| **Edit** | Change details or the photo |
+| **Edit** | Change details or either photo |
 | **Remove** | Take it out of the collection |
 
 Tests you logged *before* cataloguing a bottle attach themselves automatically when the
@@ -149,7 +151,14 @@ Tapping any test in that list jumps straight to it in the wear log.
 **Photos** are downscaled to about 1200px on capture (a 3MB phone photo lands near
 200KB), stored on your device, and uploaded to the repo as separate image files under
 `data/photos/`. Your log file only ever stores the filename, which is what keeps it small
-enough to save on every keystroke.
+enough to save on every keystroke. Both slots take the same path: the bottle shot is
+saved as `p_….jpg`, the notes shot as `n_….jpg`, so the pair is readable in the folder
+without opening anything. Two photos per bottle is roughly double the storage — worth
+knowing at 150 bottles.
+
+The notes shot syncs to `data/photos/` alongside the bottle shot, and the filename lands
+on the record as `notesPhoto`. That is as far as it goes today: nothing downstream reads
+that field yet.
 
 **Every bottle in your collection is public** — there is no per-bottle toggle, by your
 choice. That is different from tests, which stay private until you share each one.

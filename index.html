@@ -295,12 +295,24 @@ header a{ color:var(--accent); font-weight:600; }
 .bottle-card.open{ border-color:var(--line-strong); }
 .bottle-card.open .chevron{ transform:rotate(90deg); }
 .bottle-row{ display:flex; gap:13px; align-items:flex-start; }
+.bottle-thumbs{ flex:0 0 54px; display:flex; flex-direction:column; gap:3px; }
 .bottle-thumb{ width:54px; height:54px; flex:0 0 54px; overflow:hidden; background:var(--paper-deep);
   border:1px solid var(--line); display:flex; align-items:center; justify-content:center; }
 .bottle-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
 /* No photography yet. A deliberate, visible well beats a stock bottle —
    and it doubles as the shot list. */
 .bottle-thumb-empty{ color:var(--ink); opacity:.18; font-size:17px; }
+/* The notes shot rides under the bottle shot as a strip. It stays drawn
+   when there is nothing in it, because the whole point is to see which
+   bottles still need one without opening anything. Muted, not oxblood —
+   150 empty strips in accent would be a wall of alarm. */
+.bottle-notes-thumb{ width:54px; height:20px; flex:0 0 20px; overflow:hidden;
+  background:var(--paper-deep); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; }
+.bottle-notes-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.bottle-notes-thumb.has{ border-color:var(--line-strong); }
+.bottle-notes-thumb .nl{ font-size:7.5px; letter-spacing:.13em; text-transform:uppercase;
+  font-weight:600; color:var(--ink); opacity:.3; }
 .bottle-info{ flex:1; min-width:0; }
 .bottle-name{ font-family:var(--serif); font-size:16px; line-height:1.25; letter-spacing:-.005em; }
 .bottle-house{ font-size:10px; color:var(--ink-muted); font-weight:600; margin-top:4px;
@@ -545,11 +557,22 @@ header a{ color:var(--accent); font-weight:600; }
 .sec-body{ display:none; padding:2px 15px 15px; }
 .sec.open .sec-body{ display:block; }
 .sec-body .field:last-child{ margin-bottom:4px; }
-.photo-pick{ display:flex; gap:14px; align-items:flex-start; }
-.photo-preview{ width:88px; height:88px; flex:0 0 88px; overflow:hidden; background:var(--paper-deep);
+/* Two shots per bottle: the bottle, and the note breakdown off the box or
+   the card. Side by side because they are a pair — one well on its own
+   invites you to fill it and stop. Each column is a full-width square, so
+   at 360px they are still bigger than the single 88px well they replace. */
+.photo-pair{ display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+.photo-slot{ display:flex; flex-direction:column; gap:8px; min-width:0; }
+.photo-slot-cap{ font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+  font-weight:600; color:var(--ink-muted); }
+/* A fixed, short well on purpose. Squares here cost ~300px of sheet before
+   the brand field on a 360px phone, and this is a confirmation thumbnail,
+   not a viewer. */
+.photo-preview{ width:100%; height:104px; overflow:hidden; background:var(--paper-deep);
   border:1px solid var(--line); display:flex; align-items:center; justify-content:center; }
 .photo-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
-.photo-pick-actions{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+.photo-slot .btn{ width:100%; padding:14px 6px; }
+.photo-slot .btn-danger-text{ width:100%; text-align:center; padding:9px 2px; }
 .prefill-hint[hidden]{ display:none; }   /* an author display rule beats the hidden attribute */
 .prefill-hint{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
   background:var(--card); border:1px solid var(--line-strong); border-left:2px solid var(--ink);
@@ -1046,15 +1069,24 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <div class="queue-bar"><span id="finishProgressBar" style="width:0%"></span></div>
   <div class="finish-name" id="finishName"></div>
 
-  <div class="field"><label>Photo <span class="opt">optional</span></label>
-    <div class="photo-pick">
-      <div class="photo-preview" id="finishPhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
-      <div class="photo-pick-actions">
-        <button class="btn btn-ghost btn-sm" id="finishPhotoBtn">Take or choose photo</button>
-        <button class="btn-danger-text" id="finishPhotoClear">Remove photo</button>
+  <div class="field"><label>Photos <span class="opt">optional</span></label>
+    <div class="photo-pair">
+      <div class="photo-slot">
+        <div class="photo-slot-cap">The bottle</div>
+        <div class="photo-preview" id="finishPhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
+        <button class="btn btn-ghost btn-sm" id="finishPhotoBtn">Take or choose</button>
+        <button class="btn-danger-text" id="finishPhotoClear">Remove</button>
+      </div>
+      <div class="photo-slot">
+        <div class="photo-slot-cap">The notes</div>
+        <div class="photo-preview" id="finishNotesPhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
+        <button class="btn btn-ghost btn-sm" id="finishNotesPhotoBtn">Take or choose</button>
+        <button class="btn-danger-text" id="finishNotesPhotoClear">Remove</button>
       </div>
     </div>
+    <div class="helper">The notes shot is the pyramid off the box or the card — the breakdown, not the bottle.</div>
     <input type="file" id="finishPhotoInput" accept="image/*" hidden>
+    <input type="file" id="finishNotesPhotoInput" accept="image/*" hidden>
   </div>
 
   <div class="field"><label>Type</label>
@@ -1114,15 +1146,24 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <h2 id="bottleTitle">Add to collection</h2>
   <div class="sheet-sub">What you own. Start a wear test from any bottle later.</div>
 
-  <div class="field"><label>Photo <span class="opt">optional</span></label>
-    <div class="photo-pick">
-      <div class="photo-preview" id="bottlePhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
-      <div class="photo-pick-actions">
-        <button class="btn btn-ghost btn-sm" id="bottlePhotoBtn">Take or choose photo</button>
-        <button class="btn-danger-text" id="bottlePhotoClear">Remove photo</button>
+  <div class="field"><label>Photos <span class="opt">optional</span></label>
+    <div class="photo-pair">
+      <div class="photo-slot">
+        <div class="photo-slot-cap">The bottle</div>
+        <div class="photo-preview" id="bottlePhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
+        <button class="btn btn-ghost btn-sm" id="bottlePhotoBtn">Take or choose</button>
+        <button class="btn-danger-text" id="bottlePhotoClear">Remove</button>
+      </div>
+      <div class="photo-slot">
+        <div class="photo-slot-cap">The notes</div>
+        <div class="photo-preview" id="bottleNotesPhotoPreview"><span class="bottle-thumb-empty">&#9672;</span></div>
+        <button class="btn btn-ghost btn-sm" id="bottleNotesPhotoBtn">Take or choose</button>
+        <button class="btn-danger-text" id="bottleNotesPhotoClear">Remove</button>
       </div>
     </div>
+    <div class="helper">The notes shot is the pyramid off the box or the card — the breakdown, not the bottle.</div>
     <input type="file" id="bottlePhotoInput" accept="image/*" hidden>
+    <input type="file" id="bottleNotesPhotoInput" accept="image/*" hidden>
   </div>
 
   <div class="field"><label>Brand / house</label>
@@ -1277,7 +1318,7 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', added:'', bottleNotes:'', bottleId:'', fill:'', covered:false, pr:false, prFrom:'' }, t);
+    kind:'test', photo:'', notesPhoto:'', added:'', bottleNotes:'', bottleId:'', fill:'', covered:false, pr:false, prFrom:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -1329,7 +1370,12 @@ let saveState='idle', lastSaved=null;
    A phone photo is megabytes; the whole log gets about 5MB of
    localStorage. So images live in IndexedDB and sync as separate files
    in the repo, leaving the log JSON small enough to write on every
-   change. Records store only the filename. */
+   change. Records store only the filename.
+
+   A bottle carries two of them, in two parallel fields: `photo` is the
+   bottle, `notesPhoto` is the note breakdown. Both live in the same
+   object store and the same data/photos/ folder — the filename prefix
+   (p_ / n_) is what tells them apart at a glance in the repo. */
 const PHOTO_DB='scent-log-photos', PHOTO_STORE='photos';
 let photoDBPromise=null;
 function photoDB(){
@@ -1380,6 +1426,18 @@ function compressImage(file,maxPx,quality){
     img.src=url;
   });
 }
+/* Every slot takes the same path in: downscale, store the blob under a
+   fresh filename, hand the filename back to the caller to put on the
+   record. The notes shot is compressed exactly like the bottle shot —
+   two photos per bottle is real storage, and neither is worth full size. */
+function newPhotoId(prefix){ return (prefix||'p_')+Date.now()+Math.random().toString(36).slice(2,7)+'.jpg'; }
+async function capturePhoto(file,prefix){
+  const blob=await compressImage(file,1200,0.78);
+  const pid=newPhotoId(prefix);
+  await photoPut(pid,blob);
+  toast('Photo added — '+Math.round(blob.size/1024)+'KB');
+  return pid;
+}
 const photoURLCache={};
 function photoRemoteURL(id){
   const owner=sync.owner||PUBLIC_OWNER, repo=sync.repo||PUBLIC_REPO, br=sync.branch||DATA_BRANCH;
@@ -1391,6 +1449,29 @@ async function photoSrc(id){
   const b=await photoGet(id);
   if(b){ photoURLCache[id]=URL.createObjectURL(b); return photoURLCache[id]; }
   return photoRemoteURL(id);      /* taken on another device — use the published copy */
+}
+/* One well, drawn for whichever slot asks. The clear button only appears
+   once there is something to clear — an always-on destructive button next
+   to an empty well just reads as an unexplained warning. */
+function renderPhotoSlot(previewId,clearId,pid){
+  const el=document.getElementById(previewId); if(!el) return;
+  const clr=document.getElementById(clearId); if(clr) clr.style.display=pid?'':'none';
+  if(!pid){ el.innerHTML='<span class="bottle-thumb-empty">&#9672;</span>'; return; }
+  el.innerHTML='<img alt="">';
+  photoSrc(pid).then(function(src){ var im=el.querySelector('img'); if(im&&src) im.src=src; });
+}
+/* Wires one slot's three controls. Four slots exist — bottle and notes,
+   in the add/edit sheet and in the Finish details queue — and they differ
+   only in which variable they write and what the file is called. */
+function wirePhotoSlot(o){
+  document.getElementById(o.btn).addEventListener('click',function(){ document.getElementById(o.input).click(); });
+  document.getElementById(o.clear).addEventListener('click',function(){ o.set(''); });
+  document.getElementById(o.input).addEventListener('change',async function(e){
+    var f=e.target.files&&e.target.files[0]; e.target.value='';
+    if(!f) return;
+    try{ o.set(await capturePhoto(f,o.prefix)); }
+    catch(err){ toast(err.message||'Could not use that image'); }
+  });
 }
 /* render() builds strings, so images are filled in afterwards. */
 function hydratePhotos(){
@@ -1603,7 +1684,14 @@ async function ghPutPhoto(id,b64){
   return false;
 }
 async function syncPhotos(){
-  const wanted=tests.filter(function(t){ return t.kind==='bottle'&&t.photo; }).map(function(t){ return t.photo; });
+  /* Both slots go up the same way, into the same folder. Missing one here
+     is how a notes shot would live on one phone and nowhere else. */
+  const wanted=[];
+  tests.forEach(function(t){
+    if(t.kind!=='bottle') return;
+    if(t.photo) wanted.push(t.photo);
+    if(t.notesPhoto) wanted.push(t.notesPhoto);
+  });
   let changed=false;
   for(let i=0;i<wanted.length;i++){
     const id=wanted[i];
@@ -2066,8 +2154,13 @@ function cardBottle(b){
       '" data-bottle="'+b.id+'">'+
     '<div class="bottle-row">'+
       (selectMode?'<div class="sel-check"><span class="sel-box"></span></div>':'')+
-      '<div class="bottle-thumb">'+
-        (b.photo?'<img data-photo="'+esc(b.photo)+'" alt="" loading="lazy">':'<span class="bottle-thumb-empty">&#9672;</span>')+
+      '<div class="bottle-thumbs">'+
+        '<div class="bottle-thumb">'+
+          (b.photo?'<img data-photo="'+esc(b.photo)+'" alt="" loading="lazy">':'<span class="bottle-thumb-empty">&#9672;</span>')+
+        '</div>'+
+        '<div class="bottle-notes-thumb'+(b.notesPhoto?' has':'')+'" title="Photo of the notes">'+
+          (b.notesPhoto?'<img data-photo="'+esc(b.notesPhoto)+'" alt="" loading="lazy">':'<span class="nl">Notes</span>')+
+        '</div>'+
       '</div>'+
       '<div class="bottle-info">'+
         '<div class="bottle-name">'+esc(b.name)+(b.flanker?' <span class="flanker-name">'+esc(b.flanker)+'</span>':'')+'</div>'+
@@ -2712,19 +2805,14 @@ document.getElementById('fPrice').addEventListener('input',updCpl);
 document.getElementById('fSize').addEventListener('input',updCpl);
 
 /* ---- Collection ------------------------------------------------------ */
-let bottleId=null, bottlePhoto='';
+let bottleId=null, bottlePhoto='', bottleNotesPhoto='';
 function fillBrandList(){
   var seen={}; tests.forEach(function(t){ if(t.house) seen[t.house]=1; });
   document.getElementById('brandList').innerHTML=Object.keys(seen).sort().map(function(b){ return '<option value="'+esc(b)+'">'; }).join('');
 }
 function renderBottlePhoto(){
-  var el=document.getElementById('bottlePhotoPreview');
-  /* Nothing to remove until there is a photo — an always-on destructive
-     button next to an empty well just reads as an unexplained warning. */
-  document.getElementById('bottlePhotoClear').style.display=bottlePhoto?'':'none';
-  if(!bottlePhoto){ el.innerHTML='<span class="bottle-thumb-empty">&#9672;</span>'; return; }
-  el.innerHTML='<img alt="">';
-  photoSrc(bottlePhoto).then(function(src){ var im=el.querySelector('img'); if(im&&src) im.src=src; });
+  renderPhotoSlot('bottlePhotoPreview','bottlePhotoClear',bottlePhoto);
+  renderPhotoSlot('bottleNotesPhotoPreview','bottleNotesPhotoClear',bottleNotesPhoto);
 }
 function updBottleCpl(){
   var p=parseFloat(document.getElementById('bPrice').value), s=parseFloat(document.getElementById('bSize').value);
@@ -2795,7 +2883,7 @@ function syncFillUI(){
 
 function openBottle(id){
   var b=id?tests.filter(function(x){ return x.id===id; })[0]:null;
-  bottleId=b?id:null; bottlePhoto=b?b.photo:'';
+  bottleId=b?id:null; bottlePhoto=b?b.photo:''; bottleNotesPhoto=b?(b.notesPhoto||''):'';
   document.getElementById('bottleTitle').textContent=b?'Edit bottle':'Add to collection';
   document.getElementById('bHouse').value=b?b.house:'';
   document.getElementById('bName').value=b?b.name:'';
@@ -2931,19 +3019,10 @@ document.getElementById('linkList').addEventListener('click',function(e){
   var el=e.target.closest('[data-act="linkpick"]');
   if(el) linkTest(el.dataset.bottle,el.dataset.test);
 });
-document.getElementById('bottlePhotoBtn').addEventListener('click',function(){ document.getElementById('bottlePhotoInput').click(); });
-document.getElementById('bottlePhotoClear').addEventListener('click',function(){ bottlePhoto=''; renderBottlePhoto(); });
-document.getElementById('bottlePhotoInput').addEventListener('change',async function(e){
-  var f=e.target.files&&e.target.files[0]; e.target.value='';
-  if(!f) return;
-  try{
-    var blob=await compressImage(f,1200,0.78);
-    var pid='p_'+Date.now()+Math.random().toString(36).slice(2,7)+'.jpg';
-    await photoPut(pid,blob);
-    bottlePhoto=pid; renderBottlePhoto();
-    toast('Photo added — '+Math.round(blob.size/1024)+'KB');
-  }catch(err){ toast(err.message||'Could not use that image'); }
-});
+wirePhotoSlot({ btn:'bottlePhotoBtn', clear:'bottlePhotoClear', input:'bottlePhotoInput', prefix:'p_',
+  set:function(v){ bottlePhoto=v; renderBottlePhoto(); } });
+wirePhotoSlot({ btn:'bottleNotesPhotoBtn', clear:'bottleNotesPhotoClear', input:'bottleNotesPhotoInput', prefix:'n_',
+  set:function(v){ bottleNotesPhoto=v; renderBottlePhoto(); } });
 document.getElementById('bFill').addEventListener('click',function(e){
   if(!e.target.closest('.chip')) return;
   bottleFill=getSingle('bFill'); syncFillUI();
@@ -2989,7 +3068,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
     size:document.getElementById('bSize').value.trim(),
     batch:document.getElementById('bBatch').value.trim(),
     bottleNotes:document.getElementById('bNotes').value.trim(),
-    photo:bottlePhoto };
+    photo:bottlePhoto, notesPhoto:bottleNotesPhoto };
   if(bottleId){
     var b=tests.filter(function(x){ return x.id===bottleId; })[0];
     if(b) Object.assign(b,data);
@@ -3008,7 +3087,7 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
    only, and Save & Next never leaves the overlay, so a whole shelf of
    bottles can go by without touching the collection list in between. */
 function needsDetails(b){ return !b.size || !b.price || fillPct(b)===null; }
-let finishQueue=[], finishIndex=0, finishPhoto='';
+let finishQueue=[], finishIndex=0, finishPhoto='', finishNotesPhoto='';
 function finishCandidates(){
   return tests.filter(function(t){ return isBottle(t)&&t.notebook===activeTab&&needsDetails(t); })
     .sort(function(a,b){ return String(b.added||'').localeCompare(String(a.added||'')); });
@@ -3028,11 +3107,8 @@ function openFinish(firstIds){
 }
 function currentFinishBottle(){ return tests.filter(function(x){ return x.id===finishQueue[finishIndex]; })[0]; }
 function renderFinishPhoto(){
-  var el=document.getElementById('finishPhotoPreview');
-  document.getElementById('finishPhotoClear').style.display=finishPhoto?'':'none';
-  if(!finishPhoto){ el.innerHTML='<span class="bottle-thumb-empty">&#9672;</span>'; return; }
-  el.innerHTML='<img alt="">';
-  photoSrc(finishPhoto).then(function(src){ var im=el.querySelector('img'); if(im&&src) im.src=src; });
+  renderPhotoSlot('finishPhotoPreview','finishPhotoClear',finishPhoto);
+  renderPhotoSlot('finishNotesPhotoPreview','finishNotesPhotoClear',finishNotesPhoto);
 }
 function updFinishCpl(){
   var p=parseFloat(document.getElementById('fdPrice').value), s=parseFloat(document.getElementById('fdSize').value);
@@ -3058,7 +3134,7 @@ function loadFinishItem(){
   document.getElementById('fdSize').value=b.size||'';
   updFinishCpl();
   finishFill=b.fill||''; syncFinishFillUI();
-  finishPhoto=b.photo||''; renderFinishPhoto();
+  finishPhoto=b.photo||''; finishNotesPhoto=b.notesPhoto||''; renderFinishPhoto();
 }
 function finishComplete(){
   hide('finishOverlay'); render();
@@ -3076,25 +3152,16 @@ document.getElementById('finishSaveNextBtn').addEventListener('click',function()
     type:getSingle('fdType')||'Dupe', concentration:getSingle('fdConc'),
     price:document.getElementById('fdPrice').value.trim(),
     size:document.getElementById('fdSize').value.trim(),
-    fill:finishFill, photo:finishPhoto
+    fill:finishFill, photo:finishPhoto, notesPhoto:finishNotesPhoto
   });
   save(); finishAdvance();
 });
 document.getElementById('finishSkipBtn').addEventListener('click',finishAdvance);
 document.getElementById('finishDoneBtn').addEventListener('click',function(){ hide('finishOverlay'); render(); });
-document.getElementById('finishPhotoBtn').addEventListener('click',function(){ document.getElementById('finishPhotoInput').click(); });
-document.getElementById('finishPhotoClear').addEventListener('click',function(){ finishPhoto=''; renderFinishPhoto(); });
-document.getElementById('finishPhotoInput').addEventListener('change',async function(e){
-  var f=e.target.files&&e.target.files[0]; e.target.value='';
-  if(!f) return;
-  try{
-    var blob=await compressImage(f,1200,0.78);
-    var pid='p_'+Date.now()+Math.random().toString(36).slice(2,7)+'.jpg';
-    await photoPut(pid,blob);
-    finishPhoto=pid; renderFinishPhoto();
-    toast('Photo added — '+Math.round(blob.size/1024)+'KB');
-  }catch(err){ toast(err.message||'Could not use that image'); }
-});
+wirePhotoSlot({ btn:'finishPhotoBtn', clear:'finishPhotoClear', input:'finishPhotoInput', prefix:'p_',
+  set:function(v){ finishPhoto=v; renderFinishPhoto(); } });
+wirePhotoSlot({ btn:'finishNotesPhotoBtn', clear:'finishNotesPhotoClear', input:'finishNotesPhotoInput', prefix:'n_',
+  set:function(v){ finishNotesPhoto=v; renderFinishPhoto(); } });
 document.getElementById('fdPrice').addEventListener('input',updFinishCpl);
 document.getElementById('fdSize').addEventListener('input',updFinishCpl);
 document.getElementById('fdFill').addEventListener('click',function(e){

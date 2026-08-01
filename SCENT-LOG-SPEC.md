@@ -71,7 +71,10 @@ interface Test {
                                  // Blank falls back to name matching — see §4.3.
 
   // Collection-only
-  photo: string;                 // filename in data/photos/, blob held in IndexedDB
+  photo: string;                 // the bottle shot — filename in data/photos/ (p_*.jpg),
+                                 // blob held in IndexedDB
+  notesPhoto: string;            // the note breakdown — same folder, same object store
+                                 // (n_*.jpg). Parallel to photo, never a replacement.
   bottleNotes: string;           // free text about this specific bottle
   added: string;                 // ISO, when it entered the collection
   pr: boolean;                   // gifted/PR, disclosed on the review export
@@ -402,7 +405,7 @@ All calls must be wrapped in try/catch — a missing key throws rather than retu
 1. **Full re-render on every interaction.** `render()` rebuilds all of `#content` and re-attaches listeners. Fine at 160 records with 30-per-page pagination; would need reworking at 1000+.
 2. **Search input focus restoration is manual.** Cursor position is saved and restored across the re-render — a workaround for the above.
 3. ~~**No untested backlog.**~~ Resolved. The Collection view catalogues owned bottles independently of whether they have been tested; each shows a completed-test count or `Untested`.
-4. ~~**No photos.**~~ Resolved once outside the sandbox. Bottle photos are downscaled to ~1200px JPEG on capture, held in IndexedDB, and synced as individual files under `data/photos/`. Records store only the filename, so the log JSON stays small enough to rewrite on every change.
+4. ~~**No photos.**~~ Resolved once outside the sandbox. Bottle photos are downscaled to ~1200px JPEG on capture, held in IndexedDB, and synced as individual files under `data/photos/`. Records store only the filename, so the log JSON stays small enough to rewrite on every change. A bottle carries two: `photo` (the bottle) and `notesPhoto` (the note breakdown), both compressed the same way — budget roughly double the image storage per bottle.
 5. **No notification reminders** for the dry-down and skin-scent windows.
 6. ~~**No cross-device sync.**~~ Resolved. Optional GitHub-backed sync writes a shared
    JSON file to a dedicated `data` branch via the Contents API, with a per-device token.
