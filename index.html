@@ -1740,24 +1740,33 @@ async function syncNow(manual){
   if(!syncConfigured()){ if(manual) toast('Add your repo and token first'); return; }
   if(syncing) return;
   syncing=true; syncState='syncing'; renderDataBar();
+  let pulled=false;
   try{
     let settled=false;
     for(let attempt=0;attempt<2&&!settled;attempt++){
       const r=await ghRead();
       const merged=mergeDocs(tests,tombstones,r.doc);
       tests=merged.tests; tombstones=merged.deleted;
+      /* What came back is what this device holds now, whether or not the
+         write below lands. Re-seed the change snapshot against it here
+         rather than after the write: otherwise the next local edit stamps
+         every record the other device sent as if this device had just
+         changed it, and that untouched copy then wins the next merge. */
+      seedSnapshot(); pulled=true;
       const ok=await ghWrite({app:'scent-log',version:1,updatedAt:new Date().toISOString(),tests:tests,deleted:tombstones},r.sha);
       if(ok) settled=true;
     }
     if(!settled) throw new Error('Another device was writing — try again in a moment');
     await syncPhotos();
-    seedSnapshot();
     await persist();
     syncState='idle'; syncMsg=''; lastSync=new Date();
     render();
     if(manual) toast('Synced');
   }catch(e){
     syncState='error'; syncMsg=e.message||'Sync failed';
+    /* Keep whatever the read did bring back. Dropping it would leave the
+       log on screen different from the log on disk until the next reload. */
+    if(pulled){ await persist(); render(); }
     if(manual) toast(syncMsg);
   }
   syncing=false; renderDataBar();
