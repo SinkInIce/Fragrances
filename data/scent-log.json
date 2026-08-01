@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-07-31T22:43:39.348Z",
+  "updatedAt": "2026-08-01T03:00:48.850Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -350,14 +350,14 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "80",
+      "fill": "77.33",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785273512486vzq9nl",
       "name": "Aventus Absolu",
       "type": "Niche",
-      "updatedAt": "2026-07-28T23:17:41.638Z"
+      "updatedAt": "2026-08-01T03:00:48.850Z"
     },
     {
       "notebook": "stevnscents",
@@ -574,14 +574,14 @@
       "added": "2026-07-28T21:18:32.486Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "85",
+      "fill": "80",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785273512486y50170",
       "name": "Vibrato",
       "type": "Niche",
-      "updatedAt": "2026-07-31T17:48:06.283Z"
+      "updatedAt": "2026-08-01T03:00:48.850Z"
     },
     {
       "notebook": "stevnscents",
@@ -1619,14 +1619,14 @@
       "added": "2026-07-30T17:22:05.070Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "100",
+      "fill": "98",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t1785432125070przpce",
       "name": "Naxos",
       "type": "Niche",
-      "updatedAt": "2026-07-30T17:24:23.367Z"
+      "updatedAt": "2026-08-01T03:00:48.850Z"
     },
     {
       "notebook": "stevnscents",
@@ -1731,14 +1731,14 @@
       "added": "2026-07-30T17:22:05.070Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "98",
+      "fill": "96",
       "covered": false,
       "pr": false,
       "prFrom": "",
       "id": "t17854321250700t34b0",
       "name": "Erba Gold",
       "type": "Niche",
-      "updatedAt": "2026-07-31T17:47:32.702Z"
+      "updatedAt": "2026-08-01T03:00:48.850Z"
     },
     {
       "notebook": "stevnscents",
