@@ -1672,8 +1672,25 @@ function ghUrl(){
   return 'https://api.github.com/repos/'+encodeURIComponent(sync.owner)+'/'+encodeURIComponent(sync.repo)
     +'/contents/'+sync.path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
 }
+/* A phone connection drops requests rather than failing them. An unbounded
+   fetch leaves `syncing` true for good, and the guard at the top of
+   syncNow() then refuses every later attempt — the status line sits on
+   "Syncing…" until the app is reloaded. Bound every call and say which
+   kind of failure it was, because "Failed to fetch" on a train is not a
+   problem with the token. */
+const GH_TIMEOUT=20000;
+async function ghFetch(url,opts){
+  const ctl=new AbortController();
+  const timer=setTimeout(function(){ ctl.abort(); },GH_TIMEOUT);
+  try{ return await fetch(url,Object.assign({signal:ctl.signal},opts)); }
+  catch(e){
+    if(ctl.signal.aborted) throw new Error('GitHub did not answer in time — try again');
+    throw new Error(navigator.onLine===false ? 'Offline — this will sync when you are back' : 'Could not reach GitHub');
+  }
+  finally{ clearTimeout(timer); }
+}
 async function ghRead(){
-  const res=await fetch(ghUrl()+'?ref='+encodeURIComponent(sync.branch||'main')+'&_='+Date.now(),
+  const res=await ghFetch(ghUrl()+'?ref='+encodeURIComponent(sync.branch||'main')+'&_='+Date.now(),
     {headers:ghHeaders(),cache:'no-store'});
   if(res.status===404) return {doc:null,sha:null};          /* first sync — file not there yet */
   if(res.status===401||res.status===403) throw new Error('Token rejected — check it has Contents: read and write');
@@ -1698,7 +1715,7 @@ function blobToBase64(blob){
 async function ghPutPhoto(id,b64){
   const url='https://api.github.com/repos/'+encodeURIComponent(sync.owner)+'/'+encodeURIComponent(sync.repo)
     +'/contents/data/photos/'+encodeURIComponent(id);
-  const res=await fetch(url,{ method:'PUT', headers:Object.assign({'Content-Type':'application/json'},ghHeaders()),
+  const res=await ghFetch(url,{ method:'PUT', headers:Object.assign({'Content-Type':'application/json'},ghHeaders()),
     body:JSON.stringify({ message:'Scent Log photo', content:b64, branch:sync.branch||'main' }) });
   if(res.ok) return true;
   if(res.status===422||res.status===409) return true;   /* already there */
@@ -1729,7 +1746,7 @@ async function syncPhotos(){
 async function ghWrite(doc,sha){
   const body={ message:'Scent Log sync', content:b64enc(JSON.stringify(doc,null,2)), branch:sync.branch||'main' };
   if(sha) body.sha=sha;
-  const res=await fetch(ghUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghHeaders()),body:JSON.stringify(body)});
+  const res=await ghFetch(ghUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghHeaders()),body:JSON.stringify(body)});
   if(res.status===409||res.status===422) return null;        /* someone else wrote first */
   if(res.status===401||res.status===403) throw new Error('Token rejected — check it has Contents: read and write');
   if(!res.ok) throw new Error('Could not write to GitHub ('+res.status+')');
