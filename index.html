@@ -349,6 +349,52 @@ header a{ color:var(--accent); font-weight:600; }
   padding-top:16px; border-top:1px solid var(--line); }
 .col-filters{ margin-bottom:14px; }
 
+/* ---- Multi-select and bulk edit -------------------------------------
+   Cataloguing 150 bottles means the same correction over and over — a
+   misspelled house across nine bottles, a size he never filled in. The
+   bar is sticky at the top because the list is long: scrolling to the
+   bottom of 150 cards to reach an action is the problem, not the fix. */
+.sel-bar{ position:sticky; top:0; z-index:30; background:var(--ink); color:var(--paper);
+  padding:8px 12px 12px; margin:0 0 12px; box-shadow:0 6px 14px rgba(42,35,27,.18); }
+/* Two deliberate rows rather than one that truncates: on a 360px phone the
+   count and "Select all 70 matching" cannot share a line, and a clipped
+   count is worse than a second row. */
+.sel-bar-top{ display:flex; align-items:center; gap:1px; flex-wrap:wrap; justify-content:flex-end; }
+.sel-count{ font-family:var(--serif); font-size:16px; flex:1 0 100%; white-space:nowrap; margin-bottom:1px; }
+.sel-bar-top .sel-link:last-child{ padding-right:0; }
+.sel-link{ border:0; background:none; color:var(--paper); font-family:var(--sans); font-size:11.5px;
+  font-weight:600; letter-spacing:.02em; cursor:pointer; padding:11px 6px; min-height:44px;
+  white-space:nowrap; opacity:.78; }
+.sel-link:active{ opacity:1; }
+.sel-edit{ display:block; width:100%; margin-top:6px; min-height:46px; border:0; cursor:pointer;
+  background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:12px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.11em; padding:15px 18px; }
+.sel-edit[disabled]{ opacity:.42; cursor:default; }
+.btn[disabled]{ opacity:.42; cursor:default; }
+/* An author display rule beats the hidden attribute — .btn-row is flex. */
+.btn-row[hidden]{ display:none; }
+/* A 21px box is the right size to look at and the wrong size to hit, so
+   the box is drawn inside a 44px target. */
+.sel-check{ flex:0 0 44px; width:44px; height:44px; margin:-5px 2px -5px -7px;
+  display:flex; align-items:center; justify-content:center; }
+.sel-box{ width:21px; height:21px; border:1px solid var(--line-strong); background:var(--paper); }
+.bottle-card.picked{ border-color:var(--accent); box-shadow:inset 2px 0 0 var(--accent),var(--shadow); }
+.bottle-card.picked .sel-box{ background:var(--accent); border-color:var(--accent); }
+.bottle-card.picked .sel-box::after{ content:''; display:block; width:5px; height:10px;
+  margin:2px auto 0; border:solid var(--card); border-width:0 2px 2px 0; transform:rotate(42deg); }
+.bottle-card.selectable{ -webkit-user-select:none; user-select:none; }
+/* The checkbox takes 44px off the card's text column, which is enough to
+   push the fill readout off the right edge of a 360px phone. */
+.bottle-card.selectable .fill-track{ flex:0 1 62px; }
+.bottle-card.selectable .fill-val{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+/* Undo has to survive the toast, so it lives in the page until it is used
+   or dismissed. Oxblood on the edge: this is the one thing worth noticing. */
+.undo-bar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--card);
+  border:1px solid var(--line-strong); border-left:2px solid var(--accent);
+  padding:8px 12px; margin:0 0 12px; }
+.undo-bar .ut{ flex:1 1 150px; font-size:12px; line-height:1.5; color:var(--ink); min-width:0; }
+.undo-bar button{ min-height:44px; padding:11px 4px; }
+
 /* ---- Controls, filters ---------------------------------------------- */
 .controls{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:10px; }
 .sort-sel{ position:relative; }
@@ -957,6 +1003,42 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <button class="btn btn-primary" id="bulkAddBtn">Add them</button>
 </div></div>
 
+<!-- Bulk edit. One sheet, one selection, any number of fields — but only the
+     fields explicitly staged below are ever written. A field left alone is
+     never touched, and never written as empty. -->
+<div class="overlay" id="bulkEditOverlay"><div class="sheet">
+  <div class="sheet-handle"></div>
+  <h2 id="beTitle">Edit bottles</h2>
+  <div class="sheet-sub" id="beSub">Pick a field, set the value, add another if you need to. Anything you do not set is left exactly as it is.</div>
+  <div id="beForm">
+    <div id="beStaged"></div>
+    <div class="field"><label id="beFieldLabel">What to change</label>
+      <div class="sort-sel"><select id="beField"></select></div></div>
+    <div class="field" id="beTextWrap" hidden><label id="beTextLabel">New value</label>
+      <input type="text" id="beText" autocomplete="off"></div>
+    <div class="field" id="beNumWrap" hidden><label id="beNumLabel">New value</label>
+      <input type="number" id="beNum" inputmode="decimal" placeholder="100"></div>
+    <div class="field" id="beChipsWrap" hidden><label id="beChipsLabel">New value</label>
+      <div class="rating-row" id="beChips"></div></div>
+    <div class="field" id="beMultiWrap" hidden><label id="beMultiLabel">New value <span class="opt">tap all that apply</span></label>
+      <div class="chip-row" id="beMulti"></div></div>
+    <div class="field" id="beBoolWrap" hidden><label id="beBoolLabel">New value</label>
+      <div class="rating-row" id="beBool">
+        <div class="chip" data-val="yes">Yes</div>
+        <div class="chip" data-val="no">No</div>
+      </div></div>
+    <div class="btn-row" id="beAddRow" hidden><button class="btn btn-ghost btn-sm" id="beAddBtn">Add another change</button></div>
+    <button class="btn btn-primary" id="beApplyBtn">Apply</button>
+  </div>
+  <div id="beConfirm" hidden>
+    <div class="finish-name" id="beConfirmLine"></div>
+    <div id="beConfirmList"></div>
+    <div class="helper">Nothing else on those bottles changes. You can undo it straight after.</div>
+    <button class="btn btn-primary" id="beConfirmYes">Yes, change them</button>
+    <button class="btn btn-ghost btn-stack" id="beConfirmBack">Back</button>
+  </div>
+</div></div>
+
 <div class="overlay" id="finishOverlay"><div class="sheet">
   <div class="sheet-handle"></div>
   <h2>Finish details</h2>
@@ -1150,6 +1232,10 @@ let tests=[], activeTab='stevnscents', activeView='tests';
 let noteCtx=null, endId=null, openHistId=null, tick=null, searchQ='', cmpA='', cmpB='';
 let sortBy='recent', filters={}, filterOpen=false, visibleCount=30, colQ='';
 let activeSection='log', openBottleId=null, colSort='brand', colFilter='', colVisible=30;
+/* Multi-select lives only in the collection view and only in memory — a
+   selection is never worth persisting across a reload. bulkUndo holds the
+   previous values of just the records the last apply touched. */
+let selectMode=false, selectedIds={}, bulkUndo=null, bulkStaged=[], lpFired=false;
 const urlParams=new URLSearchParams(location.search);
 let readOnly=false;   /* public visitor mode — no editing, no saving, no sync */
 const PAGE=30;
@@ -1611,7 +1697,9 @@ function render(){
   document.querySelectorAll('#tabBar .tab').forEach(t=>t.classList.toggle('selected',t.dataset.section===activeSection));
   document.querySelectorAll('#viewBar .vtab').forEach(t=>t.classList.toggle('selected',t.dataset.view===activeView));
   document.getElementById('viewBar').classList.toggle('hidden', inCol);
-  document.getElementById('fabWrap').classList.toggle('hidden', !inCol&&activeView!=='tests');
+  /* Selection mode owns the screen: an "Add a bottle" button floating over
+     a list you are picking from is only there to be hit by mistake. */
+  document.getElementById('fabWrap').classList.toggle('hidden', (!inCol&&activeView!=='tests')||(inCol&&selectMode));
   const fl=document.getElementById('fabLabel');
   if(fl) fl.textContent=inCol?'+ Add a bottle':'+ New test';
   const c=document.getElementById('content');
@@ -1638,7 +1726,10 @@ function isBlotter(t){
 }
 function testRecords(){ return tests.filter(function(t){ return !isBottle(t); }); }
 
-function viewCollection(){
+/* The set of bottles the collection view is currently showing, before
+   sorting and paging. Select all reads exactly this, so "all" always means
+   what is on screen — search for one house, select all of it. */
+function collectionMatches(){
   let list=tests.filter(t=>isBottle(t)&&t.notebook===activeTab);
   if(colQ){ const q=colQ.toLowerCase();
     list=list.filter(t=>[t.house,t.name,t.flanker,t.type,t.concentration,t.bottleNotes,t.inspired,(t.families||[]).join(' ')].join(' ').toLowerCase().indexOf(q)>-1);
@@ -1649,6 +1740,12 @@ function viewCollection(){
   else if(colFilter==='trade') list=list.filter(t=>t.traded);
   else if(colFilter==='bought') list=list.filter(t=>!t.pr&&!t.traded);
   else if(colFilter) list=list.filter(t=>t.type===colFilter);
+  return list;
+}
+function colNarrowed(){ return !!(colQ||colFilter); }
+
+function viewCollection(){
+  let list=collectionMatches();
 
   const byName=(a,b)=>(a.house+' '+a.name).localeCompare(b.house+' '+b.name);
   list=list.slice().sort(function(a,b){
@@ -1679,21 +1776,26 @@ function viewCollection(){
   const all=tests.filter(t=>isBottle(t)&&t.notebook===activeTab).length;
 
   /* The stats panel carries the counts; only repeat them in the header when
-     it is not showing (searching, or too few bottles to be worth charting). */
-  const showStats=!colQ&&!colFilter&&all>=1;
+     it is not showing (searching, or too few bottles to be worth charting).
+     In selection mode it goes entirely — the cards should start under the
+     bar, not eight stat boxes down. */
+  const showStats=!colQ&&!colFilter&&all>=1&&!selectMode;
   const untested=tests.filter(t=>isBottle(t)&&t.notebook===activeTab&&!bottleTests(t).some(x=>x.completed)).length;
   let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+
     (!showStats&&all?' · '+all:'')+(!showStats&&!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
-  if(!readOnly){
+  if(!readOnly&&selectMode) h+=selBar(list.length);
+  if(!readOnly&&!selectMode&&bulkUndo) h+=undoBar();
+  if(!readOnly&&!selectMode){
     /* Right under the header, not buried past a long list of cards —
-       these are the two actions worth reaching without scrolling: the
-       bulk-add entry point, and finishing whatever bulk-add left behind
-       last time. Finish details only appears once there is something to
-       finish. */
+       these are the actions worth reaching without scrolling: the bulk-add
+       entry point, finishing whatever bulk-add left behind last time, and
+       selecting a batch to edit together. Finish details only appears once
+       there is something to finish. */
     const toFinish=finishCandidates().length;
     h+='<div class="btn-row">'+
       (toFinish?'<button class="btn btn-ghost btn-sm btn-flag" data-act="finishdetails">Finish details <b>'+toFinish+'</b></button>':'')+
-      '<button class="btn btn-ghost btn-sm" data-act="bulkadd">Add several at once</button></div>';
+      '<button class="btn btn-ghost btn-sm" data-act="bulkadd">Add several at once</button>'+
+      (all>1?'<button class="btn btn-ghost btn-sm" data-act="selectmode">Select</button>':'')+'</div>';
   }
   if(all>4) h+='<div class="search-wrap"><input type="text" id="colSearch" placeholder="Search your collection..." value="'+esc(colQ)+'"></div>';
   if(all>2&&!readOnly){
@@ -1721,7 +1823,7 @@ function viewCollection(){
   list.slice(0,colVisible).forEach(b=>h+=cardBottle(b));
   if(list.length>colVisible) h+='<div class="showmore"><button class="btn btn-ghost" data-act="colmore">Show '+
     Math.min(PAGE,list.length-colVisible)+' more · '+(list.length-colVisible)+' left</button></div>';
-  if(!readOnly){
+  if(!readOnly&&!selectMode){
     const toFinish=finishCandidates().length;
     h+='<div class="col-foot">'+
       (toFinish?'<button class="btn-text" data-act="finishdetails">Finish details ('+toFinish+')</button>':'')+
@@ -1729,6 +1831,34 @@ function viewCollection(){
       '<button class="btn-text" data-act="exportcol">Copy my whole collection</button></div>';
   }
   return h;
+}
+
+/* ---- Selection bar ---------------------------------------------------
+   Sticky at the top because the list it governs is 150 cards long. Select
+   all means all of what the view is currently showing — search a house,
+   select the lot, edit once — so it says "matching" whenever a search or
+   filter is narrowing the list, and never quietly reaches past it. */
+function selectedIdList(){
+  return tests.filter(function(t){ return isBottle(t)&&t.notebook===activeTab&&selectedIds[t.id]; })
+    .map(function(t){ return t.id; });
+}
+function selBar(matching){
+  const n=selectedIdList().length;
+  const allLabel='Select all '+matching+(colNarrowed()?' matching':'');
+  return '<div class="sel-bar"><div class="sel-bar-top">'+
+      '<div class="sel-count">'+n+' selected</div>'+
+      '<button class="sel-link" data-act="selall">'+allLabel+'</button>'+
+      '<button class="sel-link" data-act="selnone">Clear</button>'+
+      '<button class="sel-link" data-act="selexit">Done</button>'+
+    '</div>'+
+    '<button class="sel-edit" data-act="selectedit"'+(n?'':' disabled')+'>'+
+      (n?'Edit '+n+' bottle'+(n===1?'':'s'):'Edit')+'</button>'+
+  '</div>';
+}
+function undoBar(){
+  return '<div class="undo-bar"><div class="ut">'+esc(bulkUndo.sentence)+'.</div>'+
+    '<button class="btn-text" data-act="bulkundo">Undo</button>'+
+    '<button class="btn-text" data-act="undodismiss">Dismiss</button></div>';
 }
 
 /* A bottle's tests: explicitly linked ones, plus any unlinked test whose
@@ -1843,7 +1973,11 @@ function collectionStats(list){
 }
 
 function cardBottle(b){
-  const mine=bottleTests(b), done=mine.filter(t=>t.completed), open=openBottleId===b.id;
+  /* In selection mode a card is a target, not a drawer — tapping it picks
+     it instead of opening it, so nothing expands and no inner action can
+     be hit by accident. */
+  const picked=selectMode&&!!selectedIds[b.id];
+  const mine=bottleTests(b), done=mine.filter(t=>t.completed), open=!selectMode&&openBottleId===b.id;
   const scores=done.map(t=>parseInt(t.rating)).filter(n=>n>0);
   const avg=scores.length?(scores.reduce((a,n)=>a+n,0)/scores.length):0;
 
@@ -1928,8 +2062,10 @@ function cardBottle(b){
   if(b.traded) tags.push('<div class="badge shared">Trade'+(b.tradedWith?' · '+esc(b.tradedWith):'')+'</div>');
   if(needsDetails(b)&&!readOnly) tags.push('<div class="badge">Details missing</div>');
 
-  return '<div class="card bottle-card'+(open?' open':'')+'" data-bottle="'+b.id+'">'+
+  return '<div class="card bottle-card'+(open?' open':'')+(picked?' picked':'')+(selectMode?' selectable':'')+
+      '" data-bottle="'+b.id+'">'+
     '<div class="bottle-row">'+
+      (selectMode?'<div class="sel-check"><span class="sel-box"></span></div>':'')+
       '<div class="bottle-thumb">'+
         (b.photo?'<img data-photo="'+esc(b.photo)+'" alt="" loading="lazy">':'<span class="bottle-thumb-empty">&#9672;</span>')+
       '</div>'+
@@ -1938,6 +2074,7 @@ function cardBottle(b){
         (b.house?'<div class="bottle-house">'+esc(b.house)+'</div>':'')+
         (spec.length?'<div class="bottle-spec">'+specLine(spec)+'</div>':'')+
         (b.inspired?'<div class="inspired">Marketed as inspired by '+esc(b.inspired)+'</div>':'')+
+        ((b.seasons||[]).length?'<div class="bottle-note">Best in '+esc(b.seasons.join(' · '))+'</div>':'')+
         (pct!==null
           ? '<div class="fill-meter'+(low?' low':'')+'">'+
               '<div class="fill-track"><div class="fill-bar" style="width:'+pct+'%"></div></div>'+
@@ -1948,7 +2085,7 @@ function cardBottle(b){
       '</div>'+
       '<div class="bottle-rail">'+
         (avg?'<div class="bottle-avg">'+avg.toFixed(1)+'<span>/10</span></div>':'')+
-        '<div class="chevron">&rsaquo;</div>'+
+        (selectMode?'':'<div class="chevron">&rsaquo;</div>')+
       '</div>'+
     '</div>'+
     inner+
@@ -2394,6 +2531,13 @@ function bind(){
         setTimeout(function(){ var c=document.querySelector('[data-hist="'+id+'"]'); if(c) c.scrollIntoView({block:'center',behavior:'smooth'}); },60); }
       else if(a==='exportall') exportAll();
       else if(a==='copycmp') copyCmp();
+      else if(a==='selectmode') enterSelect(null);
+      else if(a==='selall'){ collectionMatches().forEach(function(b){ selectedIds[b.id]=1; }); render(); }
+      else if(a==='selnone'){ selectedIds={}; render(); }
+      else if(a==='selexit'){ selectMode=false; selectedIds={}; render(); }
+      else if(a==='selectedit') openBulkEdit();
+      else if(a==='bulkundo') undoBulk();
+      else if(a==='undodismiss'){ bulkUndo=null; render(); }
       else if(a==='clearfilters'){ filters={}; visibleCount=PAGE; render(); }
       else if(a==='more'){ visibleCount+=PAGE; render(); }
       else if(a==='colmore'){ colVisible+=PAGE; render(); }
@@ -2426,11 +2570,38 @@ function bind(){
   document.querySelectorAll('.bottle-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('[data-act]')||e.target.closest('.card-fill')) return;
+      /* A long press ends in a click on whatever is under the finger. That
+         click is the tail of a gesture already handled, not a new tap, so
+         it is swallowed once — however long the finger stayed down. */
+      if(lpFired){ lpFired=false; return; }
+      if(selectMode){ toggleSelected(c.dataset.bottle); return; }
       var opening = openBottleId!==c.dataset.bottle;
       openBottleId = opening ? c.dataset.bottle : null;
       render();
       if(opening) revealActions('.bottle-card.open','.bottle-actions');
     });
+    /* Long press is the second way in, not the only one — the Select button
+       at the top is. Cancelled by a scroll, which is what a held finger on
+       a long list usually turns into. */
+    if(readOnly||selectMode) return;
+    var lpTimer=null, lpX=0, lpY=0;
+    var clearLp=function(){ if(lpTimer){ clearTimeout(lpTimer); lpTimer=null; } };
+    c.addEventListener('pointerdown',function(e){
+      if(e.target.closest('[data-act]')||e.target.closest('.card-fill')) return;
+      lpX=e.clientX; lpY=e.clientY;
+      lpFired=false; clearLp();
+      lpTimer=setTimeout(function(){
+        lpTimer=null; lpFired=true;
+        /* If the gesture never produces a click — dragged off the card,
+           cancelled — do not leave the flag armed for the next tap. */
+        setTimeout(function(){ lpFired=false; },2500);
+        enterSelect(c.dataset.bottle);
+      },500);
+    });
+    c.addEventListener('pointermove',function(e){
+      if(lpTimer&&(Math.abs(e.clientX-lpX)>10||Math.abs(e.clientY-lpY)>10)) clearLp();
+    });
+    ['pointerup','pointercancel','pointerleave'].forEach(function(ev){ c.addEventListener(ev,clearLp); });
   });
 
   document.querySelectorAll('.hist-card').forEach(function(c){
@@ -2504,9 +2675,14 @@ function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .
 /* Every .rating-row in the markup must appear here or its chips are dead —
    they render and highlight nothing. bType/bConc were missed when the
    collection sheet was added, so every bottle saved as the default Dupe. */
+/* beChips and beBool hold chips that are built at run time from
+   BULK_FIELDS. The listener sits on the container, not the chips, so
+   registering the container id here once is still all it takes — but it is
+   still required, and the chips are just as silently dead without it. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
- 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr','fdType','fdConc','fdFill'].forEach(chipSingle);
-['fSpots','eFam','eSeason','eOcc'].forEach(chipMulti);
+ 'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr','fdType','fdConc','fdFill',
+ 'beChips','beBool'].forEach(chipSingle);
+['fSpots','eFam','eSeason','eOcc','beMulti'].forEach(chipMulti);
 
 document.querySelectorAll('#endOverlay .sec').forEach(function(sec){
   sec.querySelector('.sec-head').addEventListener('click',function(){ sec.classList.toggle('open'); });
@@ -2936,6 +3112,267 @@ function stepFinishFill(by){
 document.getElementById('fdFillMinus').addEventListener('click',function(){ stepFinishFill(-5); });
 document.getElementById('fdFillPlus').addEventListener('click',function(){ stepFinishFill(5); });
 
+/* ---- Multi-select and bulk edit --------------------------------------
+   Nine bottles from one house with the brand spelled wrong, or a shelf of
+   dupes that are all 100ml and all full: the same edit, over and over, one
+   sheet at a time. Selection plus a staged list of changes turns that into
+   one pass.
+
+   The safety rules, in order of how much damage they prevent:
+   1. Only a field that was explicitly picked AND given a value is written.
+      A field left alone is never touched, and is never written as empty —
+      a blank value cannot be staged at all.
+   2. The confirm names the count and every change before anything happens.
+   3. Every apply snapshots the previous value of exactly the keys it is
+      about to write, on exactly the records it is about to write them to,
+      so one tap puts it all back.
+   4. The selection clears on success, so a second tap cannot re-apply. */
+const BULK_FIELDS=[
+  {key:'house', label:'Brand / house', noun:'brand', kind:'text', ph:'e.g. Xerjoff'},
+  {key:'name', label:'Fragrance name', noun:'name', kind:'text', ph:'e.g. Khamrah'},
+  {key:'flanker', label:'Flanker', noun:'flanker', kind:'text', ph:'e.g. Elixir'},
+  {key:'type', label:'Type', noun:'type', kind:'chips',
+   opts:[['Dupe','Dupe / Clone'],['Designer','Designer'],['Niche','Niche'],['Indie','Indie']]},
+  {key:'concentration', label:'Concentration', noun:'concentration', kind:'chips',
+   opts:[['EDC','EDC'],['EDT','EDT'],['EDP','EDP'],['Extrait','Extrait'],['Parfum','Parfum'],['Oil / Attar','Oil']]},
+  {key:'size', label:'Bottle size (ml)', noun:'size', kind:'number', ph:'100', suffix:'ml'},
+  {key:'price', label:'Price paid', noun:'price', kind:'number', ph:'35', prefix:'$'},
+  {key:'fill', label:'How full it is', noun:'fill level', kind:'chips',
+   opts:[['100','Full'],['75','¾'],['50','Half'],['25','¼'],['10','Nearly out'],['0','Empty']]},
+  {key:'seasons', label:'Best season', noun:'season', kind:'chips', multi:true,
+   opts:[['Spring','Spring'],['Summer','Summer'],['Fall','Fall'],['Winter','Winter'],['Year-round','Year-round']]},
+  {key:'inspired', label:'Marketed as inspired by', noun:'inspired by', kind:'text', ph:"e.g. Angels' Share by Kilian"},
+  {key:'batch', label:'Batch', noun:'batch', kind:'text', ph:'e.g. 2024'},
+  {key:'bottleNotes', label:'Notes', noun:'notes', kind:'text', ph:'e.g. bought at the mall'},
+  {key:'pr', label:'Sent as PR', noun:'PR', kind:'bool'}
+];
+function bulkDef(k){ return BULK_FIELDS.filter(function(f){ return f.key===k; })[0]||null; }
+function bulkOptLabel(f,v){
+  if(f.key==='fill') return fillLabel(v);
+  var o=(f.opts||[]).filter(function(x){ return x[0]===v; })[0];
+  return o?o[1]:v;
+}
+
+function enterSelect(id){
+  if(readOnly) return;
+  selectMode=true; openBottleId=null; selectedIds={};
+  if(id) selectedIds[id]=1;
+  render();
+}
+function toggleSelected(id){
+  if(selectedIds[id]) delete selectedIds[id]; else selectedIds[id]=1;
+  render();
+}
+
+/* Reads what is on screen right now. Returns null — never a blank — when
+   the field has not actually been given a value. */
+function currentBulkValue(){
+  var f=bulkDef(document.getElementById('beField').value);
+  if(!f) return null;
+  if(f.kind==='text'){
+    var t=document.getElementById('beText').value.trim();
+    return t?{value:t,label:t}:null;
+  }
+  if(f.kind==='number'){
+    var raw=document.getElementById('beNum').value.trim();
+    if(!raw) return null;
+    var n=parseFloat(raw);
+    if(!isFinite(n)||n<0) return null;
+    var s=String(n);
+    return {value:s,label:(f.prefix||'')+s+(f.suffix||'')};
+  }
+  if(f.kind==='bool'){
+    var b=getSingle('beBool');
+    return b?{value:b==='yes',label:b==='yes'?'yes':'no'}:null;
+  }
+  if(f.multi){
+    var a=getMulti('beMulti');
+    return a.length?{value:a,label:a.join(', ')}:null;
+  }
+  var c=getSingle('beChips');
+  return c?{value:c,label:bulkOptLabel(f,c)}:null;
+}
+function bulkChipHTML(f,sm){
+  return f.opts.map(function(o){
+    return '<div class="chip'+(sm?' sm':'')+'" data-val="'+esc(o[0])+'">'+esc(o[1])+'</div>';
+  }).join('');
+}
+function renderStaged(){
+  var el=document.getElementById('beStaged');
+  if(!bulkStaged.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="section-label" style="margin-top:0">Will change</div><div class="card">'+
+    bulkStaged.map(function(c){
+      var f=bulkDef(c.key);
+      return '<div class="bulk-row"><div><div class="bh">'+esc(f?f.label:c.key)+'</div>'+
+        '<div class="bs">to '+esc(c.label)+'</div></div>'+
+        '<button class="btn-danger-text" data-bestage="'+esc(c.key)+'">Remove</button></div>';
+    }).join('')+'</div>';
+}
+function syncBulkButtons(){
+  var n=selectedIdList().length;
+  var v=currentBulkValue();
+  var total=bulkStaged.length+(v?1:0);
+  var who=n+' bottle'+(n===1?'':'s');
+  var btn=document.getElementById('beApplyBtn');
+  btn.textContent=total>1?('Apply '+total+' changes to '+who):('Apply to '+who);
+  btn.disabled=!total;
+  document.getElementById('beAddRow').hidden=!v||bulkStaged.length+1>=BULK_FIELDS.length;
+}
+function syncBulkForm(){
+  var sel=document.getElementById('beField'), cur=sel.value;
+  var opts=BULK_FIELDS.filter(function(f){
+    return !bulkStaged.some(function(s){ return s.key===f.key; });
+  });
+  if(!opts.some(function(f){ return f.key===cur; })) cur='';
+  sel.innerHTML='<option value="">Choose a field…</option>'+
+    opts.map(function(f){ return '<option value="'+esc(f.key)+'">'+esc(f.label)+'</option>'; }).join('');
+  sel.value=cur;
+
+  var wraps={text:'beTextWrap',number:'beNumWrap',chips:'beChipsWrap',multi:'beMultiWrap',bool:'beBoolWrap'};
+  Object.keys(wraps).forEach(function(k){ document.getElementById(wraps[k]).hidden=true; });
+  var f=bulkDef(cur);
+  if(f){
+    var kind=(f.kind==='chips'&&f.multi)?'multi':f.kind;
+    var wrap=document.getElementById(wraps[kind]);
+    wrap.hidden=false;
+    if(kind==='text'){
+      var ti=document.getElementById('beText');
+      ti.placeholder=f.ph||'';
+      /* The brand box borrows the same suggestion list as every other one. */
+      if(f.key==='house') ti.setAttribute('list','brandList'); else ti.removeAttribute('list');
+      document.getElementById('beTextLabel').textContent=f.label;
+    } else if(kind==='number'){
+      document.getElementById('beNum').placeholder=f.ph||'';
+      document.getElementById('beNumLabel').textContent=f.label;
+    } else if(kind==='chips'){
+      document.getElementById('beChips').innerHTML=bulkChipHTML(f,f.opts.length>4);
+      document.getElementById('beChipsLabel').textContent=f.label;
+    } else if(kind==='multi'){
+      document.getElementById('beMulti').innerHTML=bulkChipHTML(f,true);
+      document.getElementById('beMultiLabel').innerHTML=esc(f.label)+' <span class="opt">tap all that apply</span>';
+    } else if(kind==='bool'){
+      document.getElementById('beBoolLabel').textContent=f.label;
+    }
+  }
+  renderStaged();
+  syncBulkButtons();
+}
+function clearBulkInputs(){
+  document.getElementById('beText').value='';
+  document.getElementById('beNum').value='';
+  setSingle('beChips',''); setMulti('beMulti',[]); setSingle('beBool','');
+}
+/* Moves the field on screen into the staged list. Refuses a blank, so an
+   empty value can never reach a record. */
+function stageCurrent(){
+  var sel=document.getElementById('beField'), f=bulkDef(sel.value);
+  if(!f){ toast('Pick a field first'); return false; }
+  var v=currentBulkValue();
+  if(!v){ toast('Set a value for '+f.label.toLowerCase()+' first'); return false; }
+  bulkStaged=bulkStaged.filter(function(s){ return s.key!==f.key; });
+  bulkStaged.push({key:f.key,noun:f.noun,value:v.value,label:v.label});
+  sel.value=''; clearBulkInputs(); syncBulkForm();
+  return true;
+}
+function bulkSentence(changes,n){
+  var who=n+' bottle'+(n===1?'':'s');
+  if(changes.length===1) return 'Set '+changes[0].noun+' to '+changes[0].label+' on '+who;
+  var nouns=changes.map(function(c){ return c.noun; });
+  var last=nouns.pop();
+  return 'Set '+nouns.join(', ')+' and '+last+' on '+who;
+}
+function openBulkEdit(){
+  var ids=selectedIdList();
+  if(!ids.length){ toast('Pick a bottle first'); return; }
+  bulkStaged=[];
+  fillBrandList();
+  document.getElementById('beTitle').textContent='Edit '+ids.length+' bottle'+(ids.length===1?'':'s');
+  document.getElementById('beField').value='';
+  clearBulkInputs();
+  document.getElementById('beForm').hidden=false;
+  document.getElementById('beConfirm').hidden=true;
+  document.getElementById('beSub').hidden=false;
+  syncBulkForm();
+  show('bulkEditOverlay');
+}
+function applyBulk(){
+  var ids=selectedIdList();
+  if(!bulkStaged.length||!ids.length){ hide('bulkEditOverlay'); return; }
+  var changes=bulkStaged.slice(), recs=[];
+  ids.forEach(function(id){
+    var b=tests.filter(function(x){ return x.id===id; })[0];
+    if(!b) return;
+    var before={};
+    changes.forEach(function(c){
+      var old=b[c.key];
+      before[c.key]=Array.isArray(old)?old.slice():old;
+      b[c.key]=Array.isArray(c.value)?c.value.slice():c.value;
+    });
+    recs.push({id:id,before:before});
+  });
+  var sentence=bulkSentence(changes,recs.length);
+  bulkUndo={sentence:sentence,records:recs};
+  bulkStaged=[]; selectedIds={}; selectMode=false;
+  save(); hide('bulkEditOverlay'); render(); toast(sentence);
+}
+function undoBulk(){
+  if(!bulkUndo) return;
+  var n=0, missing=0;
+  bulkUndo.records.forEach(function(r){
+    var b=tests.filter(function(x){ return x.id===r.id; })[0];
+    if(!b){ missing++; return; }
+    Object.keys(r.before).forEach(function(k){
+      var v=r.before[k];
+      b[k]=Array.isArray(v)?v.slice():v;
+    });
+    n++;
+  });
+  bulkUndo=null; save(); render();
+  toast('Undone — '+n+' bottle'+(n===1?'':'s')+' back to how they were'+
+    (missing?', '+missing+' no longer here':''));
+}
+
+document.getElementById('beField').addEventListener('change',function(){ clearBulkInputs(); syncBulkForm(); });
+document.getElementById('beText').addEventListener('input',syncBulkButtons);
+document.getElementById('beNum').addEventListener('input',syncBulkButtons);
+/* These fire after the chipSingle / chipMulti handlers registered below,
+   so the class change is already on the chip by the time we read it. */
+['beChips','beMulti','beBool'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',syncBulkButtons);
+});
+document.getElementById('beStaged').addEventListener('click',function(e){
+  var el=e.target.closest('[data-bestage]');
+  if(!el) return;
+  bulkStaged=bulkStaged.filter(function(s){ return s.key!==el.dataset.bestage; });
+  syncBulkForm();
+});
+document.getElementById('beAddBtn').addEventListener('click',function(){ stageCurrent(); });
+document.getElementById('beApplyBtn').addEventListener('click',function(){
+  var sel=document.getElementById('beField');
+  /* A field left picked but blank is a half-finished thought, not a
+     licence to write an empty value — say so rather than dropping it. */
+  if(sel.value&&!stageCurrent()) return;
+  var n=selectedIdList().length;
+  if(!bulkStaged.length){ toast('Pick a field and set a value'); return; }
+  if(!n){ toast('Nothing is selected'); hide('bulkEditOverlay'); return; }
+  document.getElementById('beConfirmLine').textContent=bulkSentence(bulkStaged,n)+'?';
+  document.getElementById('beConfirmList').innerHTML='<div class="card">'+bulkStaged.map(function(c){
+    var f=bulkDef(c.key);
+    return '<div class="bulk-row"><div><div class="bh">'+esc(f?f.label:c.key)+'</div>'+
+      '<div class="bs">to '+esc(c.label)+'</div></div></div>';
+  }).join('')+'</div>';
+  document.getElementById('beForm').hidden=true;
+  document.getElementById('beSub').hidden=true;
+  document.getElementById('beConfirm').hidden=false;
+});
+document.getElementById('beConfirmYes').addEventListener('click',applyBulk);
+document.getElementById('beConfirmBack').addEventListener('click',function(){
+  document.getElementById('beConfirm').hidden=true;
+  document.getElementById('beForm').hidden=false;
+  document.getElementById('beSub').hidden=false;
+  syncBulkForm();
+});
+
 document.getElementById('newTestBtn').addEventListener('click',function(){
   if(activeSection==='collection'){ openBottle(null); return; }
   ['fName','fHouse','fFlanker','fInspired','fPrice','fSize','fBatch','fYear','fPerfumer','fContext'].forEach(function(i){ document.getElementById(i).value=''; });
@@ -3281,6 +3718,7 @@ function exportCollection(){
     var meta=[b.type,b.concentration,b.size?b.size+'ml':''].filter(Boolean).join(', ');
     L.push(fullTitle(b)+(meta?' ('+meta+')':''));
     if(b.inspired) L.push('  Inspired by '+b.inspired);
+    if((b.seasons||[]).length) L.push('  Best in '+b.seasons.join(', '));
     if(b.batch) L.push('  Batch '+b.batch);
     if(b.pr) L.push('  PR'+(b.prFrom?' from '+b.prFrom:''));
     var done=bottleTests(b).filter(function(t){ return t.completed; });
@@ -3310,7 +3748,8 @@ function copyCmp(){
 }
 
 document.getElementById('tabBar').addEventListener('click',function(e){ var t=e.target.closest('.tab');
-  if(t&&t.dataset.section!==activeSection){ activeSection=t.dataset.section; openBottleId=null; colQ=''; colVisible=PAGE; save(); render(); } });
+  if(t&&t.dataset.section!==activeSection){ activeSection=t.dataset.section; openBottleId=null; colQ=''; colVisible=PAGE;
+    selectMode=false; selectedIds={}; save(); render(); } });
 document.getElementById('viewBar').addEventListener('click',function(e){ var v=e.target.closest('.vtab');
   if(v&&v.dataset.view!==activeView){ activeView=v.dataset.view; save(); render(); } });
 document.getElementById('confirmYesBtn').addEventListener('click',function(){
