@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-08-01T16:49:00.124Z",
+  "updatedAt": "2026-08-01T16:49:46.163Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -1574,7 +1574,7 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "Xeroff",
+      "house": "Xerjoff",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -1626,11 +1626,11 @@
       "id": "t1785432125070przpce",
       "name": "Naxos",
       "type": "Niche",
-      "updatedAt": "2026-08-01T04:59:02.892Z"
+      "updatedAt": "2026-08-01T16:49:42.966Z"
     },
     {
       "notebook": "stevnscents",
-      "house": "Xeroff",
+      "house": "Xerjoff",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -1682,11 +1682,11 @@
       "id": "t1785432125070ewg9yz",
       "name": "Renaissance",
       "type": "Niche",
-      "updatedAt": "2026-07-30T17:25:14.419Z"
+      "updatedAt": "2026-08-01T16:49:42.966Z"
     },
     {
       "notebook": "stevnscents",
-      "house": "Xeroff",
+      "house": "Xerjoff",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -1738,11 +1738,11 @@
       "id": "t17854321250700t34b0",
       "name": "Erba Gold",
       "type": "Niche",
-      "updatedAt": "2026-08-01T03:11:16.782Z"
+      "updatedAt": "2026-08-01T16:49:42.966Z"
     },
     {
       "notebook": "stevnscents",
-      "house": "Xeroff",
+      "house": "Xerjoff",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -1794,11 +1794,11 @@
       "id": "t1785432125070hc3vbd",
       "name": "Torino21",
       "type": "Niche",
-      "updatedAt": "2026-07-30T17:25:42.292Z"
+      "updatedAt": "2026-08-01T16:49:42.966Z"
     },
     {
       "notebook": "stevnscents",
-      "house": "Xeroff",
+      "house": "Xerjoff",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -1850,7 +1850,7 @@
       "id": "t1785432125070h0xjvy",
       "name": "Erba Pura",
       "type": "Niche",
-      "updatedAt": "2026-07-30T17:23:53.771Z"
+      "updatedAt": "2026-08-01T16:49:42.966Z"
     },
     {
       "notebook": "stevnscents",
