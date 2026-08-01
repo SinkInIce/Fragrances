@@ -1413,6 +1413,17 @@ function viewCollection(){
   const untested=tests.filter(t=>isBottle(t)&&t.notebook===activeTab&&!bottleTests(t).some(x=>x.completed)).length;
   let h='<div class="section-label">'+(readOnly?'The collection':'Your collection')+
     (!showStats&&all?' · '+all:'')+(!showStats&&!readOnly&&all&&untested?' · '+untested+' untested':'')+'</div>';
+  if(!readOnly){
+    /* Right under the header, not buried past a long list of cards —
+       these are the two actions worth reaching without scrolling: the
+       bulk-add entry point, and finishing whatever bulk-add left behind
+       last time. Finish details only appears once there is something to
+       finish. */
+    const toFinish=finishCandidates().length;
+    h+='<div class="btn-row">'+
+      (toFinish?'<button class="btn btn-ghost btn-sm" data-act="finishdetails">Finish details ('+toFinish+')</button>':'')+
+      '<button class="btn btn-ghost btn-sm" data-act="bulkadd">Add several at once</button></div>';
+  }
   if(all>4) h+='<div class="search-wrap"><input type="text" id="colSearch" placeholder="Search your collection..." value="'+esc(colQ)+'"></div>';
   if(all>2&&!readOnly){
     const sorts=[['brand','Brand A-Z'],['name','Name A-Z'],['cheap','Cheapest per ml'],['dear','Priciest per ml'],
