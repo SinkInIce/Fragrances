@@ -1324,7 +1324,8 @@ function norm(t){
     tier:'', rebuy:'', verdict:'', perfumer:'', year:'',
     topNotes:'', heartNotes:'', baseNotes:'', similar:'', seasonNotes:'', dayNight:'', layers:'',
     gender:'', age:'', rating:'', value:'', pros:'', cons:'', shared:false,
-    kind:'test', photo:'', notesPhoto:'', added:'', bottleNotes:'', bottleId:'', fill:'', fillAt:'', covered:false, pr:false, prFrom:'' }, t);
+    kind:'test', photo:'', notesPhoto:'', added:'', bottleNotes:'', bottleId:'', fill:'', fillAt:'',
+    covered:false, pr:false, prFrom:'', traded:false, tradedWith:'', tradedFor:'' }, t);
 }
 function cpl(t){ const p=parseFloat(t.price), s=parseFloat(t.size); if(!p||!s) return ''; return '$'+(p/s).toFixed(2)+'/ml'; }
 function cplNum(t){ const p=parseFloat(t.price), s=parseFloat(t.size); return (p&&s)?p/s:Infinity; }
@@ -2065,6 +2066,12 @@ function bottleTests(b){
 const FILL_LABEL={'100':'Full','75':'\u00be full','50':'Half full','25':'\u00bc left','10':'Nearly out','0':'Empty'};
 function fillLabel(v){ return (v===''||v==null)?'':(FILL_LABEL[v]||v+'% left'); }
 function fillPct(b){ return b.fill===''||b.fill==null?null:parseFloat(b.fill); }
+/* The − / + step, in one place. Three controls do this — the card, the
+   edit sheet and the Finish details queue — and they had three copies of
+   the same clamp, which is three chances for the next change to miss one.
+   An unset level steps down from Full, because that is what a bottle you
+   have not measured yet looks like. */
+function fillStep(cur,by){ return String(Math.max(0,Math.min(100,(cur===''||cur==null?100:parseInt(cur,10))+by))); }
 function mlLeft(b){
   const p=fillPct(b), sz=parseFloat(b.size);
   return (p===null||!sz)?null:sz*p/100;
@@ -2727,8 +2734,7 @@ function bind(){
     btn.addEventListener('click',function(e){
       e.stopPropagation();
       var b=tests.filter(function(x){ return x.id===btn.dataset.bottle; })[0]; if(!b) return;
-      var cur=b.fill===''?100:parseInt(b.fill,10);
-      b.fill=String(Math.max(0,Math.min(100,cur+parseInt(btn.dataset.fillstep,10))));
+      b.fill=fillStep(b.fill,parseInt(btn.dataset.fillstep,10));
       save(); render();
     });
   });
@@ -3126,11 +3132,7 @@ document.getElementById('bPr').addEventListener('click',function(e){
   if(e.target.closest('.chip')) syncPrField();
 });
 document.getElementById('bFillClear').addEventListener('click',function(){ bottleFill=''; syncFillUI(); });
-function stepSheetFill(by){
-  var cur=bottleFill===''?100:parseInt(bottleFill,10);
-  bottleFill=String(Math.max(0,Math.min(100,cur+by)));
-  syncFillUI();
-}
+function stepSheetFill(by){ bottleFill=fillStep(bottleFill,by); syncFillUI(); }
 document.getElementById('bFillMinus').addEventListener('click',function(){ stepSheetFill(-5); });
 document.getElementById('bFillPlus').addEventListener('click',function(){ stepSheetFill(5); });
 document.getElementById('bHouse').addEventListener('input',function(){ if(!bottleId) refreshBottlePrefill(); });
@@ -3257,11 +3259,7 @@ document.getElementById('fdFill').addEventListener('click',function(e){
 document.getElementById('fdFillRange').addEventListener('input',function(){
   finishFill=String(this.value); syncFinishFillUI();
 });
-function stepFinishFill(by){
-  var cur=finishFill===''?100:parseInt(finishFill,10);
-  finishFill=String(Math.max(0,Math.min(100,cur+by)));
-  syncFinishFillUI();
-}
+function stepFinishFill(by){ finishFill=fillStep(finishFill,by); syncFinishFillUI(); }
 document.getElementById('fdFillMinus').addEventListener('click',function(){ stepFinishFill(-5); });
 document.getElementById('fdFillPlus').addEventListener('click',function(){ stepFinishFill(5); });
 
@@ -3529,8 +3527,7 @@ document.getElementById('beConfirmBack').addEventListener('click',function(){
 document.getElementById('newTestBtn').addEventListener('click',function(){
   if(activeSection==='collection'){ openBottle(null); return; }
   ['fName','fHouse','fFlanker','fInspired','fPrice','fSize','fBatch','fYear','fPerfumer','fContext'].forEach(function(i){ document.getElementById(i).value=''; });
-  var seen={}; tests.forEach(function(t){ if(t.house) seen[t.house]=1; });
-  document.getElementById('brandList').innerHTML=Object.keys(seen).sort().map(function(b){ return '<option value="'+esc(b)+'">'; }).join('');
+  fillBrandList();
   setSingle('fType','Dupe'); setSingle('fConc','EDP'); setSingle('fSprays','3');
   setSingle('fWeather',''); setSingle('fHumidity',''); setMulti('fSpots',[]);
   document.getElementById('cplOut').textContent='';
