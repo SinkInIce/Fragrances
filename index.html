@@ -1364,7 +1364,10 @@ const store=(function(){
   };
 })();
 const storeLabel={ artifact:'Saved in this artifact', local:'Saved on this device', memory:'Held in memory only' };
-let saveState='idle', lastSaved=null;
+/* blockWrites is set only when the stored log came back unreadable AND a
+   copy of it could not be kept — see load(). It stops persist() writing
+   over the one copy there is. */
+let saveState='idle', lastSaved=null, blockWrites=false;
 
 /* ---- Photos ----------------------------------------------------------
    A phone photo is megabytes; the whole log gets about 5MB of
@@ -1495,10 +1498,17 @@ async function load(){
         tombstones=Array.isArray(p.deleted)?p.deleted:[];
       }
     }catch(e){
-      /* Keep the unreadable copy rather than letting the next save overwrite it. */
+      /* Keep the unreadable copy rather than letting the next save overwrite
+         it. That copy doubles the space the log takes, which is exactly the
+         write most likely to fail when storage is already full — and if it
+         does, the original is all there is. Refuse to write at all rather
+         than let the first tab tap flatten it with an empty log. */
       tests=[]; saveState='error';
-      try{ await store.set(KEY+'-corrupt',raw); }catch(_){}
-      toast('Saved data was unreadable — a copy was kept');
+      let kept=false;
+      try{ kept=!!(await store.set(KEY+'-corrupt',raw)); }catch(_){}
+      blockWrites=!kept;
+      toast(kept ? 'Saved data was unreadable — a copy was kept'
+                 : 'Saved data was unreadable and could not be copied — nothing will be written over it');
     }
   }
   seedSnapshot();
@@ -1547,6 +1557,7 @@ async function tryPublic(force){
 /* Writes the current log to this device. save() adds change tracking and
    queues a sync on top; syncNow() calls persist() directly to avoid a loop. */
 async function persist(){
+  if(blockWrites){ renderDataBar(); return; }
   saveState='saving'; renderDataBar();
   try{
     const ok=await store.set(KEY,JSON.stringify({tests,activeTab,activeView,activeSection,sortBy,deleted:tombstones}));
@@ -1793,6 +1804,9 @@ async function syncNow(manual){
     }
     if(!settled) throw new Error('Another device was writing — try again in a moment');
     await syncPhotos();
+    /* A whole log has just come back from the remote, so there is now
+       something worth writing even if what was on this device was junk. */
+    blockWrites=false;
     await persist();
     syncState='idle'; syncMsg=''; lastSync=new Date();
     render();
@@ -1815,13 +1829,14 @@ function scheduleSync(){
 function renderDataBar(){
   const el=document.getElementById('dataStatus'); if(!el) return;
   let s;
-  if(store.mode==='memory') s='<strong>Nothing is being saved.</strong> This browser is blocking storage — back up to a file before you close the tab.';
+  if(blockWrites) s='<strong>Your saved log could not be read, and no copy could be kept.</strong> Nothing is being written over it. Sort that out before you log anything else.';
+  else if(store.mode==='memory') s='<strong>Nothing is being saved.</strong> This browser is blocking storage — back up to a file before you close the tab.';
   else if(saveState==='error') s='<strong>Your last change may not be saved.</strong> Back up to a file.';
   else if(saveState==='saving') s='Saving…';
   else if(lastSaved) s=storeLabel[store.mode]+' · last saved '+lastSaved.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   else s=storeLabel[store.mode]+' · saves automatically as you type';
   el.innerHTML=s;
-  el.className='data-status'+((store.mode==='memory'||saveState==='error')?' warn':'');
+  el.className='data-status'+((blockWrites||store.mode==='memory'||saveState==='error')?' warn':'');
 
   const sy=document.getElementById('syncStatus'); if(!sy) return;
   let t='', cls='sync-line';
