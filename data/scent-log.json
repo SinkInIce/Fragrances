@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-08-02T16:32:03.171Z",
+  "updatedAt": "2026-08-02T16:32:55.307Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -4022,13 +4022,13 @@
       "house": "Bujairami",
       "flanker": "",
       "inspired": "",
-      "concentration": "",
+      "concentration": "Extrait",
       "sprays": "",
       "spots": [],
       "weather": "",
       "humidity": "",
-      "price": "",
-      "size": "",
+      "price": "110",
+      "size": "100",
       "batch": "",
       "context": "",
       "checkpoints": [],
@@ -4075,8 +4075,8 @@
       "tradedFor": "",
       "id": "t1785688175394co0nvr",
       "name": "Aussie Glow",
-      "type": "Dupe",
-      "updatedAt": "2026-08-02T16:29:35.394Z"
+      "type": "Niche",
+      "updatedAt": "2026-08-02T16:32:52.444Z"
     },
     {
       "notebook": "stevnscents",
