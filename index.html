@@ -55,7 +55,14 @@ body::before{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E");
   opacity:.09;
 }
-#app{ max-width:600px; margin:0 auto; padding:18px 16px 112px; }
+/* viewport-fit=cover plus display:standalone means the web view runs edge to
+   edge on an installed iPhone — the status bar and the notch sit *over* the
+   page rather than beside it. The bottom inset was handled; the top was not,
+   so 18px of padding put the masthead under a 59px notch. env() is 0 on
+   everything without one, so this changes nothing anywhere else. */
+#app{ max-width:600px; margin:0 auto;
+  padding:calc(18px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+          112px calc(16px + env(safe-area-inset-left)); }
 
 /* ---- Masthead -------------------------------------------------------
    This is a tool somebody opens forty times a day with 150 bottles in it.
@@ -366,7 +373,9 @@ header a{ color:var(--accent); font-weight:600; }
    misspelled house across nine bottles, a size he never filled in. The
    bar is sticky at the top because the list is long: scrolling to the
    bottom of 150 cards to reach an action is the problem, not the fix. */
-.sel-bar{ position:sticky; top:0; z-index:30; background:var(--ink); color:var(--paper);
+/* Sticky positions against the scrollport, not the padded #app, so top:0 puts
+   it back under the notch that #app just cleared. */
+.sel-bar{ position:sticky; top:env(safe-area-inset-top); z-index:30; background:var(--ink); color:var(--paper);
   padding:8px 12px 12px; margin:0 0 12px; box-shadow:0 6px 14px rgba(42,35,27,.18); }
 /* Two deliberate rows rather than one that truncates: on a 360px phone the
    count and "Select all 70 matching" cannot share a line, and a clipped
