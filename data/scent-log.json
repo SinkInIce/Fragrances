@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-08-02T16:32:55.307Z",
+  "updatedAt": "2026-08-02T16:33:10.504Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -4065,8 +4065,8 @@
       "added": "2026-08-02T16:29:35.402Z",
       "bottleNotes": "",
       "bottleId": "",
-      "fill": "",
-      "fillAt": "",
+      "fill": "100",
+      "fillAt": "2026-08-02T16:33:07.794Z",
       "covered": false,
       "pr": false,
       "prFrom": "",
@@ -4076,7 +4076,7 @@
       "id": "t1785688175394co0nvr",
       "name": "Aussie Glow",
       "type": "Niche",
-      "updatedAt": "2026-08-02T16:32:52.444Z"
+      "updatedAt": "2026-08-02T16:33:07.794Z"
     },
     {
       "notebook": "stevnscents",
