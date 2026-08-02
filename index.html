@@ -510,6 +510,25 @@ header a{ color:var(--accent); font-weight:600; }
   animation:slideup .26s ease; }
 @keyframes slideup{ from{ transform:translateY(100%);} to{ transform:translateY(0);} }
 .sheet-handle{ width:40px; height:2px; background:var(--line-strong); margin:0 auto 18px; }
+/* One obvious way out of every sheet. Tapping the dimmed backdrop still
+   works, but a 92vh sheet leaves a sliver of backdrop at best and none once
+   you have scrolled -- the owner's words: "I am struggling to get out of
+   these fragrance screens". Sticky, so it is still there eighteen fields
+   deep. Injected into every sheet by one loop in the script, so a future
+   sheet cannot forget it. */
+.sheet-close-wrap{ position:sticky; top:0; height:0; text-align:right; z-index:6; }
+.sheet-close{ width:36px; height:36px; border:1px solid var(--line-strong); background:var(--paper);
+  color:var(--ink); font-size:20px; line-height:1; cursor:pointer; padding:0;
+  transform:translateY(-8px); }
+/* The shop fold on the bottle sheet. Collapsed by default: most bottles are
+   never for sale, and eighteen fields is already a long sheet. */
+.shop-fold{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:4px 0 18px; }
+.shop-fold summary{ list-style:none; cursor:pointer; padding:13px 0; display:flex; align-items:baseline; gap:8px;
+  font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink); }
+.shop-fold summary::-webkit-details-marker{ display:none; }
+.shop-fold summary::after{ content:'+'; margin-left:auto; font-size:16px; font-weight:400; color:var(--ink-muted); }
+.shop-fold[open] summary::after{ content:'\2212'; }
+.shop-fold .shop-fold-body{ padding-top:6px; }
 .sheet h2{ font-family:var(--serif); font-size:22px; margin-bottom:6px; line-height:1.2; letter-spacing:-.01em; }
 .sheet .sheet-sub{ font-size:12.5px; color:var(--ink-muted); margin-bottom:22px; line-height:1.6; }
 .field{ margin-bottom:18px; }
@@ -525,6 +544,9 @@ header a{ color:var(--accent); font-weight:600; }
 .field input:focus, .field textarea:focus{ outline:none; border-color:var(--ink);
   box-shadow:inset 0 -2px 0 var(--accent); }
 .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+/* Same trap .btn-row[hidden] documents: an author display rule beats the
+   hidden attribute. The shop fold's whole-bottle pair relies on hidden. */
+.two-col[hidden]{ display:none; }
 .chip-row{ display:flex; gap:6px; flex-wrap:wrap; }
 .chip{ border:1px solid var(--line-strong); background:var(--card); padding:11px 14px;
   font-size:13px; font-weight:500; cursor:pointer; color:var(--ink-soft); min-height:44px;
@@ -1244,6 +1266,40 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
     <div class="helper">Reformulations are real. Recording it lets you compare batches of the same fragrance later.</div></div>
   <div class="field"><label>Notes <span class="opt">optional</span></label>
     <textarea id="bNotes" placeholder="e.g. bought at the mall, batch smells stronger than the first bottle"></textarea></div>
+
+  <details class="shop-fold" id="bShopFold">
+    <summary>Shop <span class="opt">Fallowmark</span></summary>
+    <div class="shop-fold-body">
+      <div class="helper" style="margin-bottom:16px">Intake for the storefront, so a new bottle is catalogued and listed in one sitting. This rides the same sync the fill level does; Studio still computes decant prices and keeps the books.</div>
+      <div class="field"><label>Sell decants of it</label>
+        <div class="rating-row" id="bShopSell">
+          <div class="chip" data-val="yes">Sell it</div>
+          <div class="chip" data-val="no">Not for sale</div>
+        </div></div>
+      <div class="field"><label>Scent family</label>
+        <div class="rating-row" id="bShopFamily">
+          <div class="chip sm" data-val="Amber">Amber</div>
+          <div class="chip sm" data-val="Fresh">Fresh</div>
+          <div class="chip sm" data-val="Woody">Woody</div>
+          <div class="chip sm" data-val="Smoky">Smoky</div>
+          <div class="chip sm" data-val="Green">Green</div>
+          <div class="chip sm" data-val="Sweet">Sweet</div>
+          <div class="chip sm" data-val="Leather">Leather</div>
+        </div>
+        <div class="helper">Drives which shelves and seasons it lands on. The site never shows the word to a customer.</div></div>
+      <div class="field"><label>Honest note <span class="opt">optional</span></label>
+        <textarea id="bShopNote" placeholder="Your read of it, a sentence or two. Goes on the product page word for word."></textarea></div>
+      <div class="field"><label>Sell sealed full bottles</label>
+        <div class="rating-row" id="bShopWhole">
+          <div class="chip" data-val="yes">Sell sealed stock</div>
+          <div class="chip" data-val="no">No</div>
+        </div></div>
+      <div class="two-col" id="bShopWholeFields" hidden>
+        <div class="field"><label>Bottle price</label><input type="number" id="bShopPrice" placeholder="185" inputmode="decimal"></div>
+        <div class="field"><label>Sealed in stock</label><input type="number" id="bShopQty" placeholder="3" inputmode="numeric"></div>
+      </div>
+    </div>
+  </details>
 
   <button class="btn btn-primary" id="saveBottleBtn">Save to collection</button>
 </div></div>
@@ -2875,6 +2931,7 @@ function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .
    still required, and the chips are just as silently dead without it. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
  'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr','fdType','fdConc','fdFill',
+ 'bShopSell','bShopFamily','bShopWhole',
  'beChips','beBool'].forEach(chipSingle);
 ['fSpots','eFam','eSeason','eOcc','beMulti'].forEach(chipMulti);
 
@@ -3002,6 +3059,17 @@ function openBottle(id){
   document.getElementById('bSize').value=b?b.size:'';
   document.getElementById('bBatch').value=b?b.batch:'';
   document.getElementById('bNotes').value=b?b.bottleNotes:'';
+  var sh=(b&&b.shop)||{};
+  setSingle('bShopSell', sh.sell===true?'yes':(sh.sell===false?'no':''));
+  setSingle('bShopFamily', sh.family||'');
+  document.getElementById('bShopNote').value=sh.note||'';
+  setSingle('bShopWhole', sh.sellWhole===true?'yes':(sh.sellWhole===false?'no':''));
+  document.getElementById('bShopPrice').value=sh.price||'';
+  document.getElementById('bShopQty').value=sh.qty||'';
+  syncShopWholeFields();
+  /* Open when it has anything to show -- an intake pass shouldn't need a tap
+     to see what's already set; a bottle that was never for sale stays folded. */
+  document.getElementById('bShopFold').open = !!(sh.sell||sh.family||sh.note||sh.sellWhole);
   document.getElementById('saveBottleBtn').textContent=b?'Save changes':'Save to collection';
   fillBrandList(); updBottleCpl(); renderBottlePhoto();
   document.getElementById('bottlePrefill').hidden=true;
@@ -3166,6 +3234,27 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
     batch:document.getElementById('bBatch').value.trim(),
     bottleNotes:document.getElementById('bNotes').value.trim(),
     photo:bottlePhoto, notesPhoto:bottleNotesPhoto };
+  /* The shop fold. A key is included once the owner has ever set it, and
+     stays included even when cleared, so clearing a note here clears it in
+     Studio too -- an absent key means "never touched", and Studio leaves its
+     own value alone. shop.at moves only when something shop-side actually
+     changed; the bridge uses it to decide who spoke last. */
+  (function(){
+    var prevB=bottleId?tests.filter(function(x){ return x.id===bottleId; })[0]:null;
+    var prev=(prevB&&prevB.shop)||{};
+    var shop={}, v;
+    v=getSingle('bShopSell');  if(v) shop.sell=(v==='yes'); else if('sell' in prev) shop.sell=prev.sell;
+    v=getSingle('bShopFamily'); if(v||('family' in prev)) shop.family=v;
+    v=document.getElementById('bShopNote').value.trim(); if(v||('note' in prev)) shop.note=v;
+    v=getSingle('bShopWhole'); if(v) shop.sellWhole=(v==='yes'); else if('sellWhole' in prev) shop.sellWhole=prev.sellWhole;
+    v=document.getElementById('bShopPrice').value.trim(); if(v||('price' in prev)) shop.price=v;
+    v=document.getElementById('bShopQty').value.trim();   if(v||('qty' in prev)) shop.qty=v;
+    if(!Object.keys(shop).length) return;
+    var was={}; Object.keys(prev).forEach(function(k){ if(k!=='at') was[k]=prev[k]; });
+    shop.at = JSON.stringify(shop)===JSON.stringify(was) ? (prev.at||new Date().toISOString())
+                                                         : new Date().toISOString();
+    data.shop=shop;
+  })();
   if(bottleId){
     var b=tests.filter(function(x){ return x.id===bottleId; })[0];
     if(b) Object.assign(b,data);
@@ -3932,6 +4021,31 @@ document.getElementById('confirmYesBtn').addEventListener('click',function(){
 document.getElementById('confirmNoBtn').addEventListener('click',function(){ pendingDelete=null; hide('confirmOverlay'); });
 
 document.querySelectorAll('.overlay').forEach(function(o){ o.addEventListener('click',function(e){ if(e.target===o){ o.classList.remove('show'); if(o.id==='confirmOverlay') pendingDelete=null; } }); });
+
+/* Every sheet gets an explicit close, injected rather than written into
+   each sheet by hand so a new sheet can never forget one. The backdrop tap
+   above still works; this exists because a tall sheet hides the backdrop. */
+function closeOverlay(o){ o.classList.remove('show'); if(o.id==='confirmOverlay') pendingDelete=null; }
+document.querySelectorAll('.overlay .sheet').forEach(function(sheet){
+  var o=sheet.closest('.overlay');
+  var wrap=document.createElement('div'); wrap.className='sheet-close-wrap';
+  var btn=document.createElement('button'); btn.type='button'; btn.className='sheet-close';
+  btn.setAttribute('aria-label','Close'); btn.innerHTML='&times;';
+  btn.addEventListener('click',function(){ closeOverlay(o); });
+  wrap.appendChild(btn);
+  sheet.insertBefore(wrap, sheet.firstChild);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape') return;
+  var open=document.querySelectorAll('.overlay.show');
+  if(open.length) closeOverlay(open[open.length-1]);
+});
+
+function syncShopWholeFields(){
+  document.getElementById('bShopWholeFields').hidden = getSingle('bShopWhole')!=='yes';
+}
+/* After chipSingle's own handler, same as the bulk-edit rows above. */
+document.getElementById('bShopWhole').addEventListener('click',syncShopWholeFields);
 
 function backupFilename(){
   var d=new Date(), p=function(n){ return String(n).padStart(2,'0'); };
