@@ -1270,23 +1270,12 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
   <details class="shop-fold" id="bShopFold">
     <summary>Shop <span class="opt">Fallowmark</span></summary>
     <div class="shop-fold-body">
-      <div class="helper" style="margin-bottom:16px">Intake for the storefront, so a new bottle is catalogued and listed in one sitting. This rides the same sync the fill level does; Studio still computes decant prices and keeps the books.</div>
+      <div class="helper" style="margin-bottom:16px">Intake for the storefront, so a new bottle is catalogued and listed in one sitting. Which shelves it lands on comes from your wear test &mdash; Best season and Best occasion &mdash; so test it and the shop follows. This rides the same sync the fill level does; Studio still computes decant prices and keeps the books.</div>
       <div class="field"><label>Sell decants of it</label>
         <div class="rating-row" id="bShopSell">
           <div class="chip" data-val="yes">Sell it</div>
           <div class="chip" data-val="no">Not for sale</div>
         </div></div>
-      <div class="field"><label>Scent family</label>
-        <div class="rating-row" id="bShopFamily">
-          <div class="chip sm" data-val="Amber">Amber</div>
-          <div class="chip sm" data-val="Fresh">Fresh</div>
-          <div class="chip sm" data-val="Woody">Woody</div>
-          <div class="chip sm" data-val="Smoky">Smoky</div>
-          <div class="chip sm" data-val="Green">Green</div>
-          <div class="chip sm" data-val="Sweet">Sweet</div>
-          <div class="chip sm" data-val="Leather">Leather</div>
-        </div>
-        <div class="helper">Drives which shelves and seasons it lands on. The site never shows the word to a customer.</div></div>
       <div class="field"><label>Honest note <span class="opt">optional</span></label>
         <textarea id="bShopNote" placeholder="Your read of it, a sentence or two. Goes on the product page word for word."></textarea></div>
       <div class="field"><label>Sell sealed full bottles</label>
@@ -2931,7 +2920,7 @@ function setMulti(cid,arr){ var a=arr||[]; document.querySelectorAll('#'+cid+' .
    still required, and the chips are just as silently dead without it. */
 ['fType','fConc','fSprays','fWeather','fHumidity','noteProj','eLong','eProj','eSill','eCompF','eTier','eRebuy',
  'eDayNight','eGender','eAge','eRating','eValue','bType','bConc','bFill','bPr','fdType','fdConc','fdFill',
- 'bShopSell','bShopFamily','bShopWhole',
+ 'bShopSell','bShopWhole',
  'beChips','beBool'].forEach(chipSingle);
 ['fSpots','eFam','eSeason','eOcc','beMulti'].forEach(chipMulti);
 
@@ -3061,7 +3050,6 @@ function openBottle(id){
   document.getElementById('bNotes').value=b?b.bottleNotes:'';
   var sh=(b&&b.shop)||{};
   setSingle('bShopSell', sh.sell===true?'yes':(sh.sell===false?'no':''));
-  setSingle('bShopFamily', sh.family||'');
   document.getElementById('bShopNote').value=sh.note||'';
   setSingle('bShopWhole', sh.sellWhole===true?'yes':(sh.sellWhole===false?'no':''));
   document.getElementById('bShopPrice').value=sh.price||'';
@@ -3069,7 +3057,7 @@ function openBottle(id){
   syncShopWholeFields();
   /* Open when it has anything to show -- an intake pass shouldn't need a tap
      to see what's already set; a bottle that was never for sale stays folded. */
-  document.getElementById('bShopFold').open = !!(sh.sell||sh.family||sh.note||sh.sellWhole);
+  document.getElementById('bShopFold').open = !!(sh.sell||sh.note||sh.sellWhole);
   document.getElementById('saveBottleBtn').textContent=b?'Save changes':'Save to collection';
   fillBrandList(); updBottleCpl(); renderBottlePhoto();
   document.getElementById('bottlePrefill').hidden=true;
@@ -3244,7 +3232,9 @@ document.getElementById('saveBottleBtn').addEventListener('click',function(){
     var prev=(prevB&&prevB.shop)||{};
     var shop={}, v;
     v=getSingle('bShopSell');  if(v) shop.sell=(v==='yes'); else if('sell' in prev) shop.sell=prev.sell;
-    v=getSingle('bShopFamily'); if(v||('family' in prev)) shop.family=v;
+    /* No family control any more -- shelves come from the wear test. A family
+       saved before that change carries through untouched. */
+    if('family' in prev) shop.family=prev.family;
     v=document.getElementById('bShopNote').value.trim(); if(v||('note' in prev)) shop.note=v;
     v=getSingle('bShopWhole'); if(v) shop.sellWhole=(v==='yes'); else if('sellWhole' in prev) shop.sellWhole=prev.sellWhole;
     v=document.getElementById('bShopPrice').value.trim(); if(v||('price' in prev)) shop.price=v;
