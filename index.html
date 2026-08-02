@@ -937,7 +937,7 @@ body.public-mode .fab-wrap, body.public-mode .data-bar{ display:none; }
       <input type="text" id="eHeart" placeholder="cinnamon, praline, tuberose" autocomplete="off"></div>
     <div class="field"><label>Base notes</label>
       <input type="text" id="eBase" placeholder="vanilla, tonka, amber, benzoin" autocomplete="off"></div>
-    <div class="field"><label>Main accords <span class="opt">tap all that apply</span></label>
+    <div class="field"><label>Scent family <span class="opt">tap all that apply</span></label>
       <!-- ONE list, everywhere. This had eighteen enthusiast families while
            the shop ran on seven the test couldn't say — the owner, on a fruity
            bottle filed under Green: "we need to line up with the same
@@ -3902,7 +3902,7 @@ function testToReview(t){
   if(t.topNotes) pyr.push('Top: '+t.topNotes);
   if(t.heartNotes) pyr.push('Heart: '+t.heartNotes);
   if(t.baseNotes) pyr.push('Base: '+t.baseNotes);
-  if((t.families||[]).length) pyr.push('Main accords: '+t.families.join(', '));
+  if((t.families||[]).length) pyr.push('Scent family: '+t.families.join(', '));
   if(pyr.length){ L.push(''); L=L.concat(pyr); }
 
   var perf=[];

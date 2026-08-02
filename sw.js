@@ -1,6 +1,6 @@
 /* Scent Log service worker — offline shell + font caching.
    Bump CACHE when shell files change so old copies are cleared. */
-const CACHE = 'scent-log-v8';
+const CACHE = 'scent-log-v9';
 const FONTS = 'scent-log-fonts-v1';
 const SHELL = [
   './',
