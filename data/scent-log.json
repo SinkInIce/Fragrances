@@ -1,7 +1,7 @@
 {
   "app": "scent-log",
   "version": 1,
-  "updatedAt": "2026-08-05T12:53:33.649Z",
+  "updatedAt": "2026-08-05T15:06:17.213Z",
   "tests": [
     {
       "notebook": "stevnscents",
@@ -874,7 +874,7 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "PacoRabbane",
+      "house": "Paco Rabanne",
       "flanker": "PARFUM",
       "inspired": "",
       "concentration": "Parfum",
@@ -931,7 +931,7 @@
       "id": "t1785273512486mt6o97",
       "name": "1 Million",
       "type": "Designer",
-      "updatedAt": "2026-07-28T23:28:05.473Z"
+      "updatedAt": "2026-08-05T15:06:17.213Z"
     },
     {
       "notebook": "stevnscents",
@@ -1240,7 +1240,7 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "PacoRabbane",
+      "house": "Paco Rabanne",
       "flanker": "",
       "inspired": "",
       "concentration": "",
@@ -1297,7 +1297,7 @@
       "id": "t1785273512486azqr5c",
       "name": "Invictus Victory EDP Extreme",
       "type": "Dupe",
-      "updatedAt": "2026-07-28T21:18:32.486Z"
+      "updatedAt": "2026-08-05T15:06:17.213Z"
     },
     {
       "notebook": "stevnscents",
@@ -1640,7 +1640,7 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "Luis Vuitton",
+      "house": "Louis Vuitton",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -1697,7 +1697,7 @@
       "id": "t17854320204510qux04",
       "name": "Imagination",
       "type": "Designer",
-      "updatedAt": "2026-07-31T01:17:31.405Z"
+      "updatedAt": "2026-08-05T15:06:17.213Z"
     },
     {
       "notebook": "stevnscents",
@@ -2006,7 +2006,7 @@
     },
     {
       "notebook": "stevnscents",
-      "house": "Luis Vuitton",
+      "house": "Louis Vuitton",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -2063,11 +2063,11 @@
       "id": "t1785460527159lwpspv",
       "name": "City of Stars",
       "type": "Designer",
-      "updatedAt": "2026-07-31T01:25:10.815Z"
+      "updatedAt": "2026-08-05T15:06:17.213Z"
     },
     {
       "notebook": "stevnscents",
-      "house": "LuisVuitton",
+      "house": "Louis Vuitton",
       "flanker": "",
       "inspired": "",
       "concentration": "EDP",
@@ -2124,7 +2124,7 @@
       "id": "t17854605271600tlkpu",
       "name": "Météore",
       "type": "Designer",
-      "updatedAt": "2026-07-31T01:26:31.990Z"
+      "updatedAt": "2026-08-05T15:06:17.213Z"
     },
     {
       "notebook": "stevnscents",
